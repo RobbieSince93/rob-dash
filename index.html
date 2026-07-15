@@ -1904,7 +1904,7 @@
 #page-neteng .done .chksvg {display:block}
 
 
-  /* ═══ 6-WEEK FITNESS ROADMAP (scoped) ═══ */
+  /* ═══ 8-WEEK FAT LOSS + SOCCER FITNESS PLAN (scoped) ═══ */
   #page-fitplan { --fpl-mon: var(--blue); --fpl-sprint: var(--amber); --fpl-workout: var(--accent); --fpl-game: var(--teal); }
 
   /* hero targets */
@@ -1935,32 +1935,12 @@
   #page-fitplan .fpl-panel { display:none; }
   #page-fitplan .fpl-panel.active { display:block; }
 
-  /* week blocks */
-  #page-fitplan .fpl-week { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:10px; overflow:hidden; transition:border-color .2s; }
-  #page-fitplan .fpl-week.current { border-color:var(--accent); box-shadow:0 0 0 1px var(--accent); }
-  #page-fitplan .fpl-week.wk-done { opacity:.72; }
-  #page-fitplan .fpl-week-hdr { display:flex; align-items:center; gap:12px; padding:14px 16px; cursor:pointer; user-select:none; transition:background .15s; }
-  #page-fitplan .fpl-week-hdr:hover { background:var(--bg3); }
-  #page-fitplan .fpl-wnum { width:34px; height:34px; border-radius:9px; background:var(--bg4); border:1px solid var(--border2); display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:13px; font-weight:600; color:var(--text2); flex-shrink:0; transition:all .2s; }
-  #page-fitplan .fpl-week.wk-done .fpl-wnum { background:var(--green); border-color:var(--green); color:#04140c; }
-  #page-fitplan .fpl-week.current .fpl-wnum { border-color:var(--accent); color:var(--accent); }
-  #page-fitplan .fpl-week-info { flex:1; min-width:0; }
-  #page-fitplan .fpl-week-title { font-family:var(--display); font-size:14px; font-weight:600; color:var(--text); display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
-  #page-fitplan .fpl-tag { font-family:var(--mono); font-size:9px; font-weight:600; padding:2px 7px; border-radius:4px; letter-spacing:.04em; text-transform:uppercase; }
-  #page-fitplan .fpl-tag.now { background:var(--accent); color:#0a0a0f; }
-  #page-fitplan .fpl-week-focus { font-size:12px; color:var(--text3); margin-top:2px; }
-  #page-fitplan .fpl-week-prog { font-family:var(--mono); font-size:11px; color:var(--text3); white-space:nowrap; }
-  #page-fitplan .fpl-chev { font-size:10px; color:var(--text3); transition:transform .2s; margin-left:4px; }
-  #page-fitplan .fpl-chev.open { transform:rotate(180deg); }
-  #page-fitplan .fpl-week-body { display:none; border-top:1px solid var(--border); padding:6px 0; }
-  #page-fitplan .fpl-week-body.open { display:block; }
-
-  /* week change note */
-  #page-fitplan .fpl-note { margin:8px 16px 10px; padding:10px 12px; background:var(--amber-dim); border:1px solid rgba(255,184,48,.22); border-radius:var(--radius-sm); font-size:12px; color:var(--text); line-height:1.5; display:flex; gap:8px; }
+  /* week change note / warnings */
+  #page-fitplan .fpl-note { margin:14px 0 0; padding:10px 12px; background:var(--amber-dim); border:1px solid rgba(255,184,48,.22); border-radius:var(--radius-sm); font-size:12px; color:var(--text); line-height:1.5; display:flex; gap:8px; }
   #page-fitplan .fpl-note b { color:var(--amber); font-weight:600; }
   #page-fitplan .fpl-note .fpl-note-ic { flex-shrink:0; }
 
-  /* session rows */
+  /* session rows (used inside tracker week cards) */
   #page-fitplan .fpl-sess { display:flex; align-items:center; gap:12px; padding:10px 16px; cursor:pointer; transition:background .15s; }
   #page-fitplan .fpl-sess:hover { background:var(--bg3); }
   #page-fitplan .fpl-sess.done .fpl-sess-name { text-decoration:line-through; text-decoration-color:var(--text3); color:var(--text2); }
@@ -1975,6 +1955,11 @@
   #page-fitplan .fpl-sess-link { font-family:var(--mono); font-size:10px; color:var(--accent); background:var(--accent-dim,rgba(124,111,255,.12)); padding:3px 8px; border-radius:5px; white-space:nowrap; cursor:pointer; border:1px solid transparent; transition:all .15s; }
   #page-fitplan .fpl-sess-link:hover { border-color:var(--accent); }
 
+  /* session tracker grid */
+  #page-fitplan .fpl-tracker { display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:12px; }
+  #page-fitplan .fpl-tweek { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+  #page-fitplan .fpl-tweek-hd { padding:10px 16px; background:var(--bg3); border-bottom:1px solid var(--border); font-family:var(--mono); font-size:11px; font-weight:600; color:var(--text2); text-transform:uppercase; letter-spacing:.05em; }
+
   /* generic cards / reference */
   #page-fitplan .fpl-card { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:18px 20px; margin-bottom:14px; }
   #page-fitplan .fpl-card-title { font-family:var(--display); font-size:14px; font-weight:600; color:var(--text); margin-bottom:4px; }
@@ -1987,32 +1972,19 @@
   #page-fitplan .fpl-sched-act { font-size:11px; font-weight:600; color:var(--text); line-height:1.3; }
   #page-fitplan .fpl-sched-day.is-rest .fpl-sched-act { color:var(--text3); font-weight:400; }
 
-  /* meal blocks */
-  #page-fitplan .fpl-meal { border-left:2px solid var(--accent); padding:4px 0 4px 16px; margin-bottom:18px; }
-  #page-fitplan .fpl-meal:last-child { margin-bottom:0; }
-  #page-fitplan .fpl-meal-top { display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:8px; flex-wrap:wrap; }
-  #page-fitplan .fpl-meal-name { font-family:var(--display); font-size:13px; font-weight:600; color:var(--text); }
-  #page-fitplan .fpl-meal-macros { font-family:var(--mono); font-size:11px; color:var(--text2); white-space:nowrap; }
-  #page-fitplan .fpl-meal-macros b { color:var(--green); font-weight:500; }
-  #page-fitplan .fpl-meal ul { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:5px; }
-  #page-fitplan .fpl-meal li { font-size:12.5px; color:var(--text2); line-height:1.45; padding-left:14px; position:relative; }
-  #page-fitplan .fpl-meal li::before { content:'·'; position:absolute; left:2px; color:var(--text3); }
-  #page-fitplan .fpl-meal.optional .fpl-meal-name { color:var(--text2); }
-
   /* macro total bar */
   #page-fitplan .fpl-macro-total { display:flex; gap:20px; flex-wrap:wrap; padding:14px 16px; background:var(--bg3); border-radius:var(--radius-sm); margin-top:14px; }
   #page-fitplan .fpl-macro-total .mt { display:flex; flex-direction:column; }
   #page-fitplan .fpl-macro-total .mt-v { font-family:var(--mono); font-size:18px; color:var(--text); }
   #page-fitplan .fpl-macro-total .mt-l { font-size:10px; color:var(--text3); text-transform:uppercase; letter-spacing:.05em; margin-top:2px; }
 
-  /* portion / hand guide */
-  #page-fitplan .fpl-portions { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
-  #page-fitplan .fpl-portion { display:flex; align-items:center; gap:12px; background:var(--bg3); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px 14px; }
-  #page-fitplan .fpl-portion-ic { font-size:24px; line-height:1; flex-shrink:0; }
-  #page-fitplan .fpl-portion-txt b { display:block; font-size:12.5px; color:var(--text); font-weight:600; }
-  #page-fitplan .fpl-portion-txt span { font-size:11.5px; color:var(--text2); }
+  /* lifting block selector */
+  #page-fitplan .fpl-blocksel { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+  #page-fitplan .fpl-blockbtn { background:var(--bg2); border:1px solid var(--border); color:var(--text2); font-family:var(--mono); font-size:11px; padding:7px 14px; border-radius:20px; cursor:pointer; transition:all .15s; }
+  #page-fitplan .fpl-blockbtn:hover { color:var(--text); }
+  #page-fitplan .fpl-blockbtn.active { background:var(--accent); color:#0a0a0f; border-color:var(--accent); font-weight:600; }
 
-  /* workout tables */
+  /* workout cards */
   #page-fitplan .fpl-wk-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
   #page-fitplan .fpl-wcard { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
   #page-fitplan .fpl-wcard-hd { padding:12px 14px; background:var(--bg3); border-bottom:1px solid var(--border); }
@@ -2023,11 +1995,18 @@
   #page-fitplan .fpl-ex-name { color:var(--text2); line-height:1.35; }
   #page-fitplan .fpl-ex-sets { font-family:var(--mono); font-size:11px; color:var(--text); white-space:nowrap; flex-shrink:0; }
 
-  /* sprint steps */
-  #page-fitplan .fpl-steps { counter-reset:fpl-step; list-style:none; margin:0; padding:0; }
+  /* numbered steps */
+  #page-fitplan .fpl-steps { counter-reset:fpl-step; list-style:none; margin:0; padding:12px 14px 4px; }
   #page-fitplan .fpl-steps li { counter-increment:fpl-step; display:flex; gap:12px; padding:9px 0; border-bottom:1px solid var(--border); font-size:12.5px; color:var(--text2); line-height:1.5; align-items:flex-start; }
   #page-fitplan .fpl-steps li:last-child { border-bottom:none; }
   #page-fitplan .fpl-steps li::before { content:counter(fpl-step); font-family:var(--mono); font-size:11px; font-weight:600; color:var(--accent); background:var(--accent-dim,rgba(124,111,255,.12)); width:22px; height:22px; border-radius:6px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+
+  /* sprint block table */
+  #page-fitplan .fpl-table { width:100%; border-collapse:collapse; font-size:12px; }
+  #page-fitplan .fpl-table th, #page-fitplan .fpl-table td { text-align:left; padding:9px 14px; border-bottom:1px solid var(--border); }
+  #page-fitplan .fpl-table th { font-family:var(--mono); font-size:10px; color:var(--text3); text-transform:uppercase; letter-spacing:.05em; font-weight:600; background:var(--bg3); }
+  #page-fitplan .fpl-table td { color:var(--text2); }
+  #page-fitplan .fpl-table tr:last-child td { border-bottom:none; }
 
   /* callout */
   #page-fitplan .fpl-callout { background:var(--green-dim); border:1px solid rgba(46,204,138,.25); border-radius:var(--radius); padding:16px 18px; font-size:13px; color:var(--text); line-height:1.55; }
@@ -2040,7 +2019,6 @@
   @media (max-width:600px) {
     #page-fitplan .fpl-hero { grid-template-columns:repeat(2,1fr); }
     #page-fitplan .fpl-wk-grid { grid-template-columns:1fr; }
-    #page-fitplan .fpl-portions { grid-template-columns:1fr; }
     #page-fitplan .fpl-sched { grid-template-columns:repeat(4,1fr); }
   }
 
@@ -4541,190 +4519,166 @@
     </div>
 
     <!-- ─── GOALS & SAVINGS PAGE ─── -->
-    <!-- ─── 6-WEEK FITNESS ROADMAP PAGE ─── -->
+    <!-- ─── 8-WEEK CUT & CONDITIONING PLAN PAGE ─── -->
     <div class="page" id="page-fitplan">
       <div class="page-header">
         <div>
-          <div class="page-title">6-Week <span>Cut & Conditioning</span></div>
-          <div class="page-subtitle">Eat better, lose the belly, stop gassing out in the second half</div>
+          <div class="page-title">8-Week <span>Cut & Conditioning</span></div>
+          <div class="page-subtitle">Belly, love handles, and a soccer fitness base — beer's out, this replaces it</div>
         </div>
         <button class="fpl-reset" onclick="fplReset()">reset progress</button>
       </div>
 
       <!-- daily targets -->
       <div class="fpl-hero">
-        <div class="fpl-target t-cal"><div class="fpl-target-val">2,000</div><div class="fpl-target-unit">calories / day</div></div>
-        <div class="fpl-target t-pro"><div class="fpl-target-val">160g</div><div class="fpl-target-unit">protein / day</div></div>
-        <div class="fpl-target t-work"><div class="fpl-target-val">3</div><div class="fpl-target-unit">workouts / week</div></div>
-        <div class="fpl-target t-sprint"><div class="fpl-target-val">1–2</div><div class="fpl-target-unit">sprint days / week</div></div>
+        <div class="fpl-target t-cal"><div class="fpl-target-val">1,850</div><div class="fpl-target-unit">calories / day</div></div>
+        <div class="fpl-target t-pro"><div class="fpl-target-val">165g</div><div class="fpl-target-unit">protein / day</div></div>
+        <div class="fpl-target t-work"><div class="fpl-target-val">5</div><div class="fpl-target-unit">training days / week</div></div>
+        <div class="fpl-target t-sprint"><div class="fpl-target-val">0</div><div class="fpl-target-unit">beers / week</div></div>
       </div>
 
       <!-- overall progress -->
       <div class="fpl-prog">
         <div class="fpl-prog-top">
-          <span class="fpl-prog-lbl">Roadmap progress</span>
+          <span class="fpl-prog-lbl">Program progress</span>
           <span class="fpl-prog-pct" id="fpl-prog-pct">0%</span>
         </div>
         <div class="fpl-track"><div class="fpl-fill" id="fpl-fill" style="width:0%"></div></div>
-        <div class="fpl-prog-sub" id="fpl-prog-sub">Check off sessions as you finish them. 24 sessions over 6 weeks.</div>
+        <div class="fpl-prog-sub" id="fpl-prog-sub">Check off sessions in the Weekly Plan tab. 40 sessions over 8 weeks.</div>
       </div>
 
       <!-- tabs -->
       <div class="fpl-tabs">
-        <button class="fpl-tab active" onclick="fplTab(0,this)">The 6 Weeks</button>
+        <button class="fpl-tab active" onclick="fplTab(0,this)">Weekly Plan</button>
         <button class="fpl-tab" onclick="fplTab(1,this)">Nutrition</button>
-        <button class="fpl-tab" onclick="fplTab(2,this)">Workouts &amp; Sprints</button>
+        <button class="fpl-tab" onclick="fplTab(2,this)">Lifting</button>
+        <button class="fpl-tab" onclick="fplTab(3,this)">Conditioning</button>
       </div>
 
-      <!-- TAB 0: ROADMAP -->
+      <!-- TAB 0: WEEKLY PLAN -->
       <div class="fpl-panel active" id="fpl-panel-0">
-        <div class="fpl-card" style="padding:14px 18px">
-          <div class="fpl-card-title" style="margin-bottom:10px">Your week at a glance</div>
-          <div class="fpl-sched">
-            <div class="fpl-sched-day"><div class="fpl-sched-dow">Mon</div><div class="fpl-sched-act">Workout A</div></div>
-            <div class="fpl-sched-day is-rest"><div class="fpl-sched-dow">Tue</div><div class="fpl-sched-act">Soccer / rest</div></div>
-            <div class="fpl-sched-day"><div class="fpl-sched-dow">Wed</div><div class="fpl-sched-act">Sprints</div></div>
-            <div class="fpl-sched-day"><div class="fpl-sched-dow">Thu</div><div class="fpl-sched-act">Workout B</div></div>
-            <div class="fpl-sched-day is-rest"><div class="fpl-sched-dow">Fri</div><div class="fpl-sched-act">Rest</div></div>
-            <div class="fpl-sched-day"><div class="fpl-sched-dow">Sat</div><div class="fpl-sched-act">Workout C</div></div>
-            <div class="fpl-sched-day is-rest"><div class="fpl-sched-dow">Sun</div><div class="fpl-sched-act">Rest</div></div>
-          </div>
-          <div class="fpl-prog-sub" style="margin-top:12px">Game lands on a different day? Slide things around. Getting it all in matters more than the exact days — just never sprint the day before a game.</div>
+        <div class="fpl-card-sub" style="margin-bottom:14px">The weekly rhythm. Same structure repeats for all 8 weeks — what changes each block is the load and volume (see the Lifting and Conditioning tabs).</div>
+
+        <div class="fpl-sched">
+          <div class="fpl-sched-day"><div class="fpl-sched-dow">Mon</div><div class="fpl-sched-act">Lift A</div></div>
+          <div class="fpl-sched-day"><div class="fpl-sched-dow">Tue</div><div class="fpl-sched-act">Sprints</div></div>
+          <div class="fpl-sched-day is-rest"><div class="fpl-sched-dow">Wed</div><div class="fpl-sched-act">Rest / walk</div></div>
+          <div class="fpl-sched-day"><div class="fpl-sched-dow">Thu</div><div class="fpl-sched-act">Lift B</div></div>
+          <div class="fpl-sched-day"><div class="fpl-sched-dow">Fri</div><div class="fpl-sched-act">Tempo + Agility</div></div>
+          <div class="fpl-sched-day"><div class="fpl-sched-dow">Sat</div><div class="fpl-sched-act">Lift C</div></div>
+          <div class="fpl-sched-day is-rest"><div class="fpl-sched-dow">Sun</div><div class="fpl-sched-act">Rest</div></div>
         </div>
 
-        <div id="fpl-weeks"></div>
+        <div class="fpl-card" style="margin-top:16px">
+          <div class="fpl-card-title">Why 5 days, not 3</div>
+          <div class="fpl-card-sub" style="margin-bottom:0">You're sitting most of the day driving, so the biggest miss in the old plan was that nothing built your aerobic base — the thing that actually stops you from gassing out in the second half. The tempo/agility day fixes that. Sprints handle short bursts, tempo running handles the engine underneath them.</div>
+        </div>
+
+        <div class="fpl-card-title" style="margin:22px 0 10px">Session tracker</div>
+        <div class="fpl-tracker" id="fpl-tracker"></div>
       </div>
 
       <!-- TAB 1: NUTRITION -->
       <div class="fpl-panel" id="fpl-panel-1">
-        <div class="fpl-card">
-          <div class="fpl-card-title">A full day of food</div>
-          <div class="fpl-card-sub">Around 2,000 calories and 160g of protein. Eating a little less than your body burns is what melts the belly fat. The protein keeps you full and holds onto your muscle while the fat comes off.</div>
+        <div class="fpl-card-sub" style="margin-bottom:0">Your scale's BMR read 1,757 kcal. A driving job with occasional walking puts real maintenance closer to 2,300–2,400. This targets a steady ~450–500 cal/day deficit — about 1 lb/week — without wrecking training or work energy.</div>
 
-          <div class="fpl-meal">
-            <div class="fpl-meal-top"><span class="fpl-meal-name">Breakfast</span><span class="fpl-meal-macros">~450 cal · <b>35g protein</b></span></div>
-            <ul>
-              <li>3 whole eggs + 2 egg whites, scrambled</li>
-              <li>1 slice whole grain toast</li>
-              <li>Half an avocado</li>
-              <li>Black coffee</li>
-            </ul>
-          </div>
-
-          <div class="fpl-meal">
-            <div class="fpl-meal-top"><span class="fpl-meal-name">Lunch</span><span class="fpl-meal-macros">~550 cal · <b>45g protein</b></span></div>
-            <ul>
-              <li>Grilled chicken breast (palm-sized)</li>
-              <li>1 fist of rice</li>
-              <li>Big pile of veggies cooked in a little oil</li>
-              <li>Hot sauce and seasoning — free flavor, use plenty</li>
-            </ul>
-          </div>
-
-          <div class="fpl-meal">
-            <div class="fpl-meal-top"><span class="fpl-meal-name">Snack</span><span class="fpl-meal-macros">~250 cal · <b>25g protein</b></span></div>
-            <ul>
-              <li>1 cup Greek yogurt (plain) with honey or berries</li>
-              <li>Small handful of almonds (10–12)</li>
-            </ul>
-          </div>
-
-          <div class="fpl-meal">
-            <div class="fpl-meal-top"><span class="fpl-meal-name">Dinner</span><span class="fpl-meal-macros">~600 cal · <b>45g protein</b></span></div>
-            <ul>
-              <li>Lean ground beef or turkey (palm-sized)</li>
-              <li>1 medium sweet potato</li>
-              <li>Big salad or more veggies with a thumb of olive oil dressing</li>
-            </ul>
-          </div>
-
-          <div class="fpl-meal optional">
-            <div class="fpl-meal-top"><span class="fpl-meal-name">Before bed (optional)</span><span class="fpl-meal-macros">~150 cal · <b>15g protein</b></span></div>
-            <ul>
-              <li>Protein shake or cottage cheese — only if you're actually hungry</li>
-            </ul>
-          </div>
-
-          <div class="fpl-macro-total">
-            <div class="mt"><span class="mt-v">~2,000</span><span class="mt-l">calories</span></div>
-            <div class="mt"><span class="mt-v">~165g</span><span class="mt-l">protein</span></div>
-            <div class="mt"><span class="mt-v">5</span><span class="mt-l">meals (1 optional)</span></div>
-          </div>
+        <div class="fpl-macro-total">
+          <div class="mt"><span class="mt-v">1,850</span><span class="mt-l">calories</span></div>
+          <div class="mt"><span class="mt-v">165g</span><span class="mt-l">protein</span></div>
+          <div class="mt"><span class="mt-v">175g</span><span class="mt-l">carbs</span></div>
+          <div class="mt"><span class="mt-v">55g</span><span class="mt-l">fat</span></div>
+          <div class="mt"><span class="mt-v">100oz</span><span class="mt-l">water</span></div>
         </div>
 
-        <div class="fpl-card">
-          <div class="fpl-card-title">Swaps are fine</div>
-          <div class="fpl-card-sub" style="margin-bottom:0">Trade chicken for fish, beef for turkey, rice for potatoes — same portion, same result. Keep the pattern: every meal has a protein, a veggie, and something filling. That's why you won't feel like you're starving.</div>
+        <div class="fpl-card" style="margin-top:16px">
+          <div class="fpl-card-title">The beer math, for the record</div>
+          <div class="fpl-card-sub" style="margin-bottom:0">A regular six-pack runs 900–1,000+ calories, and your body burns off the alcohol before it touches stored fat — so the deficit pauses while that's happening. Cutting it out is worth more to the belly and love handles specifically than anything in the workouts. Everything else here is secondary to that one change.</div>
         </div>
 
-        <div class="fpl-card">
-          <div class="fpl-card-title">No scale needed — use your hand</div>
-          <div class="fpl-card-sub">Portions travel with you. No weighing, no apps.</div>
-          <div class="fpl-portions">
-            <div class="fpl-portion"><span class="fpl-portion-ic">✋</span><div class="fpl-portion-txt"><b>Your palm</b><span>One portion of meat or fish (~5–6 oz)</span></div></div>
-            <div class="fpl-portion"><span class="fpl-portion-ic">✊</span><div class="fpl-portion-txt"><b>Your fist</b><span>One portion of rice, potato, or pasta</span></div></div>
-            <div class="fpl-portion"><span class="fpl-portion-ic">👍</span><div class="fpl-portion-txt"><b>Your thumb</b><span>One portion of oil, butter, or peanut butter</span></div></div>
-            <div class="fpl-portion"><span class="fpl-portion-ic">🙌</span><div class="fpl-portion-txt"><b>Two open hands</b><span>As many vegetables as you want</span></div></div>
-          </div>
-        </div>
-
-        <div class="fpl-callout">
-          <b>Eat before you play.</b> On soccer days, make the meal before your game the one with the most rice, potatoes, or fruit. That's your fuel for the game — it's a big part of not gassing out in the second half.
+        <div class="fpl-card" style="margin-top:12px; margin-bottom:0">
+          <div class="fpl-card-title">Working around a driving job</div>
+          <ol class="fpl-steps" style="padding-left:0">
+            <li>Prep meals the night before in a cooler bag — protein, a carb source, veggies. Route stops make fresh cooking impossible mid-shift.</li>
+            <li>Keep jerky, protein bars, or nuts in the cab for the moments you're stuck and hungry, instead of gas station food.</li>
+            <li>Sitting most of the day dulls thirst cues. Keep a bottle up front and refill on your walking stops — those 10x/hour walks are a good trigger to sip.</li>
+            <li>Reassess after 2 weeks. If the scale hasn't moved, drop calories another 100–150, don't drop them further right away.</li>
+          </ol>
         </div>
       </div>
 
-      <!-- TAB 2: WORKOUTS -->
+      <!-- TAB 2: LIFTING -->
       <div class="fpl-panel" id="fpl-panel-2">
-        <div class="fpl-card-sub" style="margin-bottom:14px">About 30–40 minutes each. Rest about a minute between sets. "3x10" means do it 10 times, rest, and repeat until you've done 3 rounds.</div>
+        <div class="fpl-card-sub" style="margin-bottom:14px">Same three workouts all 8 weeks, but the load climbs every 2 weeks. Pick the block that matches where you are.</div>
+
+        <div class="fpl-blocksel" id="fpl-blocksel">
+          <button class="fpl-blockbtn active" onclick="fplBlock(0,this)">Weeks 1–2</button>
+          <button class="fpl-blockbtn" onclick="fplBlock(1,this)">Weeks 3–4</button>
+          <button class="fpl-blockbtn" onclick="fplBlock(2,this)">Weeks 5–6</button>
+          <button class="fpl-blockbtn" onclick="fplBlock(3,this)">Weeks 7–8</button>
+        </div>
 
         <div class="fpl-wk-grid">
           <div class="fpl-wcard">
-            <div class="fpl-wcard-hd"><div class="wl">Workout A</div><div class="wd">Monday</div></div>
-            <div class="fpl-ex"><span class="fpl-ex-name">Squats holding a dumbbell</span><span class="fpl-ex-sets">3×10</span></div>
-            <div class="fpl-ex"><span class="fpl-ex-name">Push-ups</span><span class="fpl-ex-sets">3×10–12</span></div>
-            <div class="fpl-ex"><span class="fpl-ex-name">Row a dumbbell to your ribs</span><span class="fpl-ex-sets">3×10</span></div>
-            <div class="fpl-ex"><span class="fpl-ex-name">Plank</span><span class="fpl-ex-sets">3×30–45s</span></div>
-            <div class="fpl-ex"><span class="fpl-ex-name">Lying leg raises</span><span class="fpl-ex-sets">3×12</span></div>
+            <div class="fpl-wcard-hd"><div class="wl">Workout A</div><div class="wd">Monday — Lower Body + Core</div></div>
+            <div id="fpl-wa"></div>
           </div>
-
           <div class="fpl-wcard">
-            <div class="fpl-wcard-hd"><div class="wl">Workout B</div><div class="wd">Thursday</div></div>
-            <div class="fpl-ex"><span class="fpl-ex-name">Deadlift with dumbbells</span><span class="fpl-ex-sets">3×10</span></div>
-            <div class="fpl-ex"><span class="fpl-ex-name">Press dumbbells overhead</span><span class="fpl-ex-sets">3×10</span></div>
-            <div class="fpl-ex"><span class="fpl-ex-name">Pull-downs or assisted pull-ups</span><span class="fpl-ex-sets">3×10</span></div>
-            <div class="fpl-ex"><span class="fpl-ex-name">Plank on your side</span><span class="fpl-ex-sets">3×25s / side</span></div>
-            <div class="fpl-ex"><span class="fpl-ex-name">Bicycle crunches</span><span class="fpl-ex-sets">3×20</span></div>
+            <div class="fpl-wcard-hd"><div class="wl">Workout B</div><div class="wd">Thursday — Upper Push/Pull + Core</div></div>
+            <div id="fpl-wb"></div>
           </div>
-
           <div class="fpl-wcard">
-            <div class="fpl-wcard-hd"><div class="wl">Workout C</div><div class="wd">Saturday</div></div>
-            <div class="fpl-ex"><span class="fpl-ex-name">Walking lunges</span><span class="fpl-ex-sets">3×12 / leg</span></div>
-            <div class="fpl-ex"><span class="fpl-ex-name">Push-ups, hands on a bench</span><span class="fpl-ex-sets">3×10</span></div>
-            <div class="fpl-ex"><span class="fpl-ex-name">Row with one arm at a time</span><span class="fpl-ex-sets">3×10 / side</span></div>
-            <div class="fpl-ex"><span class="fpl-ex-name">Twist a band or cable across your body</span><span class="fpl-ex-sets">3×12 / side</span></div>
-            <div class="fpl-ex"><span class="fpl-ex-name">Mountain climbers</span><span class="fpl-ex-sets">3×30s</span></div>
+            <div class="fpl-wcard-hd"><div class="wl">Workout C</div><div class="wd">Saturday — Full Body Circuit</div></div>
+            <div id="fpl-wc"></div>
           </div>
         </div>
 
-        <div class="fpl-card" style="margin-top:14px">
-          <div class="fpl-card-title">Sprint day — this fixes the gas tank</div>
-          <div class="fpl-card-sub">Do this 1–2 times a week. The walk time between sprints shrinks as the weeks go on (see each week for the exact time).</div>
+        <div class="fpl-card" style="margin-top:14px; margin-bottom:0">
+          <div class="fpl-card-title">How to run Workout C</div>
+          <div class="fpl-card-sub" style="margin-bottom:0">This one's a circuit, not straight sets — it's the metabolic finisher for the week. Move through all 5 exercises back to back with only 30–45s rest between them, then rest 90s and repeat for the listed rounds.</div>
+        </div>
+      </div>
+
+      <!-- TAB 3: CONDITIONING -->
+      <div class="fpl-panel" id="fpl-panel-3">
+        <div class="fpl-card-sub" style="margin-bottom:14px">Two conditioning days a week. Sprints build your top-end burst, tempo + agility builds the engine that keeps you sharp late in games.</div>
+
+        <div class="fpl-wcard" style="margin-bottom:14px">
+          <div class="fpl-wcard-hd"><div class="wl">Sprint Day — Repeated Sprint Ability</div><div class="wd">Tuesday</div></div>
           <ol class="fpl-steps">
             <li>Jog easy for 5 minutes to warm up</li>
             <li>Sprint hard for 30 seconds</li>
-            <li>Walk to catch your breath (see the week's walk time)</li>
-            <li>Repeat the sprint + walk 8 times total</li>
+            <li>Walk to recover — length shrinks each block, see table below</li>
+            <li>Repeat sprint + walk for the block's total reps</li>
             <li>Walk 5 minutes to cool down</li>
           </ol>
-          <div class="fpl-note" style="margin:14px 0 0">
-            <span class="fpl-note-ic">⚠️</span>
-            <span><b>Never sprint the day before a game.</b> You want fresh legs.</span>
-          </div>
+          <table class="fpl-table">
+            <tr><th>Block</th><th>Walk rest</th><th>Total sprints</th></tr>
+            <tr><td>Weeks 1–2</td><td>90 sec</td><td>8</td></tr>
+            <tr><td>Weeks 3–4</td><td>75 sec</td><td>8</td></tr>
+            <tr><td>Weeks 5–6</td><td>60 sec</td><td>8</td></tr>
+            <tr><td>Weeks 7–8</td><td>45 sec</td><td>10</td></tr>
+          </table>
         </div>
 
-        <div class="fpl-callout" style="margin-top:14px">
-          <b>The six-pack is made in the kitchen.</b> The workouts build the muscle, but eating right is what makes it show. Stick to the food plan and the rest follows.
+        <div class="fpl-wcard">
+          <div class="fpl-wcard-hd"><div class="wl">Tempo + Agility Day</div><div class="wd">Friday</div></div>
+          <ol class="fpl-steps">
+            <li>5 min easy jog to warm up</li>
+            <li>Agility drills — 3 sets each of: in-and-out steps, lateral shuffle, high knees, backpedal (ladder or just marked lines on grass work)</li>
+            <li>20 min continuous jog at a conversational pace — this is the aerobic base that prevents the second-half fade</li>
+            <li>5x 20-yard shuttle sprints — sprint, plant, sprint back, this is the change-of-direction work soccer actually demands</li>
+            <li>5 min walk to cool down</li>
+          </ol>
         </div>
+
+        <div class="fpl-note">
+          <span class="fpl-note-ic">⚠️</span>
+          <span><b>Keep at least one rest or light day between Sprint Day and Tempo/Agility Day.</b> Back-to-back hard conditioning days without recovery is how you start regressing instead of progressing.</span>
+        </div>
+      </div>
+
+      <div class="fpl-callout" style="margin-top:14px">
+        <b>Beer was the actual leak here.</b> The workouts build the muscle and the conditioning builds the engine, but the deficit is what lets the belly and love handles actually show what's underneath. Keep the calories honest and the beer out, and the rest of this does its job.
       </div>
     </div>
 
@@ -14542,107 +14496,87 @@ function neEnsureInit(){ if(neInited){ neUpdateStats(); neUpdateVideoStats(); ne
 </script>
 
 <script>
-// ═══ 6-WEEK FITNESS ROADMAP (scoped, self-contained, own fitplan_v1 storage) ═══
+// ═══ 8-WEEK FAT LOSS + SOCCER FITNESS PLAN (scoped, self-contained, own fitplan_v2 storage) ═══
 const FPL_CHK = `<svg viewBox="0 0 12 12" fill="none"><path d="M2 6.2 4.6 9 10 3" stroke="#04140c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
-// The four session types that repeat each week (soccer/rest days aren't tracked).
+// The five sessions that repeat each week (rest days aren't tracked).
 const FPL_SESSIONS = [
-  { key:'A',      name:'Workout A',    day:'Mon', color:'var(--accent)', link:2 },
-  { key:'sprint', name:'Sprint day',  day:'Wed', color:'var(--amber)',  link:2 },
-  { key:'B',      name:'Workout B',    day:'Thu', color:'var(--accent)', link:2 },
-  { key:'C',      name:'Workout C',    day:'Sat', color:'var(--accent)', link:2 },
+  { key:'A',      name:'Lift A',              day:'Mon', color:'var(--fpl-workout)', link:2 },
+  { key:'sprint', name:'Sprint intervals',    day:'Tue', color:'var(--fpl-sprint)',  link:3 },
+  { key:'B',      name:'Lift B',              day:'Thu', color:'var(--fpl-workout)', link:2 },
+  { key:'tempo',  name:'Tempo + agility',     day:'Fri', color:'var(--fpl-game)',    link:3 },
+  { key:'C',      name:'Lift C',              day:'Sat', color:'var(--fpl-workout)', link:2 },
 ];
 
-// Week-by-week progression, straight from the plan.
-const FPL_WEEKS = [
-  { focus:'Learn the moves',        weight:'Pick a weight where the last 2 reps feel hard but doable.',                     walk:'90 sec', rounds:'3 rounds' },
-  { focus:'Groove it in',           weight:'Same weights as week 1. It should feel a little easier — that means it\'s working.', walk:'90 sec', rounds:'3 rounds' },
-  { focus:'First bump up',          weight:'Feeling easy? Add about 5 lbs. Still hard? Stay where you are.',                walk:'75 sec', rounds:'3 rounds' },
-  { focus:'Keep climbing',          weight:'Same idea: easy means add a little weight, hard means hold steady.',           walk:'75 sec', rounds:'3 rounds' },
-  { focus:'Add volume',            weight:'Do 4 rounds instead of 3 on the first two exercises of each workout.',          walk:'60 sec', rounds:'4 rounds on first 2 lifts' },
-  { focus:'Lock it in',            weight:'By now you should be lifting more than week 1 and recovering faster on the field.', walk:'60 sec', rounds:'4 rounds on first 2 lifts' },
+const FPL_WEEKS_COUNT = 8;
+const FPL_TOTAL = FPL_WEEKS_COUNT * FPL_SESSIONS.length; // 40
+
+// Sprint block progression (walk rest shrinks, total sprints climb).
+const FPL_SPRINT_BLOCKS = [
+  { label:'Weeks 1–2', rest:'90 sec', total:8 },
+  { label:'Weeks 3–4', rest:'75 sec', total:8 },
+  { label:'Weeks 5–6', rest:'60 sec', total:8 },
+  { label:'Weeks 7–8', rest:'45 sec', total:10 },
 ];
 
-const FPL_TOTAL = FPL_WEEKS.length * FPL_SESSIONS.length; // 24
+// Lifting load/volume progression — same three workouts, load climbs every 2 weeks.
+const FPL_BLOCKS = [
+  { label:'Weeks 1–2',
+    a:[['Goblet Squat','3×10'],['Romanian Deadlift','3×10'],['Walking Lunges','3×10/leg'],['Push-ups','3×10'],['Plank','3×30s'],['Lying Leg Raises','3×12']],
+    b:[['DB Bench Press','3×10'],['DB Bent-Over Row','3×10'],['Overhead Press','3×10'],['Pull-downs / Assisted Pull-ups','3×10'],['Side Plank','3×25s/side'],['Bicycle Crunches','3×20']],
+    c:[['DB Thrusters','3×10'],['Renegade Rows','3×8/side'],['Mountain Climbers','3×30s'],['DB Swings','3×15'],['Burpees','3×8']]
+  },
+  { label:'Weeks 3–4',
+    a:[['Goblet Squat','3×12'],['Romanian Deadlift','3×12'],['Walking Lunges','3×12/leg'],['Push-ups','3×12'],['Plank','3×40s'],['Lying Leg Raises','3×15']],
+    b:[['DB Bench Press','3×12'],['DB Bent-Over Row','3×12'],['Overhead Press','3×12'],['Pull-downs / Assisted Pull-ups','3×12'],['Side Plank','3×35s/side'],['Bicycle Crunches','3×25']],
+    c:[['DB Thrusters','3×12'],['Renegade Rows','3×10/side'],['Mountain Climbers','3×40s'],['DB Swings','3×20'],['Burpees','3×10']]
+  },
+  { label:'Weeks 5–6',
+    a:[['Goblet Squat','4×10'],['Romanian Deadlift','4×10'],['Walking Lunges','4×10/leg'],['Push-ups','4×15'],['Plank','3×50s'],['Lying Leg Raises','4×12']],
+    b:[['DB Bench Press','4×10'],['DB Bent-Over Row','4×10'],['Overhead Press','4×10'],['Pull-downs / Assisted Pull-ups','4×10'],['Side Plank','3×45s/side'],['Bicycle Crunches','4×20']],
+    c:[['DB Thrusters','4×10'],['Renegade Rows','4×8/side'],['Mountain Climbers','4×30s'],['DB Swings','4×15'],['Burpees','4×8']]
+  },
+  { label:'Weeks 7–8',
+    a:[['Goblet Squat','4×12'],['Romanian Deadlift','4×12'],['Walking Lunges','4×12/leg'],['Push-ups','4×20'],['Plank','3×60s'],['Lying Leg Raises','4×15']],
+    b:[['DB Bench Press','4×12'],['DB Bent-Over Row','4×12'],['Overhead Press','4×12'],['Pull-downs / Assisted Pull-ups','4×12'],['Side Plank','3×60s/side'],['Bicycle Crunches','4×25']],
+    c:[['DB Thrusters','4×12'],['Renegade Rows','4×10/side'],['Mountain Climbers','4×40s'],['DB Swings','4×20'],['Burpees','4×10']]
+  }
+];
 
-let fplState = { done:{}, openWeek:null };
+let fplState = { done:{} };
 
-function fplLoad(){ try{ const s=localStorage.getItem('fitplan_v1'); if(s) fplState=JSON.parse(s); }catch(e){} if(!fplState.done)fplState.done={}; }
-function fplSave(){ try{ localStorage.setItem('fitplan_v1', JSON.stringify(fplState)); }catch(e){} }
+function fplLoad(){ try{ const s=localStorage.getItem('fitplan_v2'); if(s) fplState=JSON.parse(s); }catch(e){} if(!fplState.done)fplState.done={}; }
+function fplSave(){ try{ localStorage.setItem('fitplan_v2', JSON.stringify(fplState)); }catch(e){} }
 
 function fplSk(wi, key){ return 'w'+wi+'-'+key; }
-function fplWeekDoneCount(wi){ return FPL_SESSIONS.filter(s=>fplState.done[fplSk(wi,s.key)]).length; }
 function fplTotalDone(){ return Object.values(fplState.done).filter(Boolean).length; }
 
-// The "current" week = first week that isn't fully complete.
-function fplCurrentWeek(){
-  for(let wi=0; wi<FPL_WEEKS.length; wi++){ if(fplWeekDoneCount(wi) < FPL_SESSIONS.length) return wi; }
-  return FPL_WEEKS.length - 1; // all done
-}
-
-function fplBuild(){
+function fplBuildTracker(){
   fplLoad();
-  const host = document.getElementById('fpl-weeks');
+  const host = document.getElementById('fpl-tracker');
   if(!host) return;
-  const cur = fplCurrentWeek();
-  if(fplState.openWeek === null || fplState.openWeek === undefined) fplState.openWeek = cur;
-
   host.innerHTML = '';
-  FPL_WEEKS.forEach((wk, wi) => {
-    const dc = fplWeekDoneCount(wi);
-    const full = dc === FPL_SESSIONS.length;
-    const isCur = wi === cur && !full;
-    const isOpen = wi === fplState.openWeek;
-
+  for(let wi=1; wi<=FPL_WEEKS_COUNT; wi++){
     const rows = FPL_SESSIONS.map(s => {
       const on = !!fplState.done[fplSk(wi,s.key)];
-      const linkLabel = s.key === 'sprint' ? 'protocol →' : 'exercises →';
+      const linkLabel = (s.key==='sprint'||s.key==='tempo') ? 'protocol →' : 'exercises →';
       return `<div class="fpl-sess${on?' done':''}" id="fpl-row-${wi}-${s.key}" onclick="fplToggle(${wi},'${s.key}')">
         <div class="fpl-cb${on?' checked':''}" id="fpl-cb-${wi}-${s.key}">${FPL_CHK}</div>
         <div class="fpl-dot" style="background:${s.color}"></div>
         <div class="fpl-sess-body">
           <div class="fpl-sess-name">${s.name}</div>
-          <div class="fpl-sess-day">${s.day} · ${s.key==='sprint' ? wk.walk+' walk between sprints' : wk.rounds}</div>
+          <div class="fpl-sess-day">${s.day}</div>
         </div>
         <span class="fpl-sess-link" onclick="event.stopPropagation();fplTab(${s.link},document.querySelectorAll('#page-fitplan .fpl-tab')[${s.link}])">${linkLabel}</span>
       </div>`;
     }).join('');
 
     const el = document.createElement('div');
-    el.className = 'fpl-week' + (full?' wk-done':'') + (isCur?' current':'');
-    el.innerHTML = `
-      <div class="fpl-week-hdr" onclick="fplToggleWeek(${wi})">
-        <div class="fpl-wnum">${full?FPL_CHK:(wi+1)}</div>
-        <div class="fpl-week-info">
-          <div class="fpl-week-title">Week ${wi+1} · ${wk.focus} ${isCur?'<span class="fpl-tag now">this week</span>':''}</div>
-          <div class="fpl-week-focus">${wk.weight}</div>
-        </div>
-        <div class="fpl-week-prog">${dc}/${FPL_SESSIONS.length}</div>
-        <div class="fpl-chev${isOpen?' open':''}" id="fpl-chev-${wi}">▼</div>
-      </div>
-      <div class="fpl-week-body${isOpen?' open':''}" id="fpl-body-${wi}">
-        <div class="fpl-note">
-          <span class="fpl-note-ic">🏃</span>
-          <span>Sprint days this week: walk <b>${wk.walk}</b> between each of the 8 sprints. Weights: ${wk.weight.toLowerCase()}</span>
-        </div>
-        ${rows}
-      </div>`;
+    el.className = 'fpl-tweek';
+    el.innerHTML = `<div class="fpl-tweek-hd">Week ${wi}</div>${rows}`;
     host.appendChild(el);
-  });
-
-  // fix the check icon inside completed week numbers (svg uses same dark stroke)
+  }
   fplUpdateProgress();
-}
-
-function fplToggleWeek(wi){
-  fplState.openWeek = (fplState.openWeek === wi) ? -1 : wi;
-  fplSave();
-  const body = document.getElementById('fpl-body-'+wi);
-  const chev = document.getElementById('fpl-chev-'+wi);
-  // close others
-  document.querySelectorAll('#page-fitplan .fpl-week-body.open').forEach(b=>{ if(b!==body) b.classList.remove('open'); });
-  document.querySelectorAll('#page-fitplan .fpl-chev.open').forEach(c=>{ if(c!==chev) c.classList.remove('open'); });
-  if(body){ const o = body.classList.toggle('open'); if(chev) chev.classList.toggle('open', o); }
 }
 
 function fplToggle(wi, key){
@@ -14653,8 +14587,7 @@ function fplToggle(wi, key){
   const row = document.getElementById('fpl-row-'+wi+'-'+key);
   if(cb) cb.classList.toggle('checked', fplState.done[k]);
   if(row) row.classList.toggle('done', fplState.done[k]);
-  // A completed week may shift the "current" highlight, so rebuild.
-  fplBuild();
+  fplUpdateProgress();
 }
 
 function fplUpdateProgress(){
@@ -14666,11 +14599,10 @@ function fplUpdateProgress(){
   if(fill) fill.style.width = pct + '%';
   if(pctEl) pctEl.textContent = pct + '%';
   if(subEl){
-    if(done === 0) subEl.textContent = 'Check off sessions as you finish them. 24 sessions over 6 weeks.';
-    else if(done === FPL_TOTAL) subEl.textContent = '🎉 Six weeks done. You should be lifting more than week 1 and lasting the full 90 on the field.';
+    if(done === 0) subEl.textContent = 'Check off sessions in the Weekly Plan tab. 40 sessions over 8 weeks.';
+    else if(done === FPL_TOTAL) subEl.textContent = '🎉 Eight weeks done. Beer stayed out, load went up, and you should be lasting the full 90 on the field.';
     else subEl.textContent = done + ' of ' + FPL_TOTAL + ' sessions done · ' + (FPL_TOTAL - done) + ' to go';
   }
-  // sync sidebar badge if present
   const badge = document.getElementById('badge-fitplan');
   if(badge) badge.textContent = pct + '%';
 }
@@ -14683,15 +14615,34 @@ function fplTab(idx, el){
   if(pg) pg.scrollIntoView({behavior:'smooth', block:'start'});
 }
 
+function fplRenderBlock(i){
+  const b = FPL_BLOCKS[i];
+  const row = e => `<div class="fpl-ex"><span class="fpl-ex-name">${e[0]}</span><span class="fpl-ex-sets">${e[1]}</span></div>`;
+  const wa = document.getElementById('fpl-wa'); if(wa) wa.innerHTML = b.a.map(row).join('');
+  const wb = document.getElementById('fpl-wb'); if(wb) wb.innerHTML = b.b.map(row).join('');
+  const wc = document.getElementById('fpl-wc'); if(wc) wc.innerHTML = b.c.map(row).join('');
+}
+
+function fplBlock(i, el){
+  document.querySelectorAll('#page-fitplan .fpl-blockbtn').forEach(b=>b.classList.remove('active'));
+  if(el) el.classList.add('active');
+  fplRenderBlock(i);
+}
+
 function fplReset(){
-  if(!confirm('Reset all 6-week progress? This clears every checked session.')) return;
-  fplState = { done:{}, openWeek:0 };
+  if(!confirm('Reset all 8-week progress? This clears every checked session.')) return;
+  fplState = { done:{} };
   fplSave();
-  fplBuild();
+  fplBuildTracker();
 }
 
 let fplInited = false;
-function fplEnsureInit(){ if(fplInited){ fplBuild(); return; } fplInited = true; fplBuild(); }
+function fplEnsureInit(){
+  if(fplInited){ fplUpdateProgress(); return; }
+  fplInited = true;
+  fplBuildTracker();
+  fplRenderBlock(0);
+}
 
 // Sync the sidebar badge on load (cheap: just read storage, don't build the page).
 (function fplBadgeOnLoad(){
