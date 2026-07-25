@@ -4276,13 +4276,26 @@
       <div class="page-header">
         <div>
           <div class="page-title">Live <span>Prices</span></div>
-          <div class="page-subtitle">Auto-refresh crypto · TCG market estimates · portfolio impact</div>
+          <div class="page-subtitle">Auto-refresh crypto · manual stock/ETF refresh · TCG market estimates · portfolio impact</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center">
           <span style="font-size:11px;color:var(--text3)" id="lp-last-refresh">Never refreshed</span>
           <button class="btn btn-secondary" id="lp-refresh-btn" onclick="refreshAllPrices()">↻ Refresh now</button>
+          <button class="btn btn-secondary" id="lp-stock-refresh-btn" onclick="refreshStockPricesLP()">↻ Refresh stocks/ETFs</button>
           <button class="btn btn-secondary" id="lp-auto-btn" onclick="toggleAutoRefresh()">⏱ Auto: OFF</button>
         </div>
+      </div>
+
+      <!-- Alpha Vantage API key (needed for stock/ETF live prices — CoinGecko only covers crypto) -->
+      <div class="section-panel" style="margin-bottom:16px" id="lp-stock-key-panel">
+        <div style="padding:12px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="font-size:11px;color:var(--text3);white-space:nowrap">Stock/ETF prices need a free Alpha Vantage key:</span>
+          <input class="form-input" id="lp-av-key-input" placeholder="Paste your Alpha Vantage API key" style="max-width:280px;padding:6px 10px;font-size:11px">
+          <button class="btn btn-secondary btn-sm" onclick="lpSaveAlphaVantageKey()">Save key</button>
+          <a href="https://www.alphavantage.co/support/#api-key" target="_blank" style="font-size:11px;color:var(--blue);text-decoration:none">Get a free key ↗</a>
+          <span id="lp-av-key-status" style="font-size:11px;color:var(--text3)"></span>
+        </div>
+        <div style="padding:0 20px 12px;font-size:10px;color:var(--text3)">The free tier allows 25 requests/day and 5/minute — plenty for an occasional manual refresh, not for auto-refreshing continuously. Your key is stored only in this browser, never sent anywhere but Alpha Vantage.</div>
       </div>
 
       <!-- Status bar -->
@@ -4294,7 +4307,7 @@
       <!-- Crypto prices -->
       <div class="section-panel" style="margin-bottom:16px">
         <div class="section-header">
-          <div class="section-title">Crypto — Live Prices (CoinGecko)</div>
+          <div class="section-title">Holdings — Live Prices (crypto via CoinGecko · stocks/ETFs via Alpha Vantage)</div>
         </div>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;padding:16px" id="lp-crypto-cards">
           <div class="empty-state" style="grid-column:1/-1"><div class="es-icon">◎</div><div class="es-title">No crypto holdings</div><div class="es-sub">Add holdings in the Crypto Portfolio section</div></div>
@@ -5930,9 +5943,14 @@
         </div>
       </div>
       <div class="form-row">
-        <label class="form-label">CoinGecko ID (for live prices)</label>
+        <label class="form-label">CoinGecko ID (for live crypto prices)</label>
         <input class="form-input" id="crypto-coingecko-id" placeholder="e.g. bitcoin, ethereum, solana">
-        <div class="form-hint">Find at coingecko.com — leave blank to use manual price only</div>
+        <div class="form-hint">Find at coingecko.com — leave blank if this is a stock/ETF, not a coin</div>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Stock/ETF ticker (for live stock prices via Alpha Vantage)</label>
+        <input class="form-input" id="crypto-stock-symbol" placeholder="e.g. FXAIX, FSKAX, IBIT">
+        <div class="form-hint">Leave blank if this is a crypto coin, not a stock/ETF. Don't set both this and a CoinGecko ID.</div>
       </div>
       <div class="form-row-2">
         <div>
@@ -6814,6 +6832,7 @@ function populateModalForm(type, id) {
     document.getElementById('crypto-name').value = item.name || '';
     document.getElementById('crypto-symbol').value = item.symbol || '';
     document.getElementById('crypto-coingecko-id').value = item.coingeckoId || '';
+    document.getElementById('crypto-stock-symbol').value = item.stockSymbol || '';
     document.getElementById('crypto-qty').value = item.quantity || '';
     document.getElementById('crypto-avg-buy').value = item.avgBuyPrice || '';
     document.getElementById('crypto-current-price').value = item.currentPrice || '';
@@ -6870,6 +6889,7 @@ function saveCryptoHolding() {
   const name = document.getElementById('crypto-name').value.trim();
   const symbol = document.getElementById('crypto-symbol').value.trim().toUpperCase();
   const coingeckoId = document.getElementById('crypto-coingecko-id').value.trim().toLowerCase();
+  const stockSymbol = document.getElementById('crypto-stock-symbol').value.trim().toUpperCase();
   const quantity = parseFloat(document.getElementById('crypto-qty').value) || 0;
   const avgBuyPrice = parseFloat(document.getElementById('crypto-avg-buy').value) || 0;
   const currentPrice = parseFloat(document.getElementById('crypto-current-price').value) || 0;
@@ -6877,7 +6897,7 @@ function saveCryptoHolding() {
 
   if (!name || !symbol) { showToast('Name and symbol are required', 'error'); return; }
 
-  const record = { name, symbol, coingeckoId, quantity, avgBuyPrice, currentPrice, notes };
+  const record = { name, symbol, coingeckoId, stockSymbol, quantity, avgBuyPrice, currentPrice, notes };
   const holdings = DB.get('crypto');
 
   if (editId) {
@@ -9064,7 +9084,7 @@ function clearModalForm(type) {
   }
   // Crypto
   if (type === 'crypto') {
-    ['crypto-edit-id','crypto-name','crypto-symbol','crypto-coingecko-id','crypto-qty','crypto-avg-buy','crypto-current-price','crypto-notes'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    ['crypto-edit-id','crypto-name','crypto-symbol','crypto-coingecko-id','crypto-stock-symbol','crypto-qty','crypto-avg-buy','crypto-current-price','crypto-notes'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
     document.getElementById('crypto-modal-title').textContent = 'Add Crypto Holding';
   }
   // TCG
@@ -10328,6 +10348,102 @@ let lpAutoEnabled  = false;
 let lpPrevPrices   = {}; // { holdingId: lastPrice } — captured just before a refresh, consumed once by the next render to drive flash/tick animations
 let lpTcgSortMode  = 'value'; // 'value' | 'stale' — how the TCG list is ordered
 
+// ── Stock/ETF live prices (Alpha Vantage — CoinGecko only covers crypto) ──
+const LP_AV_KEY_STORAGE = 'lp_alphavantage_key';
+
+function lpLoadAlphaVantageKey() {
+  return localStorage.getItem(LP_AV_KEY_STORAGE) || '';
+}
+
+function lpSaveAlphaVantageKey() {
+  const input = document.getElementById('lp-av-key-input');
+  const key = input.value.trim();
+  if (!key) { showToast('Enter a key first', 'error'); return; }
+  localStorage.setItem(LP_AV_KEY_STORAGE, key);
+  lpRenderAlphaVantageKeyStatus();
+  showToast('Alpha Vantage key saved');
+}
+
+function lpRenderAlphaVantageKeyStatus() {
+  const key = lpLoadAlphaVantageKey();
+  const statusEl = document.getElementById('lp-av-key-status');
+  const inputEl = document.getElementById('lp-av-key-input');
+  if (statusEl) statusEl.textContent = key ? '✓ key saved' : '';
+  if (inputEl && key) inputEl.placeholder = '•'.repeat(Math.min(key.length, 20)) + ' (saved — paste a new one to replace)';
+}
+
+function lpSleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+
+// Fetches each stock/ETF holding's quote one at a time (Alpha Vantage's free tier has no
+// batch-quote endpoint, and is capped at 5 calls/minute — so this deliberately paces itself
+// rather than firing all requests at once and burning through the daily quota instantly).
+async function refreshStockPricesLP() {
+  const apiKey = lpLoadAlphaVantageKey();
+  if (!apiKey) {
+    showToast('Add a free Alpha Vantage API key above first', 'error');
+    return;
+  }
+
+  const holdings = DB.get('crypto');
+  const stockHoldings = holdings.filter(h => h.stockSymbol);
+  if (!stockHoldings.length) {
+    showToast('No holdings have a stock/ETF ticker set — add one when editing a holding', 'info');
+    return;
+  }
+
+  const btn = document.getElementById('lp-stock-refresh-btn');
+  const statusText = document.getElementById('lp-status-text');
+  if (btn) { btn.disabled = true; }
+
+  let updatedCount = 0;
+  let rateLimited = false;
+
+  for (let i = 0; i < stockHoldings.length; i++) {
+    const h = stockHoldings[i];
+    if (btn) btn.textContent = `↻ Fetching ${h.stockSymbol} (${i + 1}/${stockHoldings.length})…`;
+    if (statusText) statusText.textContent = `Fetching ${h.stockSymbol} from Alpha Vantage (${i + 1} of ${stockHoldings.length})…`;
+
+    try {
+      const res = await fetch(`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${encodeURIComponent(h.stockSymbol)}&apikey=${apiKey}`);
+      const data = await res.json();
+
+      if (data['Note'] || data['Information']) {
+        // Alpha Vantage returns 200 OK with a "Note"/"Information" field instead of a quote when rate-limited
+        rateLimited = true;
+        break;
+      }
+
+      const quote = data['Global Quote'];
+      const price = quote && parseFloat(quote['05. price']);
+      if (quote && !isNaN(price)) {
+        const changePctStr = (quote['10. change percent'] || '0%').replace('%', '');
+        const all = DB.get('crypto');
+        const idx = all.findIndex(x => x.id === h.id);
+        if (idx > -1) {
+          all[idx] = { ...all[idx], currentPrice: price, change24h: parseFloat(changePctStr) || 0, priceUpdatedAt: new Date().toISOString() };
+          DB.set('crypto', all);
+          updatedCount++;
+        }
+      }
+    } catch (e) {
+      // Network hiccup on this one symbol — keep going with the rest
+    }
+
+    // Stay comfortably under the 5-calls/minute free-tier limit
+    if (i < stockHoldings.length - 1) await lpSleep(13000);
+  }
+
+  if (btn) { btn.disabled = false; btn.textContent = '↻ Refresh stocks/ETFs'; }
+
+  if (rateLimited) {
+    showToast(`Hit Alpha Vantage's rate limit after ${updatedCount} symbol${updatedCount===1?'':'s'} — try the rest again in a minute or tomorrow`, 'error');
+  } else {
+    showToast(`Updated ${updatedCount} stock/ETF price${updatedCount===1?'':'s'}`);
+  }
+  renderLivePrices();
+  renderAll();
+}
+
 function tcgToggleSort() {
   lpTcgSortMode = lpTcgSortMode==='stale' ? 'value' : 'stale';
   renderLivePrices();
@@ -10452,6 +10568,7 @@ function lpAnimateNumber(el, from, to, duration) {
 function renderLivePrices() {
   const holdings=DB.get('crypto');
   const tcgItems=DB.get('tcg');
+  lpRenderAlphaVantageKeyStatus();
 
   // Crypto cards
   const cryptoEl=document.getElementById('lp-crypto-cards');
@@ -10475,8 +10592,10 @@ function renderLivePrices() {
           else if(price<prevPrice) flashClass=' flash-down';
         }
         const sparkline=lpBuildSparkline(h.sparkline7d);
+        const isLive = h.coingeckoId || h.stockSymbol;
+        const sourceLabel = h.coingeckoId ? 'live · CoinGecko' : h.stockSymbol ? 'live · Alpha Vantage' : 'manual';
         return`<div class="price-card${flashClass}">
-          <div class="price-card-symbol">${h.symbol} ${h.coingeckoId?'<span class="price-live-badge" style="color:var(--green);font-size:9px">● live</span>':'<span style="color:var(--text3);font-size:9px">○ manual</span>'}</div>
+          <div class="price-card-symbol">${h.symbol} ${isLive?`<span class="price-live-badge" style="color:var(--green);font-size:9px">● live</span>`:'<span style="color:var(--text3);font-size:9px">○ manual</span>'}</div>
           <div class="price-card-name">${h.name}</div>
           <div class="price-card-price" id="price-card-price-${h.id}">${price?fmt.currency(price):'—'}</div>
           <div class="price-card-change" style="color:${change24h>=0?'var(--green)':'var(--red)'}">${change24h>=0?'▲':'▼'} ${Math.abs(change24h).toFixed(2)}% 24h</div>
@@ -10485,7 +10604,7 @@ function renderLivePrices() {
             <div style="display:flex;justify-content:space-between"><span>Holdings</span><span>${fmt.num(qty,6)} ${h.symbol}</span></div>
             <div style="display:flex;justify-content:space-between;margin-top:3px"><span>Value</span><span style="font-weight:500">${fmt.currency(value,0)}</span></div>
             <div style="display:flex;justify-content:space-between;margin-top:3px"><span>P&L</span><span style="color:${pnl>=0?'var(--green)':'var(--red)'}">${pnl>=0?'+':''}${fmt.currency(pnl,0)} (${pnlPct>=0?'+':''}${fmt.pct(pnlPct,1)})</span></div>
-            <div style="margin-top:6px;font-size:10px;color:var(--text3)">Updated: ${updated}${h.coingeckoId ? '' : ' · set manually'}</div>
+            <div style="margin-top:6px;font-size:10px;color:var(--text3)">Updated: ${updated} · ${sourceLabel}</div>
           </div>
         </div>`;
       }).join('');
@@ -13078,6 +13197,7 @@ const FP_DEBT_OVERRIDES_KEY = 'fp_debt_overrides_v1';
 const FP_GOALS_KEY = 'fp_goals_v1';
 const FP_GOAL_OVERRIDES_KEY = 'fp_goal_overrides_v1';
 const FP_SCHEDULE_OVERRIDES_KEY = 'fp_schedule_overrides_v1';
+const FP_HIDDEN_DEBTS_KEY = 'fp_hidden_debts_v1';
 
 // Per-month bill/paycheck line-item edits. Keyed by monthKey ('2026-07' etc), each holding
 // its own { p1: [...], p2: [...] } that fully replaces the generated schedule for that month
@@ -13106,6 +13226,16 @@ function fpLoadDebtOverrides() {
 }
 function fpSaveDebtOverrides() {
   localStorage.setItem(FP_DEBT_OVERRIDES_KEY, JSON.stringify(fpDebtOverrides));
+}
+
+// Built-in debts the person has deleted. Built-ins are defined in code, so "deleting" one
+// just adds its id here — every debt list/calculation filters these out from then on.
+let fpHiddenDebts = [];
+function fpLoadHiddenDebts() {
+  try { fpHiddenDebts = JSON.parse(localStorage.getItem(FP_HIDDEN_DEBTS_KEY)) || []; } catch(e) { fpHiddenDebts = []; }
+}
+function fpSaveHiddenDebts() {
+  localStorage.setItem(FP_HIDDEN_DEBTS_KEY, JSON.stringify(fpHiddenDebts));
 }
 
 // Savings / accumulation goals (emergency fund, house down payment, etc.)
@@ -13668,6 +13798,17 @@ function fpMigrateCustomDebtCurrents() {
 
 // One-time migration: replace July 2026's placeholder schedule with the person's actual
 // paycheck breakdown. Runs once (guarded by a flag) so it never clobbers further edits.
+// One-time migration: the person asked to clear out all the built-in placeholder debts
+// (Lexus, Volkswagen, Student loan, etc.) so they can add their real ones from scratch.
+// Guarded so it only ever runs once and never re-hides a debt they later choose to re-add.
+function fpApplyDeleteAllBuiltInDebts() {
+  const FLAG = 'fp_delete_all_builtin_debts_v1';
+  if (localStorage.getItem(FLAG)) return;
+  fpHiddenDebts = Object.keys(FP_DEBTS);
+  fpSaveHiddenDebts();
+  localStorage.setItem(FLAG, '1');
+}
+
 function fpApplyJuly2026Update() {
   const FLAG = 'fp_july_2026_realdata_v1';
   if (localStorage.getItem(FLAG)) return;
@@ -14016,9 +14157,9 @@ function fpRenderDebtCard(id, debt, isCustom) {
   if (hasOverride) {
     actions += `<button class="btn btn-ghost btn-sm" style="padding:2px 8px;font-size:10px" onclick="fpClearDebtOverride('${id}')" title="Go back to auto-tracking from the schedule">↺ auto</button>`;
   }
-  if (isCustom) {
-    actions += `<button class="btn btn-ghost btn-sm" style="padding:2px 8px;font-size:10px;color:var(--red)" onclick="fpDeleteCustomDebt('${id}')">🗑</button>`;
-  }
+  actions += isCustom
+    ? `<button class="btn btn-ghost btn-sm" style="padding:2px 8px;font-size:10px;color:var(--red)" onclick="fpDeleteCustomDebt('${id}')">🗑</button>`
+    : `<button class="btn btn-ghost btn-sm" style="padding:2px 8px;font-size:10px;color:var(--red)" onclick="fpDeleteBuiltInDebt('${id}')">🗑</button>`;
 
   return `<div class="debt-card ${cleared ? 'cleared' : ''}" id="debtcard_${id}">
       <div class="debt-header">
@@ -14057,7 +14198,11 @@ function fpRenderDebts() {
     </div>
   </div>`;
 
-  Object.entries(FP_DEBTS).forEach(([id, debt]) => {
+  const visibleBuiltIns = Object.entries(FP_DEBTS).filter(([id]) => !fpHiddenDebts.includes(id));
+  if (!visibleBuiltIns.length && !fpCustomDebts.length) {
+    html += `<div class="empty-state"><div class="es-icon">◆</div><div class="es-title">No debts</div><div class="es-sub">Add your own with "+ Add debt" above</div></div>`;
+  }
+  visibleBuiltIns.forEach(([id, debt]) => {
     html += fpRenderDebtCard(id, debt, false);
   });
   fpCustomDebts.forEach(debt => {
@@ -14065,6 +14210,20 @@ function fpRenderDebts() {
   });
 
   panel.innerHTML = html;
+}
+
+function fpDeleteBuiltInDebt(id) {
+  const debt = FP_DEBTS[id];
+  if (!debt) return;
+  if (!confirm(`Remove "${debt.name}" from your debts? You can't undo this from the UI — you'd need to add it back manually with "+ Add debt".`)) return;
+  fpHiddenDebts.push(id);
+  fpSaveHiddenDebts();
+  delete fpDebtOverrides[id];
+  fpSaveDebtOverrides();
+  fpRenderDebts();
+  fpUpdateSummary();
+  fpRenderProgress();
+  showToast(`${debt.name} removed`);
 }
 
 function fpToggleAddDebtForm() {
@@ -14285,9 +14444,11 @@ function fpGetDebtPct(id) {
   return Math.min(100, Math.max(0, ((start - bal) / start) * 100));
 }
 
-// Combined list of built-in (schedule-tracked) + custom (user-added) debts
+// Combined list of built-in (schedule-tracked) + custom (user-added) debts — minus any
+// built-in debts the person has deleted (built-ins are code-defined, so "deleting" one
+// just hides it from view and every calculation, rather than removing it from the code)
 function fpGetAllDebtIds() {
-  return [...Object.keys(FP_DEBTS), ...fpCustomDebts.map(d => d.id)];
+  return [...Object.keys(FP_DEBTS).filter(id => !fpHiddenDebts.includes(id)), ...fpCustomDebts.map(d => d.id)];
 }
 function fpGetTotalDebtRemaining() {
   return fpGetAllDebtIds().reduce((s, id) => s + fpGetDebtBalance(id), 0);
@@ -14348,8 +14509,8 @@ function fpRenderProgress() {
       <div class="progress-card">
         <div class="progress-card-label">Total debt remaining</div>
         <div class="progress-card-val red">$${fpGetTotalDebtRemaining().toLocaleString()}</div>
-        <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${Math.min(100,((fpGetTotalDebtStarted() - fpGetTotalDebtRemaining())/fpGetTotalDebtStarted()*100)).toFixed(0)}%;background:var(--green);"></div></div>
-        <div class="progress-meta"><span>started: $${fpGetTotalDebtStarted().toLocaleString()}</span><span>${((fpGetTotalDebtStarted() - fpGetTotalDebtRemaining())/fpGetTotalDebtStarted()*100).toFixed(0)}% paid off</span></div>
+        <div class="progress-bar-bg"><div class="progress-bar-fill" style="width:${(fpGetTotalDebtStarted() > 0 ? Math.min(100,((fpGetTotalDebtStarted() - fpGetTotalDebtRemaining())/fpGetTotalDebtStarted()*100)) : 100).toFixed(0)}%;background:var(--green);"></div></div>
+        <div class="progress-meta"><span>started: $${fpGetTotalDebtStarted().toLocaleString()}</span><span>${(fpGetTotalDebtStarted() > 0 ? ((fpGetTotalDebtStarted() - fpGetTotalDebtRemaining())/fpGetTotalDebtStarted()*100) : 0).toFixed(0)}% paid off</span></div>
         <div class="progress-meta" style="margin-top:6px"><span>edit individual debts on the Debts tab</span></div>
       </div>
       ${goalCard(rothGoal, roth, rothTarget, 'blue', roth > 457 ? undefined : 'restarts May 2027')}
@@ -14410,11 +14571,13 @@ function fpResetData() {
 fpLoadState();
 fpLoadCustomDebts();
 fpLoadDebtOverrides();
+fpLoadHiddenDebts();
 fpLoadGoals();
 fpLoadGoalOverrides();
 fpLoadScheduleOverrides();
 fpMigrateCustomDebtCurrents();
 fpApplyJuly2026Update();
+fpApplyDeleteAllBuiltInDebts();
 fpMonthData = fpBuildMonthData();
 fpRenderAll();
 
