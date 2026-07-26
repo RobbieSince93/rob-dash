@@ -832,6 +832,35 @@
   @keyframes flashDown { 0%{background:rgba(255,85,102,.24)} 100%{background:transparent} }
   .price-card.flash-up { animation:flashUp 1.1s ease-out; }
   .price-card.flash-down { animation:flashDown 1.1s ease-out; }
+
+  /* ── LIVE SPORTS ── */
+  .sp-game-card { background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;transition:border-color .2s; }
+  .sp-game-card:hover { border-color:var(--border2); }
+  .sp-game-status { font-size:10px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px; }
+  .sp-game-status.live { color:var(--green); }
+  .sp-game-status.live .sp-live-dot { width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse 1.4s infinite; }
+  .sp-game-status.final { color:var(--text3); }
+  .sp-game-status.pre { color:var(--blue); }
+  .sp-team-row { display:flex;align-items:center;justify-content:space-between;padding:4px 0; }
+  .sp-team-name { font-size:14px;color:var(--text2);display:flex;align-items:center;gap:8px; }
+  .sp-team-logo { width:20px;height:20px;object-fit:contain;flex-shrink:0; }
+  .sp-team-row.winner .sp-team-name { color:var(--text);font-weight:600; }
+  .sp-team-score { font-family:var(--display);font-size:18px;font-weight:700;color:var(--text2); }
+  .sp-team-row.winner .sp-team-score { color:var(--text); }
+  .sp-game-meta { margin-top:10px;padding-top:8px;border-top:1px solid var(--border);font-size:10px;color:var(--text3); }
+
+  /* ── POLYMARKET ACTIVITY ── */
+  .pm-row { display:flex;align-items:center;gap:12px;padding:12px 20px;border-bottom:1px solid var(--border); }
+  .pm-row:last-child { border-bottom:none; }
+  .pm-row:hover { background:var(--bg3); }
+  .pm-icon { width:36px;height:36px;border-radius:8px;object-fit:cover;flex-shrink:0;background:var(--bg3); }
+  .pm-body { flex:1;min-width:0; }
+  .pm-title { font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+  .pm-detail { font-size:12px;color:var(--text2);margin-top:2px; }
+  .pm-detail .pm-user { color:var(--text); font-weight:600; }
+  .pm-detail .pm-side-buy { color:var(--green); }
+  .pm-detail .pm-side-sell { color:var(--red); }
+  .pm-time { font-size:11px;color:var(--text3);white-space:nowrap;flex-shrink:0; }
   .lp-status-bar { display:flex;align-items:center;gap:8px;padding:10px 20px;background:var(--bg3);border-bottom:1px solid var(--border);font-size:11px;color:var(--text3); }
   .lp-dot { width:7px;height:7px;border-radius:50%;background:var(--text3); }
   .lp-dot.live { background:var(--green); animation:pulse 2s infinite; }
@@ -2845,6 +2874,12 @@
         <a class="nav-item" onclick="showPage('devops')">
           <span class="nav-icon">⛭</span> DevOps Roadmap
           <span class="nav-badge" id="badge-devops-pct">0%</span>
+        </a>
+        <a class="nav-item" onclick="showPage('livesports')">
+          <span class="nav-icon">🏆</span> Live Sports
+        </a>
+        <a class="nav-item" onclick="showPage('polymarket')">
+          <span class="nav-icon">🔮</span> Polymarket Activity
         </a>
         <a class="nav-item" onclick="showPage('yearplan')">
           <span class="nav-icon">◈</span> Year One Plan
@@ -4935,6 +4970,102 @@
         sandbox="allow-scripts allow-modals allow-downloads allow-same-origin allow-popups"></iframe>
     </div>
 
+    <!-- ─── LIVE SPORTS PAGE ─── -->
+    <div class="page" id="page-livesports">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Live <span>Sports</span></div>
+          <div class="page-subtitle">MLB · NBA · MLS · La Liga · Premier League · Liga MX · Serie A · Ligue 1 · Bundesliga · Brasileirão · Argentina · International — via ESPN</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span style="font-size:11px;color:var(--text3)" id="sp-last-refresh">Never refreshed</span>
+          <button class="btn btn-secondary" id="sp-refresh-btn" onclick="spRefreshCurrent()">↻ Refresh now</button>
+          <button class="btn btn-secondary" id="sp-auto-btn" onclick="spToggleAutoRefresh()">⏱ Auto: OFF</button>
+        </div>
+      </div>
+
+      <div class="tabs" style="margin-bottom:16px;flex-wrap:wrap;height:auto;width:auto;max-width:100%">
+        <button class="tab active" id="sp-tab-mlb" onclick="spSwitchLeague('mlb')">MLB</button>
+        <button class="tab" id="sp-tab-nba" onclick="spSwitchLeague('nba')">NBA</button>
+        <button class="tab" id="sp-tab-mls" onclick="spSwitchLeague('mls')">MLS</button>
+        <button class="tab" id="sp-tab-laliga" onclick="spSwitchLeague('laliga')">La Liga</button>
+        <button class="tab" id="sp-tab-eng1" onclick="spSwitchLeague('eng1')">Premier League</button>
+        <button class="tab" id="sp-tab-mex1" onclick="spSwitchLeague('mex1')">Liga MX</button>
+        <button class="tab" id="sp-tab-ita1" onclick="spSwitchLeague('ita1')">Serie A</button>
+        <button class="tab" id="sp-tab-fra1" onclick="spSwitchLeague('fra1')">Ligue 1</button>
+        <button class="tab" id="sp-tab-ger1" onclick="spSwitchLeague('ger1')">Bundesliga</button>
+        <button class="tab" id="sp-tab-bra1" onclick="spSwitchLeague('bra1')">Brasileirão</button>
+        <button class="tab" id="sp-tab-arg1" onclick="spSwitchLeague('arg1')">Argentina</button>
+        <button class="tab" id="sp-tab-intl" onclick="spSwitchLeague('intl')">International</button>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div class="lp-status-bar" id="sp-status-bar" style="flex:1;margin-right:12px">
+          <div class="lp-dot" id="sp-dot"></div>
+          <span id="sp-status-text">Click "Refresh now" to load today's games</span>
+        </div>
+        <div class="tabs" id="sp-view-toggle" style="display:flex">
+          <button class="tab active" id="sp-view-scores-btn" onclick="spSwitchView('scores')">Scores</button>
+          <button class="tab" id="sp-view-standings-btn" onclick="spSwitchView('standings')">Standings</button>
+        </div>
+      </div>
+
+      <div id="sp-scores-view" style="display:block">
+        <div class="section-panel">
+          <div id="sp-games-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;padding:16px">
+            <div class="empty-state" style="grid-column:1/-1"><div class="es-icon">🏆</div><div class="es-title">No games loaded yet</div><div class="es-sub">Click "Refresh now" above</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="sp-standings-view" style="display:none">
+        <div class="section-panel">
+          <div id="sp-standings-body" style="padding:8px 0">
+            <div class="empty-state"><div class="es-icon">📊</div><div class="es-title">No standings loaded yet</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── POLYMARKET ACTIVITY PAGE ─── -->
+    <div class="page" id="page-polymarket">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Polymarket <span>Activity</span></div>
+          <div class="page-subtitle">Live public trades across all Polymarket markets — no login or wallet needed</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span style="font-size:11px;color:var(--text3)" id="pm-last-refresh">Never refreshed</span>
+          <button class="btn btn-secondary" id="pm-refresh-btn" onclick="pmRefresh()">↻ Refresh now</button>
+          <button class="btn btn-secondary" id="pm-auto-btn" onclick="pmToggleAutoRefresh()">⏱ Auto: OFF</button>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
+        <input class="form-input" id="pm-search-input" placeholder="Filter by market keyword (e.g. Bitcoin, election)" style="max-width:280px;padding:8px 12px;font-size:12px" oninput="pmApplyFilters()">
+        <select class="form-input" id="pm-min-amount" style="max-width:160px;padding:8px 12px;font-size:12px" onchange="pmOnMinAmountChange()">
+          <option value="0">Min amount: None</option>
+          <option value="10">Min amount: $10</option>
+          <option value="100">Min amount: $100</option>
+          <option value="1000">Min amount: $1,000</option>
+          <option value="10000">Min amount: $10,000</option>
+          <option value="100000">Min amount: $100,000</option>
+        </select>
+        <span style="font-size:11px;color:var(--text3)" id="pm-count-text"></span>
+      </div>
+
+      <div class="lp-status-bar" id="pm-status-bar">
+        <div class="lp-dot" id="pm-dot"></div>
+        <span id="pm-status-text">Click "Refresh now" to load recent trades</span>
+      </div>
+
+      <div class="section-panel" style="margin-top:16px">
+        <div id="pm-activity-list">
+          <div class="empty-state"><div class="es-icon">🔮</div><div class="es-title">No activity loaded yet</div><div class="es-sub">Click "Refresh now" above</div></div>
+        </div>
+      </div>
+    </div>
+
     <!-- ─── DEVOPS ROADMAP PAGE ─── -->
     <div class="page" id="page-devops">
       <div class="page-header">
@@ -6718,12 +6849,14 @@ function showPage(name) {
   if (name === 'yearplan' && typeof ypEnsureInit === 'function') ypEnsureInit();
   if (name === 'books' && typeof bkEnsureInit === 'function') bkEnsureInit();
   if (name === 'fitplan' && typeof fplEnsureInit === 'function') fplEnsureInit();
+  if (name === 'livesports' && typeof spEnsureInit === 'function') spEnsureInit();
+  if (name === 'polymarket' && typeof pmEnsureInit === 'function') pmEnsureInit();
   renderAll();
 }
 
 // ── Mobile nav ──────────────────────────────────────────────
 var MNAV_PAGES = ['overview','cash','bankaccount','billtracker','fitness',
-  'crypto','tcg','networth','history','income','bills','journal','books','goals','debtplanner','ahf','neteng','aplus','nexus','cybertools','devops','yearplan','fitplan','settings',
+  'crypto','tcg','networth','history','income','bills','journal','books','goals','debtplanner','ahf','neteng','aplus','nexus','cybertools','devops','yearplan','fitplan','settings','livesports','polymarket',
   'liveprices','cashflow','dashboard','analytics','fi','forecast'];
 
 function mnavGo(name, btn) {
@@ -6746,6 +6879,8 @@ function mnavGo(name, btn) {
   if (name === 'yearplan' && typeof ypEnsureInit === 'function') ypEnsureInit();
   if (name === 'books' && typeof bkEnsureInit === 'function') bkEnsureInit();
   if (name === 'fitplan' && typeof fplEnsureInit === 'function') fplEnsureInit();
+  if (name === 'livesports' && typeof spEnsureInit === 'function') spEnsureInit();
+  if (name === 'polymarket' && typeof pmEnsureInit === 'function') pmEnsureInit();
   renderAll();
 }
 
@@ -6771,6 +6906,8 @@ function mnavShowMore() {
     { id:'aplus',       icon:'🖥', label:'A+ Roadmap' },
     { id:'nexus',       icon:'🧠', label:'NEXUS'      },
     { id:'cybertools',  icon:'🛡', label:'Cyber Tools' },
+    { id:'livesports',  icon:'🏆', label:'Live Sports' },
+    { id:'polymarket',  icon:'🔮', label:'Polymarket' },
     { id:'devops',      icon:'⛭', label:'DevOps'     },
     { id:'yearplan',    icon:'◈', label:'Year Plan'  },
     { id:'fitplan',     icon:'◇', label:'Fit Plan'   },
@@ -14606,6 +14743,557 @@ fpRenderAll();
 </script>
 
 <script>
+// ═══ LIVE SPORTS (scoped, self-contained — scores/standings via ESPN's public endpoints) ═══
+const SP_LEAGUES = {
+  mlb:    { sport: 'baseball',   league: 'mlb',   label: 'MLB' },
+  nba:    { sport: 'basketball', league: 'nba',   label: 'NBA' },
+  mls:    { sport: 'soccer',     league: 'usa.1', label: 'MLS' },
+  laliga: { sport: 'soccer',     league: 'esp.1', label: 'La Liga' },
+  eng1:   { sport: 'soccer',     league: 'eng.1', label: 'Premier League' },
+  mex1:   { sport: 'soccer',     league: 'mex.1', label: 'Liga MX' },
+  ita1:   { sport: 'soccer',     league: 'ita.1', label: 'Serie A' },
+  fra1:   { sport: 'soccer',     league: 'fra.1', label: 'Ligue 1' },
+  ger1:   { sport: 'soccer',     league: 'ger.1', label: 'Bundesliga' },
+  bra1:   { sport: 'soccer',     league: 'bra.1', label: 'Brasileirão' },
+  arg1:   { sport: 'soccer',     league: 'arg.1', label: 'Argentina Primera' },
+  intl:   { sport: 'soccer',     league: null,    label: 'International', international: true, slugs: ['fifa.world', 'fifa.friendly'] },
+};
+
+let spCurrentLeague = 'mlb';
+let spAutoEnabled = false;
+let spAutoInterval = null;
+let spInited = false;
+let spViewMode = 'scores'; // 'scores' | 'standings'
+
+function spEnsureInit() {
+  if (spInited) return;
+  spInited = true;
+  spFetchLeague(spCurrentLeague);
+}
+
+function spSwitchLeague(key) {
+  if (!SP_LEAGUES[key]) return;
+  spCurrentLeague = key;
+  document.querySelectorAll('#page-livesports .tab').forEach(t => t.classList.remove('active'));
+  const btn = document.getElementById('sp-tab-' + key);
+  if (btn) btn.classList.add('active');
+  spRenderViewToggle();
+  if (spViewMode === 'standings') spFetchStandings(key);
+  else spFetchLeague(key);
+}
+
+function spSwitchView(mode) {
+  spViewMode = mode;
+  spRenderViewToggle();
+  const scoresEl = document.getElementById('sp-scores-view');
+  const standingsEl = document.getElementById('sp-standings-view');
+  if (scoresEl) scoresEl.style.display = mode === 'scores' ? 'block' : 'none';
+  if (standingsEl) standingsEl.style.display = mode === 'standings' ? 'block' : 'none';
+  if (mode === 'standings') spFetchStandings(spCurrentLeague);
+  else spFetchLeague(spCurrentLeague);
+}
+
+function spRenderViewToggle() {
+  const wrap = document.getElementById('sp-view-toggle');
+  if (!wrap) return;
+  const cfg = SP_LEAGUES[spCurrentLeague];
+  // International is a merged feed with no single league table — standings doesn't apply
+  if (cfg && cfg.international) {
+    wrap.style.display = 'none';
+    spViewMode = 'scores';
+    return;
+  }
+  wrap.style.display = 'flex';
+  document.getElementById('sp-view-scores-btn').classList.toggle('active', spViewMode === 'scores');
+  document.getElementById('sp-view-standings-btn').classList.toggle('active', spViewMode === 'standings');
+}
+
+function spRefreshCurrent() {
+  if (spViewMode === 'standings') spFetchStandings(spCurrentLeague);
+  else spFetchLeague(spCurrentLeague);
+}
+
+function spToggleAutoRefresh() {
+  spAutoEnabled = !spAutoEnabled;
+  const btn = document.getElementById('sp-auto-btn');
+  if (spAutoEnabled) {
+    spAutoInterval = setInterval(() => spRefreshCurrent(), 2 * 60 * 1000); // every 2 min
+    if (btn) { btn.textContent = '⏱ Auto: ON (2m)'; btn.style.color = 'var(--green)'; }
+    showToast('Sports auto-refresh ON — every 2 minutes');
+  } else {
+    clearInterval(spAutoInterval);
+    if (btn) { btn.textContent = '⏱ Auto: OFF'; btn.style.color = ''; }
+    showToast('Sports auto-refresh OFF');
+  }
+}
+
+async function spFetchLeague(key) {
+  const cfg = SP_LEAGUES[key];
+  if (!cfg) return;
+
+  const dot = document.getElementById('sp-dot');
+  const statusText = document.getElementById('sp-status-text');
+  if (statusText) statusText.textContent = `Loading ${cfg.label}…`;
+
+  try {
+    let events = [];
+    if (cfg.international) {
+      const results = await Promise.allSettled(
+        cfg.slugs.map(slug => fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${slug}/scoreboard`).then(r => r.json()))
+      );
+      results.forEach(r => {
+        if (r.status === 'fulfilled' && r.value && Array.isArray(r.value.events)) events = events.concat(r.value.events);
+      });
+    } else {
+      const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${cfg.sport}/${cfg.league}/scoreboard`);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      events = data.events || [];
+    }
+
+    spRenderGames(events, cfg.label);
+
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    const lastEl = document.getElementById('sp-last-refresh');
+    if (lastEl) lastEl.textContent = 'Last: ' + timeStr;
+    if (dot) dot.classList.add('live');
+    if (statusText) statusText.textContent = `${cfg.label} · updated ${timeStr} · ${events.length} game${events.length===1?'':'s'} today`;
+  } catch (e) {
+    if (statusText) statusText.textContent = `Couldn't load ${cfg.label}: ${e.message}`;
+    if (dot) dot.classList.remove('live');
+  }
+}
+
+function spTeamLogo(team) {
+  if (!team) return '';
+  if (team.logo) return team.logo;
+  if (Array.isArray(team.logos) && team.logos[0]) return team.logos[0].href;
+  return '';
+}
+
+function spRenderGames(events, leagueLabel) {
+  const grid = document.getElementById('sp-games-grid');
+  if (!grid) return;
+
+  if (!events.length) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="es-icon">🏆</div><div class="es-title">No ${leagueLabel} games today</div><div class="es-sub">Check back on the next game day</div></div>`;
+    return;
+  }
+
+  grid.innerHTML = events.map(ev => {
+    const comp = (ev.competitions && ev.competitions[0]) || {};
+    const competitors = comp.competitors || [];
+    const home = competitors.find(c => c.homeAway === 'home') || competitors[0] || {};
+    const away = competitors.find(c => c.homeAway === 'away') || competitors[1] || {};
+    const statusType = (ev.status && ev.status.type) || {};
+    const state = statusType.state; // 'pre' | 'in' | 'post'
+    const statusClass = state === 'in' ? 'live' : state === 'post' ? 'final' : 'pre';
+    const statusLabel = state === 'in'
+      ? `<span class="sp-live-dot"></span> ${statusType.shortDetail || 'LIVE'}`
+      : (statusType.shortDetail || statusType.description || '');
+    const venue = (comp.venue && comp.venue.fullName) || '';
+
+    const teamRow = (c, isWinner) => {
+      const logo = spTeamLogo(c.team);
+      return `<div class="sp-team-row${isWinner ? ' winner' : ''}">
+        <span class="sp-team-name">${logo ? `<img src="${logo}" class="sp-team-logo" alt="">` : ''}${(c.team && c.team.displayName) || '—'}</span>
+        <span class="sp-team-score">${c.score !== undefined && c.score !== null && c.score !== '' ? c.score : '—'}</span>
+      </div>`;
+    };
+
+    return `<div class="sp-game-card">
+      <div class="sp-game-status ${statusClass}">${statusLabel}</div>
+      ${teamRow(away, away.winner)}
+      ${teamRow(home, home.winner)}
+      ${venue ? `<div class="sp-game-meta">${venue}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// ── Standings ──────────────────────────────────────────────
+// Note: ESPN's standings response shape varies a bit by sport (conferences/divisions vs a
+// single flat table), and unlike the scoreboard endpoint this one isn't as widely documented,
+// so this parses defensively and falls back to a plain "not available" state rather than
+// erroring out if a particular league's shape doesn't match what's expected.
+function spStandingsUrl(key) {
+  const cfg = SP_LEAGUES[key];
+  if (cfg.sport === 'soccer') {
+    return `https://site.web.api.espn.com/apis/v2/sports/soccer/${cfg.league}/standings`;
+  }
+  return `https://site.api.espn.com/apis/v2/sports/${cfg.sport}/${cfg.league}/standings`;
+}
+
+function spExtractStandingsGroups(data) {
+  if (!data) return [];
+  if (Array.isArray(data.children) && data.children.length) {
+    return data.children
+      .map(c => ({ name: c.name || c.abbreviation || '', entries: (c.standings && c.standings.entries) || [] }))
+      .filter(g => g.entries.length);
+  }
+  if (data.standings && Array.isArray(data.standings.entries)) {
+    return [{ name: '', entries: data.standings.entries }];
+  }
+  if (Array.isArray(data.entries)) {
+    return [{ name: '', entries: data.entries }];
+  }
+  return [];
+}
+
+function spStatVal(entry, ...names) {
+  const stats = entry.stats || [];
+  for (const n of names) {
+    const s = stats.find(x => x.name === n || x.abbreviation === n || x.shortDisplayName === n);
+    if (s) return s.displayValue !== undefined && s.displayValue !== '' ? s.displayValue : (s.value !== undefined ? s.value : '—');
+  }
+  return '—';
+}
+
+async function spFetchStandings(key) {
+  const cfg = SP_LEAGUES[key];
+  if (!cfg || cfg.international) return;
+
+  const statusText = document.getElementById('sp-status-text');
+  const body = document.getElementById('sp-standings-body');
+  if (statusText) statusText.textContent = `Loading ${cfg.label} standings…`;
+
+  try {
+    const res = await fetch(spStandingsUrl(key));
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const groups = spExtractStandingsGroups(data);
+
+    if (!groups.length) {
+      body.innerHTML = `<div class="empty-state"><div class="es-icon">📊</div><div class="es-title">Standings not available for ${cfg.label}</div><div class="es-sub">ESPN's table format didn't match for this league</div></div>`;
+    } else {
+      body.innerHTML = groups.map(g => `
+        ${g.name ? `<div style="padding:10px 14px 4px;font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">${g.name}</div>` : ''}
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead>
+            <tr style="color:var(--text3);font-size:10px;text-transform:uppercase">
+              <th style="text-align:left;padding:6px 14px;font-weight:500">Team</th>
+              <th style="padding:6px 8px;font-weight:500">W</th>
+              <th style="padding:6px 8px;font-weight:500">D</th>
+              <th style="padding:6px 8px;font-weight:500">L</th>
+              <th style="padding:6px 8px;font-weight:500">PTS</th>
+              <th style="padding:6px 8px;font-weight:500">GB</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${g.entries.map(e => {
+              const team = e.team || {};
+              const logo = spTeamLogo(team);
+              const w = spStatVal(e, 'wins');
+              const d = spStatVal(e, 'ties', 'draws');
+              const l = spStatVal(e, 'losses');
+              const pts = spStatVal(e, 'points');
+              const gb = spStatVal(e, 'gamesBehind');
+              return `<tr style="border-top:1px solid var(--border)">
+                <td style="padding:7px 14px;display:flex;align-items:center;gap:8px">${logo?`<img src="${logo}" class="sp-team-logo">`:''}<span style="color:var(--text2)">${team.displayName||team.name||'—'}</span></td>
+                <td style="text-align:center;padding:7px 8px;color:var(--text2)">${w}</td>
+                <td style="text-align:center;padding:7px 8px;color:var(--text2)">${d}</td>
+                <td style="text-align:center;padding:7px 8px;color:var(--text2)">${l}</td>
+                <td style="text-align:center;padding:7px 8px;color:var(--text);font-weight:600">${pts}</td>
+                <td style="text-align:center;padding:7px 8px;color:var(--text3)">${gb}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      `).join('');
+    }
+
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    const lastEl = document.getElementById('sp-last-refresh');
+    if (lastEl) lastEl.textContent = 'Last: ' + timeStr;
+    if (statusText) statusText.textContent = `${cfg.label} standings · updated ${timeStr}`;
+  } catch (e) {
+    if (body) body.innerHTML = `<div class="empty-state"><div class="es-icon">📊</div><div class="es-title">Couldn't load standings</div><div class="es-sub">${e.message}</div></div>`;
+    if (statusText) statusText.textContent = `Couldn't load ${cfg.label} standings: ${e.message}`;
+  }
+}
+</script>
+
+<script>
+// ═══ POLYMARKET ACTIVITY (scoped, self-contained — public Data API, no key/auth needed) ═══
+let pmAllTrades = [];
+let pmInited = false;
+let pmAutoEnabled = false;
+let pmAutoInterval = null;
+let pmOffset = 0;
+let pmHasMore = true;
+const PM_PAGE_SIZE = 500; // the API's documented max per request
+const PM_TIER_TARGET = 100; // how many matches we try to find per amount tier
+const PM_TIER_MAX_PAGES_PER_CALL = 10; // safety cap per search "burst" (10 * 500 = 5000 trades scanned)
+
+// Tier search state — active whenever a Min Amount other than "None" is selected. Rather
+// than just filtering whatever's already loaded (which might have zero $10k+ trades in the
+// most recent 500), this keeps paging back through history until it finds 100 matches or
+// genuinely runs out of data.
+let pmTierMode = false;
+let pmTierAmount = 0;
+let pmTierResults = [];
+let pmTierOffset = 0;
+let pmTierScanned = 0;
+let pmTierExhausted = false;
+
+function pmEnsureInit() {
+  if (pmInited) return;
+  pmInited = true;
+  pmRefresh();
+}
+
+// Full reset — used by the manual refresh button and auto-refresh, so the feed reflects
+// what's happening right now rather than growing forever on a timer
+async function pmRefresh() {
+  pmOffset = 0;
+  pmHasMore = true;
+  pmAllTrades = [];
+  if (pmTierMode) {
+    await pmSearchTier(pmTierAmount, false);
+  } else {
+    await pmFetchPage(true);
+  }
+}
+
+// Fetches one page at the current offset. `replace` clears the existing list first
+// (used by pmRefresh); otherwise new trades are appended (used by "Load more"), de-duped
+// by transaction hash in case of overlap between pages.
+async function pmFetchPage(replace) {
+  const dot = document.getElementById('pm-dot');
+  const statusText = document.getElementById('pm-status-text');
+  const refreshBtn = document.getElementById('pm-refresh-btn');
+  const moreBtn = document.getElementById('pm-load-more-btn');
+  if (statusText) statusText.textContent = replace ? 'Loading recent activity…' : 'Loading more…';
+  if (refreshBtn) refreshBtn.disabled = true;
+  if (moreBtn) moreBtn.disabled = true;
+
+  try {
+    const res = await fetch(`https://data-api.polymarket.com/trades?limit=${PM_PAGE_SIZE}&offset=${pmOffset}`);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const page = Array.isArray(data) ? data : [];
+
+    if (replace) {
+      pmAllTrades = page;
+    } else {
+      const seen = new Set(pmAllTrades.map(t => t.transactionHash));
+      page.forEach(t => { if (!seen.has(t.transactionHash)) pmAllTrades.push(t); });
+    }
+
+    pmHasMore = page.length === PM_PAGE_SIZE; // a short page means we've hit the end
+    pmOffset += page.length;
+
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    const lastEl = document.getElementById('pm-last-refresh');
+    if (lastEl) lastEl.textContent = 'Last: ' + timeStr;
+    if (dot) dot.classList.add('live');
+    if (statusText) statusText.textContent = `Updated ${timeStr} · ${pmAllTrades.length} trades loaded${pmHasMore ? ' (more available)' : ''}`;
+
+    pmApplyFilters();
+  } catch (e) {
+    if (statusText) statusText.textContent = `Couldn't load activity: ${e.message}`;
+    if (dot) dot.classList.remove('live');
+  }
+  if (refreshBtn) refreshBtn.disabled = false;
+  if (moreBtn) moreBtn.disabled = false;
+}
+
+function pmLoadMore() {
+  if (!pmHasMore) return;
+  return pmFetchPage(false);
+}
+
+// Called when the Min Amount selector changes. "None" goes back to the plain recent-activity
+// feed; any real tier kicks off (or resumes) a search for the last 100 trades at or above it.
+function pmOnMinAmountChange() {
+  const minAmount = parseFloat(document.getElementById('pm-min-amount').value) || 0;
+  if (minAmount <= 0) {
+    pmTierMode = false;
+    pmApplyFilters();
+    return;
+  }
+  return pmSearchTier(minAmount, false);
+}
+
+// Pages backward through trade history looking for PM_TIER_TARGET (100) trades whose dollar
+// amount is >= minAmount. `resume` continues from where a previous search left off (used by
+// the "Keep searching" button); otherwise it starts fresh from the most recent trade.
+async function pmSearchTier(minAmount, resume) {
+  const dot = document.getElementById('pm-dot');
+  const statusText = document.getElementById('pm-status-text');
+  const refreshBtn = document.getElementById('pm-refresh-btn');
+
+  if (!resume || pmTierAmount !== minAmount) {
+    pmTierMode = true;
+    pmTierAmount = minAmount;
+    pmTierResults = [];
+    pmTierOffset = 0;
+    pmTierScanned = 0;
+    pmTierExhausted = false;
+  }
+  pmTierMode = true;
+
+  if (refreshBtn) refreshBtn.disabled = true;
+  const amtLabel = '$' + minAmount.toLocaleString();
+
+  try {
+    let pagesThisCall = 0;
+    while (pmTierResults.length < PM_TIER_TARGET && !pmTierExhausted && pagesThisCall < PM_TIER_MAX_PAGES_PER_CALL) {
+      if (statusText) statusText.textContent = `Searching for trades ≥ ${amtLabel}… found ${pmTierResults.length}/${PM_TIER_TARGET}, scanned ${pmTierScanned}`;
+      const res = await fetch(`https://data-api.polymarket.com/trades?limit=${PM_PAGE_SIZE}&offset=${pmTierOffset}`);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      const page = Array.isArray(data) ? data : [];
+      if (!page.length) { pmTierExhausted = true; break; }
+
+      page.forEach(t => {
+        const amount = (parseFloat(t.price) || 0) * (parseFloat(t.size) || 0);
+        if (amount >= minAmount) pmTierResults.push(t);
+      });
+
+      pmTierScanned += page.length;
+      pmTierOffset += page.length;
+      pagesThisCall++;
+      if (page.length < PM_PAGE_SIZE) { pmTierExhausted = true; break; }
+    }
+
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    const lastEl = document.getElementById('pm-last-refresh');
+    if (lastEl) lastEl.textContent = 'Last: ' + timeStr;
+    if (dot) dot.classList.add('live');
+
+    const found = Math.min(pmTierResults.length, PM_TIER_TARGET);
+    if (statusText) {
+      statusText.textContent = pmTierExhausted && found < PM_TIER_TARGET
+        ? `Found ${found} trades ≥ ${amtLabel} (that's all of them — scanned ${pmTierScanned} total trades)`
+        : `Found ${found} of ${PM_TIER_TARGET} trades ≥ ${amtLabel} · scanned ${pmTierScanned} total trades`;
+    }
+
+    pmApplyFilters();
+  } catch (e) {
+    if (statusText) statusText.textContent = `Couldn't search activity: ${e.message}`;
+    if (dot) dot.classList.remove('live');
+  }
+  if (refreshBtn) refreshBtn.disabled = false;
+}
+
+function pmKeepSearchingTier() {
+  return pmSearchTier(pmTierAmount, true);
+}
+
+function pmToggleAutoRefresh() {
+  pmAutoEnabled = !pmAutoEnabled;
+  const btn = document.getElementById('pm-auto-btn');
+  if (pmAutoEnabled) {
+    pmAutoInterval = setInterval(pmRefresh, 60 * 1000); // every 1 min — activity moves fast
+    if (btn) { btn.textContent = '⏱ Auto: ON (1m)'; btn.style.color = 'var(--green)'; }
+    showToast('Polymarket auto-refresh ON — every minute');
+  } else {
+    clearInterval(pmAutoInterval);
+    if (btn) { btn.textContent = '⏱ Auto: OFF'; btn.style.color = ''; }
+    showToast('Polymarket auto-refresh OFF');
+  }
+}
+
+function pmRelativeTime(unixSeconds) {
+  const diffMs = Date.now() - (unixSeconds * 1000);
+  const diffSec = Math.floor(diffMs / 1000);
+  if (diffSec < 30) return 'now';
+  if (diffSec < 60) return diffSec + 's ago';
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return diffMin + 'm ago';
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return diffHr + 'h ago';
+  return Math.floor(diffHr / 24) + 'd ago';
+}
+
+function pmApplyFilters() {
+  const search = (document.getElementById('pm-search-input').value || '').trim().toLowerCase();
+
+  if (pmTierMode) {
+    const filtered = pmTierResults.slice(0, PM_TIER_TARGET).filter(t => {
+      if (search && !(t.title || '').toLowerCase().includes(search)) return false;
+      return true;
+    });
+    const countEl = document.getElementById('pm-count-text');
+    if (countEl) countEl.textContent = `Showing ${filtered.length} of ${Math.min(pmTierResults.length, PM_TIER_TARGET)} found (≥ $${pmTierAmount.toLocaleString()})`;
+    pmRenderList(filtered);
+    return;
+  }
+
+  const minAmount = parseFloat(document.getElementById('pm-min-amount').value) || 0;
+  const filtered = pmAllTrades.filter(t => {
+    const amount = (parseFloat(t.price) || 0) * (parseFloat(t.size) || 0);
+    if (amount < minAmount) return false;
+    if (search && !(t.title || '').toLowerCase().includes(search)) return false;
+    return true;
+  });
+
+  const countEl = document.getElementById('pm-count-text');
+  if (countEl) countEl.textContent = `Showing ${filtered.length} of ${pmAllTrades.length} loaded`;
+
+  pmRenderList(filtered);
+}
+
+function pmRenderList(trades) {
+  const list = document.getElementById('pm-activity-list');
+  if (!list) return;
+
+  if (!trades.length) {
+    list.innerHTML = `<div class="empty-state"><div class="es-icon">🔮</div><div class="es-title">No matching activity</div><div class="es-sub">Try lowering the min amount or clearing the keyword filter</div></div>`;
+    return;
+  }
+
+  // No display cap — every trade that's been loaded/found and passes the current filters
+  // is shown. The footer below adapts to whichever mode (general feed vs. tier search) is active.
+  let footer;
+  if (pmTierMode) {
+    const found = Math.min(pmTierResults.length, PM_TIER_TARGET);
+    if (found >= PM_TIER_TARGET) {
+      footer = `<div style="padding:14px 20px;text-align:center;font-size:11px;color:var(--text3)">Found all ${PM_TIER_TARGET} — this is the most recent ${PM_TIER_TARGET} trades ≥ $${pmTierAmount.toLocaleString()}</div>`;
+    } else if (pmTierExhausted) {
+      footer = `<div style="padding:14px 20px;text-align:center;font-size:11px;color:var(--text3)">That's all of them — scanned ${pmTierScanned} total trades, found ${found}</div>`;
+    } else {
+      footer = `<div style="padding:14px 20px;text-align:center">
+        <button class="btn btn-secondary btn-sm" id="pm-load-more-btn" onclick="pmKeepSearchingTier()">Keep searching (found ${found}/${PM_TIER_TARGET} so far)</button>
+      </div>`;
+    }
+  } else {
+    footer = pmHasMore
+      ? `<div style="padding:14px 20px;text-align:center">
+          <button class="btn btn-secondary btn-sm" id="pm-load-more-btn" onclick="pmLoadMore()">Load more (further back in history)</button>
+        </div>`
+      : `<div style="padding:14px 20px;text-align:center;font-size:11px;color:var(--text3)">That's everything currently available</div>`;
+  }
+
+  list.innerHTML = trades.map(t => {
+    const price = parseFloat(t.price) || 0;
+    const size = parseFloat(t.size) || 0;
+    const amount = price * size;
+    const sideLabel = t.side === 'SELL' ? 'sold' : 'bought';
+    const sideClass = t.side === 'SELL' ? 'pm-side-sell' : 'pm-side-buy';
+    const user = t.pseudonym || t.name || 'anon';
+    const outcome = t.outcome || '—';
+    const marketUrl = t.eventSlug ? `https://polymarket.com/event/${t.eventSlug}` : (t.slug ? `https://polymarket.com/market/${t.slug}` : '#');
+    const icon = t.icon ? `<img src="${t.icon}" class="pm-icon" alt="">` : `<div class="pm-icon"></div>`;
+
+    return `<a href="${marketUrl}" target="_blank" class="pm-row" style="text-decoration:none;color:inherit">
+      ${icon}
+      <div class="pm-body">
+        <div class="pm-title">${t.title || 'Untitled market'}</div>
+        <div class="pm-detail"><span class="pm-user">${user}</span> ${sideLabel} <span class="${sideClass}">${outcome}</span> at ${(price*100).toFixed(0)}¢ ($${amount.toFixed(2)})</div>
+      </div>
+      <div class="pm-time">${pmRelativeTime(t.timestamp)}</div>
+    </a>`;
+  }).join('') + footer;
+}
+</script>
+
+<script>
+
 // ═══ AHF WORK TRACKER (scoped, self-contained, own localStorage keys) ═══
 const AHF_LIMIT = 2, AHF_WINDOW_DAYS = 90;
 const AHF_SICK_MAX = 120, AHF_VAC_MAX = 80;
