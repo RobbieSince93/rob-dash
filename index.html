@@ -874,6 +874,10 @@
   .pm-detail .pm-side-buy { color:var(--green); }
   .pm-detail .pm-side-sell { color:var(--red); }
   .pm-time { font-size:11px;color:var(--text3);white-space:nowrap;flex-shrink:0; }
+  .pm-cat-menu { position:absolute;top:calc(100% + 6px);left:0;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:6px;min-width:170px;z-index:50;box-shadow:0 12px 32px rgba(0,0,0,0.5); }
+  .pm-cat-item { padding:8px 12px;border-radius:6px;font-size:13px;color:var(--text2);cursor:pointer;white-space:nowrap; }
+  .pm-cat-item:hover { background:var(--bg3);color:var(--text); }
+  .pm-cat-item.active { background:rgba(77,166,255,0.15);color:var(--blue);font-weight:600; }
   .lp-status-bar { display:flex;align-items:center;gap:8px;padding:10px 20px;background:var(--bg3);border-bottom:1px solid var(--border);font-size:11px;color:var(--text3); }
   .lp-dot { width:7px;height:7px;border-radius:50%;background:var(--text3); }
   .lp-dot.live { background:var(--green); animation:pulse 2s infinite; }
@@ -5056,6 +5060,12 @@
       </div>
 
       <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
+        <div style="position:relative">
+          <button class="btn btn-secondary" id="pm-category-btn" onclick="pmToggleCategoryMenu()" style="padding:8px 14px;font-size:12px;display:flex;align-items:center;gap:6px">
+            <span id="pm-category-label">All</span><span id="pm-category-caret">⌄</span>
+          </button>
+          <div id="pm-category-menu" class="pm-cat-menu" style="display:none"></div>
+        </div>
         <input class="form-input" id="pm-search-input" placeholder="Filter by market keyword (e.g. Bitcoin, election)" style="max-width:280px;padding:8px 12px;font-size:12px" oninput="pmApplyFilters()">
         <select class="form-input" id="pm-min-amount" style="max-width:160px;padding:8px 12px;font-size:12px" onchange="pmOnMinAmountChange()">
           <option value="0">Min amount: None</option>
@@ -5067,6 +5077,7 @@
         </select>
         <span style="font-size:11px;color:var(--text3)" id="pm-count-text"></span>
       </div>
+      <div style="font-size:10px;color:var(--text3);margin:-10px 0 14px">Category is a best-effort keyword match on the market title — Polymarket's API doesn't expose the real tag on individual trades, so this won't be 100% exact.</div>
 
       <div class="lp-status-bar" id="pm-status-bar">
         <div class="lp-dot" id="pm-dot"></div>
@@ -15227,6 +15238,33 @@ function pmTradeKey(t) {
   return `${t.transactionHash}_${t.asset}_${t.price}_${t.size}_${t.timestamp}`;
 }
 
+// A single market order commonly fills against several resting orders in one blockchain
+// transaction — the raw API returns each of those as a separate row, but Polymarket's own
+// UI displays them as one combined trade (one logical "buy $126,667 of X"). Without this,
+// a big trade gets scattered across many small fills, none of which individually clears a
+// min-amount bar — which is exactly why $100k+ searches were coming back empty even when
+// the underlying activity was there. Groups by transaction + wallet + market + side, since
+// a single transaction can in principle touch more than one market.
+function pmAggregateFills(rawTrades) {
+  const groups = new Map();
+  rawTrades.forEach(t => {
+    const key = `${t.transactionHash}_${t.proxyWallet}_${t.asset}_${t.side}`;
+    const price = parseFloat(t.price) || 0;
+    const size = parseFloat(t.size) || 0;
+    if (!groups.has(key)) {
+      groups.set(key, { ...t, size: 0, _cost: 0 });
+    }
+    const g = groups.get(key);
+    g.size += size;
+    g._cost += price * size;
+    if (t.timestamp > g.timestamp) g.timestamp = t.timestamp; // last fill's timestamp for the combined row
+  });
+  return Array.from(groups.values()).map(g => ({
+    ...g,
+    price: g.size > 0 ? g._cost / g.size : 0, // size-weighted average fill price
+  }));
+}
+
 // Builds the /trades URL. Uses a "before" timestamp cursor for pagination instead of
 // "offset" — offset-based paging skips trades on a feed that's constantly growing, because
 // everything shifts by however many new trades arrived between one call and the next.
@@ -15238,9 +15276,60 @@ function pmTradesUrl(beforeTs) {
   return url;
 }
 
+// Best-effort category matching by keyword against the market title — Polymarket's /trades
+// endpoint doesn't return the market's actual tag, only its title, so this is an approximation
+// of the site's own category taxonomy rather than an authoritative match.
+const PM_CATEGORIES = {
+  all:         { label: 'All', keywords: null },
+  politics:    { label: 'Politics', keywords: ['president','election','senate','congress','governor','vote ','democrat','republican','impeach','prime minister','parliament','poll'] },
+  sports:      { label: 'Sports', keywords: [' vs.', ' vs ', 'mlb','nba','nfl','nhl','mls','ufc','atp','wta','soccer','tennis','fight night','game winner','champions','playoffs','open:'] },
+  crypto:      { label: 'Crypto', keywords: ['bitcoin','ethereum','solana','dogecoin','btc','eth ','sol ','doge','xrp','bnb','crypto','up or down'] },
+  esports:     { label: 'Esports', keywords: ['counter-strike','league of legends','lol:','dota','valorant','csgo','cs2','blast','esports'] },
+  iran:        { label: 'Iran', keywords: ['iran','khamenei','tehran','larijani'] },
+  finance:     { label: 'Finance', keywords: ['fed ','interest rate','stock','s&p','nasdaq','dow jones','powell','rate hike','rate cut'] },
+  geopolitics: { label: 'Geopolitics', keywords: ['russia','ukraine','china','israel','gaza','war','ceasefire','nato','taiwan'] },
+  tech:        { label: 'Tech', keywords: ['openai','apple','google','microsoft','tesla','spacex','ai model','chatgpt'] },
+  culture:     { label: 'Culture', keywords: ['movie','box office','album','oscar','grammy','celebrity','tv show'] },
+  economy:     { label: 'Economy', keywords: ['unemployment','jobs report','cpi ','gdp','tariff','inflation','recession'] },
+  weather:     { label: 'Weather', keywords: ['temperature','hurricane','highest temperature','weather'] },
+};
+let pmSelectedCategory = 'all';
+
+function pmRenderCategoryMenu() {
+  const menu = document.getElementById('pm-category-menu');
+  if (!menu) return;
+  menu.innerHTML = Object.entries(PM_CATEGORIES).map(([key, cat]) =>
+    `<div class="pm-cat-item${pmSelectedCategory === key ? ' active' : ''}" onclick="pmSelectCategory('${key}')">${cat.label}</div>`
+  ).join('');
+}
+
+function pmToggleCategoryMenu() {
+  const menu = document.getElementById('pm-category-menu');
+  if (!menu) return;
+  menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+}
+
+function pmSelectCategory(key) {
+  pmSelectedCategory = key;
+  const label = document.getElementById('pm-category-label');
+  if (label) label.textContent = PM_CATEGORIES[key].label;
+  document.getElementById('pm-category-menu').style.display = 'none';
+  pmRenderCategoryMenu();
+  pmApplyFilters();
+}
+
+function pmMatchesCategory(title) {
+  if (pmSelectedCategory === 'all') return true;
+  const cat = PM_CATEGORIES[pmSelectedCategory];
+  if (!cat || !cat.keywords) return true;
+  const t = (title || '').toLowerCase();
+  return cat.keywords.some(k => t.includes(k));
+}
+
 function pmEnsureInit() {
   if (pmInited) return;
   pmInited = true;
+  pmRenderCategoryMenu();
   pmRefresh();
 }
 
@@ -15279,7 +15368,8 @@ async function pmFetchWindow() {
       const res = await fetch(pmTradesUrl(pmOldestTs));
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
-      const page = Array.isArray(data) ? data : [];
+      const rawPage = Array.isArray(data) ? data : [];
+      const page = pmAggregateFills(rawPage);
       if (!page.length) { pmWindowDone = true; pmHasMore = false; break; }
 
       for (const t of page) {
@@ -15290,7 +15380,7 @@ async function pmFetchWindow() {
       }
 
       pagesThisCall++;
-      if (page.length < PM_PAGE_SIZE) { pmHasMore = false; if (!pmWindowDone) pmWindowDone = true; break; }
+      if (rawPage.length < PM_PAGE_SIZE) { pmHasMore = false; if (!pmWindowDone) pmWindowDone = true; break; }
     }
 
     const now = new Date();
@@ -15332,14 +15422,15 @@ async function pmLoadOlder() {
     const res = await fetch(pmTradesUrl(pmOldestTs));
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
-    const page = Array.isArray(data) ? data : [];
+    const rawPage = Array.isArray(data) ? data : [];
+    const page = pmAggregateFills(rawPage);
     const seen = new Set(pmAllTrades.map(pmTradeKey));
     page.forEach(t => {
       const key = pmTradeKey(t);
       if (!seen.has(key)) { seen.add(key); pmAllTrades.push(t); }
       if (pmOldestTs === null || t.timestamp < pmOldestTs) pmOldestTs = t.timestamp;
     });
-    pmHasMore = page.length === PM_PAGE_SIZE;
+    pmHasMore = rawPage.length === PM_PAGE_SIZE;
     if (statusText) statusText.textContent = `${pmAllTrades.length} trades loaded total`;
     pmApplyFilters();
   } catch (e) {
@@ -15390,7 +15481,8 @@ async function pmSearchTier(minAmount, resume) {
       const res = await fetch(pmTradesUrl(pmTierOldestTs));
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
-      const page = Array.isArray(data) ? data : [];
+      const rawPage = Array.isArray(data) ? data : [];
+      const page = pmAggregateFills(rawPage);
       if (!page.length) { pmTierExhausted = true; break; }
 
       page.forEach(t => {
@@ -15402,9 +15494,9 @@ async function pmSearchTier(minAmount, resume) {
         }
       });
 
-      pmTierScanned += page.length;
+      pmTierScanned += rawPage.length;
       pagesThisCall++;
-      if (page.length < PM_PAGE_SIZE) { pmTierExhausted = true; break; }
+      if (rawPage.length < PM_PAGE_SIZE) { pmTierExhausted = true; break; }
     }
 
     const now = new Date();
@@ -15470,6 +15562,7 @@ function pmApplyFilters() {
   if (pmTierMode) {
     const filtered = pmTierResults.slice(0, PM_TIER_TARGET).filter(t => {
       if (search && !(t.title || '').toLowerCase().includes(search)) return false;
+      if (!pmMatchesCategory(t.title)) return false;
       return true;
     });
     const countEl = document.getElementById('pm-count-text');
@@ -15483,6 +15576,7 @@ function pmApplyFilters() {
     const amount = (parseFloat(t.price) || 0) * (parseFloat(t.size) || 0);
     if (amount < minAmount) return false;
     if (search && !(t.title || '').toLowerCase().includes(search)) return false;
+    if (!pmMatchesCategory(t.title)) return false;
     return true;
   });
 
