@@ -10385,9 +10385,12 @@ async function refreshStockPricesLP() {
   }
 
   const holdings = DB.get('crypto');
-  const stockHoldings = holdings.filter(h => h.stockSymbol);
+  // A holding counts as a stock/ETF if it has an explicit stockSymbol, OR it has no
+  // coingeckoId (not crypto) and has a symbol at all — covers holdings added before the
+  // stockSymbol field existed, where the ticker was already sitting in the symbol field.
+  const stockHoldings = holdings.filter(h => !h.coingeckoId && (h.stockSymbol || h.symbol));
   if (!stockHoldings.length) {
-    showToast('No holdings have a stock/ETF ticker set — add one when editing a holding', 'info');
+    showToast('No non-crypto holdings found to refresh', 'info');
     return;
   }
 
@@ -10397,36 +10400,49 @@ async function refreshStockPricesLP() {
 
   let updatedCount = 0;
   let rateLimited = false;
+  let firstError = '';
+  const notFound = [];
 
   for (let i = 0; i < stockHoldings.length; i++) {
     const h = stockHoldings[i];
-    if (btn) btn.textContent = `↻ Fetching ${h.stockSymbol} (${i + 1}/${stockHoldings.length})…`;
-    if (statusText) statusText.textContent = `Fetching ${h.stockSymbol} from Alpha Vantage (${i + 1} of ${stockHoldings.length})…`;
+    const ticker = h.stockSymbol || h.symbol;
+    if (btn) btn.textContent = `↻ Fetching ${ticker} (${i + 1}/${stockHoldings.length})…`;
+    if (statusText) statusText.textContent = `Fetching ${ticker} from Alpha Vantage (${i + 1} of ${stockHoldings.length})…`;
 
     try {
-      const res = await fetch(`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${encodeURIComponent(h.stockSymbol)}&apikey=${apiKey}`);
-      const data = await res.json();
+      const res = await fetch(`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${encodeURIComponent(ticker)}&apikey=${apiKey}`);
+      if (!res.ok) {
+        firstError = firstError || `HTTP ${res.status} for ${ticker}`;
+      } else {
+        const data = await res.json();
 
-      if (data['Note'] || data['Information']) {
-        // Alpha Vantage returns 200 OK with a "Note"/"Information" field instead of a quote when rate-limited
-        rateLimited = true;
-        break;
-      }
+        if (data['Note'] || data['Information']) {
+          // Alpha Vantage returns 200 OK with a "Note"/"Information" field instead of a quote
+          // when rate-limited, or when the key itself is invalid/unactivated
+          rateLimited = true;
+          firstError = firstError || (data['Note'] || data['Information']);
+          break;
+        }
 
-      const quote = data['Global Quote'];
-      const price = quote && parseFloat(quote['05. price']);
-      if (quote && !isNaN(price)) {
-        const changePctStr = (quote['10. change percent'] || '0%').replace('%', '');
-        const all = DB.get('crypto');
-        const idx = all.findIndex(x => x.id === h.id);
-        if (idx > -1) {
-          all[idx] = { ...all[idx], currentPrice: price, change24h: parseFloat(changePctStr) || 0, priceUpdatedAt: new Date().toISOString() };
-          DB.set('crypto', all);
-          updatedCount++;
+        const quote = data['Global Quote'];
+        const price = quote && parseFloat(quote['05. price']);
+        if (quote && quote['05. price'] !== undefined && !isNaN(price)) {
+          const changePctStr = (quote['10. change percent'] || '0%').replace('%', '');
+          const all = DB.get('crypto');
+          const idx = all.findIndex(x => x.id === h.id);
+          if (idx > -1) {
+            all[idx] = { ...all[idx], stockSymbol: ticker, currentPrice: price, change24h: parseFloat(changePctStr) || 0, priceUpdatedAt: new Date().toISOString() };
+            DB.set('crypto', all);
+            updatedCount++;
+          }
+        } else {
+          // Alpha Vantage responded fine but doesn't recognize this ticker (empty Global Quote)
+          notFound.push(ticker);
         }
       }
     } catch (e) {
-      // Network hiccup on this one symbol — keep going with the rest
+      // Actual network/CORS failure — surface it instead of failing silently
+      firstError = firstError || (e && e.message ? e.message : 'network error');
     }
 
     // Stay comfortably under the 5-calls/minute free-tier limit
@@ -10436,9 +10452,15 @@ async function refreshStockPricesLP() {
   if (btn) { btn.disabled = false; btn.textContent = '↻ Refresh stocks/ETFs'; }
 
   if (rateLimited) {
-    showToast(`Hit Alpha Vantage's rate limit after ${updatedCount} symbol${updatedCount===1?'':'s'} — try the rest again in a minute or tomorrow`, 'error');
+    showToast(`Alpha Vantage: ${firstError || 'rate limit hit'} (updated ${updatedCount} first)`, 'error');
+  } else if (updatedCount === 0 && firstError) {
+    showToast(`Stock refresh failed: ${firstError}`, 'error');
+  } else if (updatedCount === 0 && notFound.length) {
+    showToast(`Alpha Vantage didn't recognize: ${notFound.join(', ')} — check the ticker symbol`, 'error');
   } else {
-    showToast(`Updated ${updatedCount} stock/ETF price${updatedCount===1?'':'s'}`);
+    let msg = `Updated ${updatedCount} stock/ETF price${updatedCount===1?'':'s'}`;
+    if (notFound.length) msg += ` (not recognized: ${notFound.join(', ')})`;
+    showToast(msg);
   }
   renderLivePrices();
   renderAll();
