@@ -10388,7 +10388,7 @@ async function refreshStockPricesLP() {
   // A holding counts as a stock/ETF if it has an explicit stockSymbol, OR it has no
   // coingeckoId (not crypto) and has a symbol at all — covers holdings added before the
   // stockSymbol field existed, where the ticker was already sitting in the symbol field.
-  const stockHoldings = holdings.filter(h => !h.coingeckoId && (h.stockSymbol || h.symbol));
+  const stockHoldings = holdings.filter(h => h.stockSymbol || (!h.coingeckoId && h.symbol));
   if (!stockHoldings.length) {
     showToast('No non-crypto holdings found to refresh', 'info');
     return;
@@ -10515,7 +10515,7 @@ async function refreshAllPrices() {
 
 async function refreshCryptoPricesLP() {
   const holdings=DB.get('crypto');
-  const withIds=holdings.filter(h=>h.coingeckoId);
+  const withIds=holdings.filter(h=>h.coingeckoId&&!h.stockSymbol);
   if(!withIds.length) return;
   const ids=[...new Set(withIds.map(h=>h.coingeckoId))].join(',');
   const res=await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&sparkline=true`);
@@ -10615,7 +10615,7 @@ function renderLivePrices() {
         }
         const sparkline=lpBuildSparkline(h.sparkline7d);
         const isLive = h.coingeckoId || h.stockSymbol;
-        const sourceLabel = h.coingeckoId ? 'live · CoinGecko' : h.stockSymbol ? 'live · Alpha Vantage' : 'manual';
+        const sourceLabel = h.stockSymbol ? 'live · Alpha Vantage' : h.coingeckoId ? 'live · CoinGecko' : 'manual';
         return`<div class="price-card${flashClass}">
           <div class="price-card-symbol">${h.symbol} ${isLive?`<span class="price-live-badge" style="color:var(--green);font-size:9px">● live</span>`:'<span style="color:var(--text3);font-size:9px">○ manual</span>'}</div>
           <div class="price-card-name">${h.name}</div>
