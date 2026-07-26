@@ -849,6 +849,14 @@
   .sp-pin-btn:hover { color:var(--amber); }
   .sp-pin-btn.pinned { color:var(--amber); }
   .sp-game-card.sp-pinned-card { border-color:var(--amber); box-shadow:0 0 0 1px rgba(255,184,48,0.25); }
+  .sp-situation { display:flex;align-items:center;gap:12px;margin:8px 0;padding:8px 0;border-top:1px solid var(--border); }
+  .sp-bases { position:relative;width:34px;height:34px;flex-shrink:0; }
+  .sp-base { position:absolute;width:12px;height:12px;border:1.5px solid var(--text3);background:transparent;transform:rotate(45deg); }
+  .sp-base.occupied { background:var(--amber);border-color:var(--amber); }
+  .sp-base-1 { bottom:0;right:0; }
+  .sp-base-2 { top:0;left:50%;margin-left:-6px; }
+  .sp-base-3 { bottom:0;left:0; }
+  .sp-situation-text { font-size:11px;color:var(--text2);line-height:1.5; }
   .sp-team-row.winner .sp-team-name { color:var(--text);font-weight:600; }
   .sp-team-score { font-family:var(--display);font-size:18px;font-weight:700;color:var(--text2); }
   .sp-team-row.winner .sp-team-score { color:var(--text); }
@@ -4990,6 +4998,7 @@
       </div>
 
       <div class="tabs" style="margin-bottom:16px;flex-wrap:wrap;height:auto;width:auto;max-width:100%">
+        <button class="tab" id="sp-tab-favorites" onclick="spSwitchLeague('favorites')" style="color:var(--amber)">★ Favorites</button>
         <button class="tab active" id="sp-tab-mlb" onclick="spSwitchLeague('mlb')">MLB</button>
         <button class="tab" id="sp-tab-nba" onclick="spSwitchLeague('nba')">NBA</button>
         <button class="tab" id="sp-tab-mls" onclick="spSwitchLeague('mls')">MLS</button>
@@ -14806,12 +14815,13 @@ function spEnsureInit() {
 }
 
 function spSwitchLeague(key) {
-  if (!SP_LEAGUES[key]) return;
+  if (key !== 'favorites' && !SP_LEAGUES[key]) return;
   spCurrentLeague = key;
   document.querySelectorAll('#page-livesports .tab').forEach(t => t.classList.remove('active'));
   const btn = document.getElementById('sp-tab-' + key);
   if (btn) btn.classList.add('active');
   spRenderViewToggle();
+  if (key === 'favorites') { spFetchFavorites(); return; }
   if (spViewMode === 'standings') spFetchStandings(key);
   else spFetchLeague(key);
 }
@@ -14824,15 +14834,15 @@ function spSwitchView(mode) {
   if (scoresEl) scoresEl.style.display = mode === 'scores' ? 'block' : 'none';
   if (standingsEl) standingsEl.style.display = mode === 'standings' ? 'block' : 'none';
   if (mode === 'standings') spFetchStandings(spCurrentLeague);
-  else spFetchLeague(spCurrentLeague);
+  else spRefreshCurrent();
 }
 
 function spRenderViewToggle() {
   const wrap = document.getElementById('sp-view-toggle');
   if (!wrap) return;
   const cfg = SP_LEAGUES[spCurrentLeague];
-  // International is a merged feed with no single league table — standings doesn't apply
-  if (cfg && cfg.international) {
+  // International and Favorites are merged feeds with no single league table — standings doesn't apply
+  if (spCurrentLeague === 'favorites' || (cfg && cfg.international)) {
     wrap.style.display = 'none';
     spViewMode = 'scores';
     return;
@@ -14843,8 +14853,69 @@ function spRenderViewToggle() {
 }
 
 function spRefreshCurrent() {
-  if (spViewMode === 'standings') spFetchStandings(spCurrentLeague);
+  if (spCurrentLeague === 'favorites') spFetchFavorites();
+  else if (spViewMode === 'standings') spFetchStandings(spCurrentLeague);
   else spFetchLeague(spCurrentLeague);
+}
+
+// Fetches every league in parallel and keeps only games involving a pinned team — this is
+// what makes "Favorites" a single cross-sport feed (an MLB team and a soccer team can show
+// up side by side) rather than yet another per-league tab.
+async function spFetchFavorites() {
+  const dot = document.getElementById('sp-dot');
+  const statusText = document.getElementById('sp-status-text');
+
+  if (!spPinnedTeams.length) {
+    document.getElementById('sp-games-grid').innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="es-icon">★</div><div class="es-title">No teams pinned yet</div><div class="es-sub">Click the ☆ next to a team on any league tab to add it here</div></div>`;
+    if (statusText) statusText.textContent = 'Pin a team on any league tab to build your Favorites feed';
+    return;
+  }
+
+  if (statusText) statusText.textContent = `Loading favorites across all leagues…`;
+
+  const keys = Object.keys(SP_LEAGUES);
+  const results = await Promise.allSettled(keys.map(async key => {
+    const cfg = SP_LEAGUES[key];
+    if (cfg.international) {
+      const subs = await Promise.allSettled(
+        cfg.slugs.map(slug => fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${slug}/scoreboard`).then(r => r.json()))
+      );
+      let evs = [];
+      subs.forEach(s => { if (s.status === 'fulfilled' && s.value && Array.isArray(s.value.events)) evs = evs.concat(s.value.events); });
+      return evs;
+    }
+    const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${cfg.sport}/${cfg.league}/scoreboard`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.events || [];
+  }));
+
+  let allEvents = [];
+  results.forEach(r => { if (r.status === 'fulfilled') allEvents = allEvents.concat(r.value); });
+  let favEvents = allEvents.filter(ev => spEventHasPinnedTeam(ev));
+
+  // Live games first, then upcoming (soonest first), then finals — a cross-sport feed is
+  // most useful when what's actually happening right now floats to the top.
+  const statePriority = { in: 0, pre: 1, post: 2 };
+  favEvents.sort((a, b) => {
+    const sa = (a.status && a.status.type && a.status.type.state) || 'pre';
+    const sb = (b.status && b.status.type && b.status.type.state) || 'pre';
+    const pa = statePriority[sa] !== undefined ? statePriority[sa] : 3;
+    const pb = statePriority[sb] !== undefined ? statePriority[sb] : 3;
+    if (pa !== pb) return pa - pb;
+    return new Date(a.date) - new Date(b.date);
+  });
+
+  spLastEvents = favEvents;
+  spLastLeagueLabel = 'Favorites';
+  spRenderGames(favEvents, 'Favorites');
+
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  const lastEl = document.getElementById('sp-last-refresh');
+  if (lastEl) lastEl.textContent = 'Last: ' + timeStr;
+  if (dot) dot.classList.add('live');
+  if (statusText) statusText.textContent = `Favorites · updated ${timeStr} · ${favEvents.length} game${favEvents.length===1?'':'s'} for ${spPinnedTeams.length} pinned team${spPinnedTeams.length===1?'':'s'}`;
 }
 
 function spToggleAutoRefresh() {
@@ -14924,6 +14995,43 @@ function spEventHasPinnedTeam(ev) {
   return competitors.some(c => spIsPinned(c.team && c.team.displayName));
 }
 
+// Renders live runners-on-base / count / current batter for an in-progress baseball game.
+// ESPN's scoreboard only includes this "situation" object for baseball, and only while
+// state === 'in' — this couldn't be verified against an actual live in-progress game during
+// testing (every sample pulled back was a finished game), so the field names below are the
+// well-established ESPN convention, but treat this one as best-effort until confirmed live.
+function spRenderBaseballSituation(comp, state) {
+  if (state !== 'in') return '';
+  const sit = comp && comp.situation;
+  if (!sit) return '';
+  const hasCount = sit.balls !== undefined || sit.strikes !== undefined || sit.outs !== undefined;
+  const hasBases = sit.onFirst !== undefined || sit.onSecond !== undefined || sit.onThird !== undefined;
+  if (!hasCount && !hasBases) return '';
+
+  const batterName = sit.batter && sit.batter.athlete && (sit.batter.athlete.shortName || sit.batter.athlete.displayName);
+  const pitcherName = sit.pitcher && sit.pitcher.athlete && (sit.pitcher.athlete.shortName || sit.pitcher.athlete.displayName);
+
+  const basesHtml = hasBases ? `<div class="sp-bases">
+      <div class="sp-base sp-base-2${sit.onSecond ? ' occupied' : ''}"></div>
+      <div class="sp-base sp-base-3${sit.onThird ? ' occupied' : ''}"></div>
+      <div class="sp-base sp-base-1${sit.onFirst ? ' occupied' : ''}"></div>
+    </div>` : '';
+
+  const countParts = [];
+  if (sit.balls !== undefined && sit.strikes !== undefined) countParts.push(`${sit.balls}-${sit.strikes}`);
+  if (sit.outs !== undefined) countParts.push(`${sit.outs} out${sit.outs === 1 ? '' : 's'}`);
+  const countText = countParts.join(', ');
+
+  return `<div class="sp-situation">
+    ${basesHtml}
+    <div class="sp-situation-text">
+      ${countText}
+      ${batterName ? `<div>At bat: ${batterName}</div>` : ''}
+      ${pitcherName ? `<div>Pitching: ${pitcherName}</div>` : ''}
+    </div>
+  </div>`;
+}
+
 function spRenderGames(events, leagueLabel) {
   const grid = document.getElementById('sp-games-grid');
   if (!grid) return;
@@ -14955,6 +15063,7 @@ function spRenderGames(events, leagueLabel) {
     const venue = (comp.venue && comp.venue.fullName) || '';
     const gameIsPinned = spEventHasPinnedTeam(ev);
     const pacificTime = spFormatPacificTime(ev.date);
+    const situationHtml = spRenderBaseballSituation(comp, state);
 
     const teamRow = (c, isWinner) => {
       const logo = spTeamLogo(c.team);
@@ -14975,6 +15084,7 @@ function spRenderGames(events, leagueLabel) {
       ${pacificTime ? `<div class="sp-game-time">${pacificTime}</div>` : ''}
       ${teamRow(away, away.winner)}
       ${teamRow(home, home.winner)}
+      ${situationHtml}
       ${venue ? `<div class="sp-game-meta">${venue}</div>` : ''}
     </div>`;
   }).join('');
@@ -15089,9 +15199,12 @@ let pmAllTrades = [];
 let pmInited = false;
 let pmAutoEnabled = false;
 let pmAutoInterval = null;
-let pmOffset = 0;
-let pmHasMore = true;
+let pmOldestTs = null;    // timestamp cursor — the oldest trade timestamp loaded so far, used as the "before" anchor for the next page
+let pmHasMore = true;      // true while the underlying API still has older pages beyond what's loaded
+let pmWindowDone = false;  // true once the last-24h window has been fully covered (cutoff reached, or genuinely no more data)
 const PM_PAGE_SIZE = 500; // the API's documented max per request
+const PM_WINDOW_SECONDS = 24 * 60 * 60; // "all 24 hours" — everything from the last day, not a fixed trade count
+const PM_WINDOW_MAX_PAGES_PER_CALL = 40; // safety cap per loading "burst" (40 * 500 = 20,000 trades) so a single click can't loop forever
 const PM_TIER_TARGET = 100; // how many matches we try to find per amount tier
 const PM_TIER_MAX_PAGES_PER_CALL = 20; // safety cap per search "burst" (20 * 500 = 10,000 trades scanned)
 
@@ -15102,9 +15215,28 @@ const PM_TIER_MAX_PAGES_PER_CALL = 20; // safety cap per search "burst" (20 * 50
 let pmTierMode = false;
 let pmTierAmount = 0;
 let pmTierResults = [];
-let pmTierOffset = 0;
+let pmTierOldestTs = null; // timestamp cursor for the tier search
 let pmTierScanned = 0;
 let pmTierExhausted = false;
+
+// A single trade "row" from the API can share a transaction hash with several other rows
+// (one blockchain transaction commonly fills against multiple resting orders at once) — so
+// transactionHash alone isn't a safe de-dup key. This combines it with the fields that make
+// each individual fill distinct.
+function pmTradeKey(t) {
+  return `${t.transactionHash}_${t.asset}_${t.price}_${t.size}_${t.timestamp}`;
+}
+
+// Builds the /trades URL. Uses a "before" timestamp cursor for pagination instead of
+// "offset" — offset-based paging skips trades on a feed that's constantly growing, because
+// everything shifts by however many new trades arrived between one call and the next.
+// Anchoring to a timestamp avoids that entirely: "give me everything before this instant"
+// is a stable request no matter how much new data has shown up since.
+function pmTradesUrl(beforeTs) {
+  let url = `https://data-api.polymarket.com/trades?limit=${PM_PAGE_SIZE}&takerOnly=false`;
+  if (beforeTs) url += `&before=${beforeTs}`;
+  return url;
+}
 
 function pmEnsureInit() {
   if (pmInited) return;
@@ -15115,50 +15247,62 @@ function pmEnsureInit() {
 // Full reset — used by the manual refresh button and auto-refresh, so the feed reflects
 // what's happening right now rather than growing forever on a timer
 async function pmRefresh() {
-  pmOffset = 0;
+  pmOldestTs = null;
   pmHasMore = true;
+  pmWindowDone = false;
   pmAllTrades = [];
   if (pmTierMode) {
     await pmSearchTier(pmTierAmount, false);
   } else {
-    await pmFetchPage(true);
+    await pmFetchWindow();
   }
 }
 
-// Fetches one page at the current offset. `replace` clears the existing list first
-// (used by pmRefresh); otherwise new trades are appended (used by "Load more"), de-duped
-// by transaction hash in case of overlap between pages.
-async function pmFetchPage(replace) {
+// Pages through trades (newest first) and keeps every one from the last 24 hours — no fixed
+// trade-count cap. Since trades are ordered by timestamp descending, the moment a trade older
+// than the cutoff shows up, everything after it is guaranteed older too, so it's safe to stop.
+async function pmFetchWindow() {
   const dot = document.getElementById('pm-dot');
   const statusText = document.getElementById('pm-status-text');
   const refreshBtn = document.getElementById('pm-refresh-btn');
   const moreBtn = document.getElementById('pm-load-more-btn');
-  if (statusText) statusText.textContent = replace ? 'Loading recent activity…' : 'Loading more…';
   if (refreshBtn) refreshBtn.disabled = true;
   if (moreBtn) moreBtn.disabled = true;
 
+  const cutoff = Math.floor(Date.now() / 1000) - PM_WINDOW_SECONDS;
+  const seen = new Set(pmAllTrades.map(pmTradeKey));
+
   try {
-    const res = await fetch(`https://data-api.polymarket.com/trades?limit=${PM_PAGE_SIZE}&offset=${pmOffset}`);
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json();
-    const page = Array.isArray(data) ? data : [];
+    let pagesThisCall = 0;
+    while (!pmWindowDone && pagesThisCall < PM_WINDOW_MAX_PAGES_PER_CALL) {
+      if (statusText) statusText.textContent = `Loading the last 24 hours… ${pmAllTrades.length} trades so far`;
+      const res = await fetch(pmTradesUrl(pmOldestTs));
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      const page = Array.isArray(data) ? data : [];
+      if (!page.length) { pmWindowDone = true; pmHasMore = false; break; }
 
-    if (replace) {
-      pmAllTrades = page;
-    } else {
-      const seen = new Set(pmAllTrades.map(t => t.transactionHash));
-      page.forEach(t => { if (!seen.has(t.transactionHash)) pmAllTrades.push(t); });
+      for (const t of page) {
+        if ((t.timestamp || 0) < cutoff) { pmWindowDone = true; break; }
+        const key = pmTradeKey(t);
+        if (!seen.has(key)) { seen.add(key); pmAllTrades.push(t); }
+        if (pmOldestTs === null || t.timestamp < pmOldestTs) pmOldestTs = t.timestamp;
+      }
+
+      pagesThisCall++;
+      if (page.length < PM_PAGE_SIZE) { pmHasMore = false; if (!pmWindowDone) pmWindowDone = true; break; }
     }
-
-    pmHasMore = page.length === PM_PAGE_SIZE; // a short page means we've hit the end
-    pmOffset += page.length;
 
     const now = new Date();
     const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
     const lastEl = document.getElementById('pm-last-refresh');
     if (lastEl) lastEl.textContent = 'Last: ' + timeStr;
     if (dot) dot.classList.add('live');
-    if (statusText) statusText.textContent = `Updated ${timeStr} · ${pmAllTrades.length} trades loaded${pmHasMore ? ' (more available)' : ''}`;
+    if (statusText) {
+      statusText.textContent = pmWindowDone
+        ? `Updated ${timeStr} · ${pmAllTrades.length} trades in the last 24 hours`
+        : `Updated ${timeStr} · ${pmAllTrades.length} trades loaded so far (still within last 24h — more to load)`;
+    }
 
     pmApplyFilters();
   } catch (e) {
@@ -15169,9 +15313,39 @@ async function pmFetchPage(replace) {
   if (moreBtn) moreBtn.disabled = false;
 }
 
-function pmLoadMore() {
+// Continues the 24h window load from where it left off (only needed if a single burst hit
+// the safety cap before actually reaching the 24-hour cutoff — i.e. a genuinely huge volume day).
+function pmContinueWindow() {
+  if (pmWindowDone) return;
+  return pmFetchWindow();
+}
+
+// Reaches further back than 24 hours, for anyone who wants older history too.
+async function pmLoadOlder() {
   if (!pmHasMore) return;
-  return pmFetchPage(false);
+  const statusText = document.getElementById('pm-status-text');
+  const moreBtn = document.getElementById('pm-load-more-btn');
+  if (moreBtn) moreBtn.disabled = true;
+  if (statusText) statusText.textContent = 'Loading older activity…';
+
+  try {
+    const res = await fetch(pmTradesUrl(pmOldestTs));
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const page = Array.isArray(data) ? data : [];
+    const seen = new Set(pmAllTrades.map(pmTradeKey));
+    page.forEach(t => {
+      const key = pmTradeKey(t);
+      if (!seen.has(key)) { seen.add(key); pmAllTrades.push(t); }
+      if (pmOldestTs === null || t.timestamp < pmOldestTs) pmOldestTs = t.timestamp;
+    });
+    pmHasMore = page.length === PM_PAGE_SIZE;
+    if (statusText) statusText.textContent = `${pmAllTrades.length} trades loaded total`;
+    pmApplyFilters();
+  } catch (e) {
+    if (statusText) statusText.textContent = `Couldn't load more: ${e.message}`;
+  }
+  if (moreBtn) moreBtn.disabled = false;
 }
 
 // Called when the Min Amount selector changes. "None" goes back to the plain recent-activity
@@ -15180,6 +15354,7 @@ function pmOnMinAmountChange() {
   const minAmount = parseFloat(document.getElementById('pm-min-amount').value) || 0;
   if (minAmount <= 0) {
     pmTierMode = false;
+    if (!pmAllTrades.length) return pmRefresh();
     pmApplyFilters();
     return;
   }
@@ -15198,7 +15373,7 @@ async function pmSearchTier(minAmount, resume) {
     pmTierMode = true;
     pmTierAmount = minAmount;
     pmTierResults = [];
-    pmTierOffset = 0;
+    pmTierOldestTs = null;
     pmTierScanned = 0;
     pmTierExhausted = false;
   }
@@ -15206,24 +15381,28 @@ async function pmSearchTier(minAmount, resume) {
 
   if (refreshBtn) refreshBtn.disabled = true;
   const amtLabel = '$' + minAmount.toLocaleString();
+  const seen = new Set(pmTierResults.map(pmTradeKey));
 
   try {
     let pagesThisCall = 0;
     while (pmTierResults.length < PM_TIER_TARGET && !pmTierExhausted && pagesThisCall < PM_TIER_MAX_PAGES_PER_CALL) {
       if (statusText) statusText.textContent = `Searching for trades ≥ ${amtLabel}… found ${pmTierResults.length}/${PM_TIER_TARGET}, scanned ${pmTierScanned}`;
-      const res = await fetch(`https://data-api.polymarket.com/trades?limit=${PM_PAGE_SIZE}&offset=${pmTierOffset}`);
+      const res = await fetch(pmTradesUrl(pmTierOldestTs));
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
       const page = Array.isArray(data) ? data : [];
       if (!page.length) { pmTierExhausted = true; break; }
 
       page.forEach(t => {
+        if (pmTierOldestTs === null || t.timestamp < pmTierOldestTs) pmTierOldestTs = t.timestamp;
         const amount = (parseFloat(t.price) || 0) * (parseFloat(t.size) || 0);
-        if (amount >= minAmount) pmTierResults.push(t);
+        if (amount >= minAmount) {
+          const key = pmTradeKey(t);
+          if (!seen.has(key)) { seen.add(key); pmTierResults.push(t); }
+        }
       });
 
       pmTierScanned += page.length;
-      pmTierOffset += page.length;
       pagesThisCall++;
       if (page.length < PM_PAGE_SIZE) { pmTierExhausted = true; break; }
     }
@@ -15235,10 +15414,11 @@ async function pmSearchTier(minAmount, resume) {
     if (dot) dot.classList.add('live');
 
     const found = Math.min(pmTierResults.length, PM_TIER_TARGET);
+    const depthLabel = pmTierOldestTs ? pmRelativeTime(pmTierOldestTs).replace(' ago', '') + ' back' : '';
     if (statusText) {
       statusText.textContent = pmTierExhausted && found < PM_TIER_TARGET
-        ? `Found ${found} trades ≥ ${amtLabel} (that's all of them — scanned ${pmTierScanned} total trades)`
-        : `Found ${found} of ${PM_TIER_TARGET} trades ≥ ${amtLabel} · scanned ${pmTierScanned} total trades`;
+        ? `Found ${found} trades ≥ ${amtLabel} (that's all of them — scanned ${pmTierScanned} total trades, reaching ${depthLabel})`
+        : `Found ${found} of ${PM_TIER_TARGET} trades ≥ ${amtLabel} · scanned ${pmTierScanned} trades, reaching ${depthLabel}`;
     }
 
     pmApplyFilters();
@@ -15257,7 +15437,12 @@ function pmToggleAutoRefresh() {
   pmAutoEnabled = !pmAutoEnabled;
   const btn = document.getElementById('pm-auto-btn');
   if (pmAutoEnabled) {
-    pmAutoInterval = setInterval(pmRefresh, 60 * 1000); // every 1 min — activity moves fast
+    // In tier mode, auto-refresh should extend the existing search deeper, not wipe out
+    // everything scanned so far and start over from scratch every single minute.
+    pmAutoInterval = setInterval(() => {
+      if (pmTierMode) pmSearchTier(pmTierAmount, true);
+      else pmRefresh();
+    }, 60 * 1000); // every 1 min — activity moves fast
     if (btn) { btn.textContent = '⏱ Auto: ON (1m)'; btn.style.color = 'var(--green)'; }
     showToast('Polymarket auto-refresh ON — every minute');
   } else {
@@ -15328,12 +15513,17 @@ function pmRenderList(trades) {
     }
   } else if (!trades.length) {
     footer = '';
+  } else if (!pmWindowDone) {
+    footer = `<div style="padding:14px 20px;text-align:center">
+        <button class="btn btn-secondary btn-sm" id="pm-load-more-btn" onclick="pmContinueWindow()">Keep loading (still within last 24h, ${pmAllTrades.length} so far)</button>
+      </div>`;
   } else {
     footer = pmHasMore
       ? `<div style="padding:14px 20px;text-align:center">
-          <button class="btn btn-secondary btn-sm" id="pm-load-more-btn" onclick="pmLoadMore()">Load more (further back in history)</button>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:8px">That's all ${pmAllTrades.length} trades from the last 24 hours</div>
+          <button class="btn btn-secondary btn-sm" id="pm-load-more-btn" onclick="pmLoadOlder()">Load older (before 24h ago)</button>
         </div>`
-      : `<div style="padding:14px 20px;text-align:center;font-size:11px;color:var(--text3)">That's everything currently available</div>`;
+      : `<div style="padding:14px 20px;text-align:center;font-size:11px;color:var(--text3)">That's all ${pmAllTrades.length} trades from the last 24 hours — nothing older is available</div>`;
   }
 
   if (!trades.length) {
