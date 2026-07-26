@@ -14968,9 +14968,9 @@ function spToggleAutoRefresh() {
   spAutoEnabled = !spAutoEnabled;
   const btn = document.getElementById('sp-auto-btn');
   if (spAutoEnabled) {
-    spAutoInterval = setInterval(() => spRefreshCurrent(), 3 * 1000); // every 3 sec
-    if (btn) { btn.textContent = '⏱ Auto: ON (3s)'; btn.style.color = 'var(--green)'; }
-    showToast('Sports auto-refresh ON — every 3 seconds');
+    spAutoInterval = setInterval(() => spRefreshCurrent(), 1 * 1000); // every 1 sec
+    if (btn) { btn.textContent = '⏱ Auto: ON (1s)'; btn.style.color = 'var(--green)'; }
+    showToast('Sports auto-refresh ON — every 1 second');
   } else {
     clearInterval(spAutoInterval);
     if (btn) { btn.textContent = '⏱ Auto: OFF'; btn.style.color = ''; }
