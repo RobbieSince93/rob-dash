@@ -857,6 +857,20 @@
   .sp-base-2 { top:0;left:50%;margin-left:-6px; }
   .sp-base-3 { bottom:0;left:0; }
   .sp-situation-text { font-size:11px;color:var(--text2);line-height:1.5; }
+  .sp-detail-section-title { font-family:var(--display);font-size:12px;font-weight:600;color:var(--text);text-transform:uppercase;letter-spacing:.05em;margin:18px 0 8px; }
+  .sp-detail-section-title:first-child { margin-top:0; }
+  .sp-box-table { width:100%;border-collapse:collapse;font-size:11px;margin-bottom:6px; }
+  .sp-box-table th { text-align:left;padding:4px 6px;color:var(--text3);font-weight:500;border-bottom:1px solid var(--border); }
+  .sp-box-table th.num, .sp-box-table td.num { text-align:center; }
+  .sp-box-table td { padding:4px 6px;color:var(--text2);border-bottom:1px solid var(--border); }
+  .sp-box-table tr.starter td:first-child { color:var(--text);font-weight:500; }
+  .sp-play-item { padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--text2);display:flex;gap:10px; }
+  .sp-play-item:last-child { border-bottom:none; }
+  .sp-play-inning { flex-shrink:0;color:var(--text3);font-size:10px;min-width:52px; }
+  .sp-play-score { flex-shrink:0;color:var(--text3);font-size:10px;min-width:36px;text-align:right; }
+  .sp-team-tab { display:inline-flex;gap:4px;margin-bottom:10px; }
+  .sp-team-tab button { background:var(--bg3);border:1px solid var(--border);color:var(--text2);padding:5px 12px;font-size:11px;border-radius:6px;cursor:pointer; }
+  .sp-team-tab button.active { background:rgba(77,166,255,0.15);border-color:var(--blue);color:var(--blue); }
   .sp-team-row.winner .sp-team-name { color:var(--text);font-weight:600; }
   .sp-team-score { font-family:var(--display);font-size:18px;font-weight:700;color:var(--text2); }
   .sp-team-row.winner .sp-team-score { color:var(--text); }
@@ -874,6 +888,7 @@
   .pm-detail .pm-side-buy { color:var(--green); }
   .pm-detail .pm-side-sell { color:var(--red); }
   .pm-time { font-size:11px;color:var(--text3);white-space:nowrap;flex-shrink:0; }
+  .pm-row.pm-row-new { animation: flashUp 1.6s ease-out; }
   .pm-cat-menu { position:absolute;top:calc(100% + 6px);left:0;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:6px;min-width:170px;z-index:50;box-shadow:0 12px 32px rgba(0,0,0,0.5); }
   .pm-cat-item { padding:8px 12px;border-radius:6px;font-size:13px;color:var(--text2);cursor:pointer;white-space:nowrap; }
   .pm-cat-item:hover { background:var(--bg3);color:var(--text); }
@@ -5043,6 +5058,19 @@
           </div>
         </div>
       </div>
+
+      <!-- Game detail modal — box score, current at-bat/situation, play-by-play -->
+      <div class="modal-overlay" id="sp-detail-modal">
+        <div class="modal" style="width:560px;max-height:85vh;display:flex;flex-direction:column">
+          <div class="modal-header">
+            <div class="modal-title" id="sp-detail-title">Game Detail</div>
+            <div class="modal-close" onclick="spCloseDetail()">✕</div>
+          </div>
+          <div class="modal-body" id="sp-detail-body" style="overflow-y:auto">
+            <div class="empty-state"><div class="es-icon">⏳</div><div class="es-title">Loading…</div></div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- ─── POLYMARKET ACTIVITY PAGE ─── -->
@@ -5055,7 +5083,7 @@
         <div style="display:flex;gap:8px;align-items:center">
           <span style="font-size:11px;color:var(--text3)" id="pm-last-refresh">Never refreshed</span>
           <button class="btn btn-secondary" id="pm-refresh-btn" onclick="pmRefresh()">↻ Refresh now</button>
-          <button class="btn btn-secondary" id="pm-auto-btn" onclick="pmToggleAutoRefresh()">⏱ Auto: OFF</button>
+          <button class="btn btn-secondary" id="pm-auto-btn" onclick="pmToggleAutoRefresh()" style="color:var(--green)">⏱ Live: ON (5s)</button>
         </div>
       </div>
 
@@ -14892,13 +14920,20 @@ async function spFetchFavorites() {
         cfg.slugs.map(slug => fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${slug}/scoreboard`).then(r => r.json()))
       );
       let evs = [];
-      subs.forEach(s => { if (s.status === 'fulfilled' && s.value && Array.isArray(s.value.events)) evs = evs.concat(s.value.events); });
+      subs.forEach((s, i) => {
+        if (s.status === 'fulfilled' && s.value && Array.isArray(s.value.events)) {
+          s.value.events.forEach(ev => { ev._spSport = 'soccer'; ev._spLeague = cfg.slugs[i]; });
+          evs = evs.concat(s.value.events);
+        }
+      });
       return evs;
     }
     const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${cfg.sport}/${cfg.league}/scoreboard`);
     if (!res.ok) return [];
     const data = await res.json();
-    return data.events || [];
+    const evs = data.events || [];
+    evs.forEach(ev => { ev._spSport = cfg.sport; ev._spLeague = cfg.league; });
+    return evs;
   }));
 
   let allEvents = [];
@@ -14933,9 +14968,9 @@ function spToggleAutoRefresh() {
   spAutoEnabled = !spAutoEnabled;
   const btn = document.getElementById('sp-auto-btn');
   if (spAutoEnabled) {
-    spAutoInterval = setInterval(() => spRefreshCurrent(), 2 * 60 * 1000); // every 2 min
-    if (btn) { btn.textContent = '⏱ Auto: ON (2m)'; btn.style.color = 'var(--green)'; }
-    showToast('Sports auto-refresh ON — every 2 minutes');
+    spAutoInterval = setInterval(() => spRefreshCurrent(), 3 * 1000); // every 3 sec
+    if (btn) { btn.textContent = '⏱ Auto: ON (3s)'; btn.style.color = 'var(--green)'; }
+    showToast('Sports auto-refresh ON — every 3 seconds');
   } else {
     clearInterval(spAutoInterval);
     if (btn) { btn.textContent = '⏱ Auto: OFF'; btn.style.color = ''; }
@@ -14957,14 +14992,18 @@ async function spFetchLeague(key) {
       const results = await Promise.allSettled(
         cfg.slugs.map(slug => fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/${slug}/scoreboard`).then(r => r.json()))
       );
-      results.forEach(r => {
-        if (r.status === 'fulfilled' && r.value && Array.isArray(r.value.events)) events = events.concat(r.value.events);
+      results.forEach((r, i) => {
+        if (r.status === 'fulfilled' && r.value && Array.isArray(r.value.events)) {
+          r.value.events.forEach(ev => { ev._spSport = 'soccer'; ev._spLeague = cfg.slugs[i]; });
+          events = events.concat(r.value.events);
+        }
       });
     } else {
       const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${cfg.sport}/${cfg.league}/scoreboard`);
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
       events = data.events || [];
+      events.forEach(ev => { ev._spSport = cfg.sport; ev._spLeague = cfg.league; });
     }
 
     spLastEvents = events;
@@ -15043,6 +15082,146 @@ function spRenderBaseballSituation(comp, state) {
   </div>`;
 }
 
+// ── Game detail modal: box score, live situation, play-by-play ──────────
+// Note: the ESPN "summary" endpoint's box score / play-by-play shape is less consistently
+// documented than the scoreboard endpoint, so this parses everything defensively — sections
+// that don't match the expected shape are skipped rather than breaking the whole modal.
+async function spOpenGameDetail(gameId, sport, league) {
+  if (!gameId || !sport || !league) return;
+  const modal = document.getElementById('sp-detail-modal');
+  const body = document.getElementById('sp-detail-body');
+  const title = document.getElementById('sp-detail-title');
+  if (!modal || !body || !title) return;
+
+  modal.classList.add('open');
+  title.textContent = 'Loading…';
+  body.innerHTML = `<div class="empty-state"><div class="es-icon">⏳</div><div class="es-title">Loading game detail…</div></div>`;
+
+  try {
+    const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${sport}/${league}/summary?event=${gameId}`);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    spRenderGameDetail(data);
+  } catch (e) {
+    title.textContent = 'Game Detail';
+    body.innerHTML = `<div class="empty-state"><div class="es-icon">⚠️</div><div class="es-title">Couldn't load game detail</div><div class="es-sub">${e.message}</div></div>`;
+  }
+}
+
+function spCloseDetail() {
+  const modal = document.getElementById('sp-detail-modal');
+  if (modal) modal.classList.remove('open');
+}
+
+function spDetailStatVal(entry, ...names) {
+  const stats = entry.stats || [];
+  for (const n of names) {
+    const idx = (entry.labels || entry.names || []).findIndex(l => (l || '').toLowerCase() === n.toLowerCase());
+    if (idx > -1 && stats[idx] !== undefined) return stats[idx];
+  }
+  return null;
+}
+
+function spRenderGameDetail(data) {
+  const title = document.getElementById('sp-detail-title');
+  const body = document.getElementById('sp-detail-body');
+  if (!title || !body) return;
+
+  const header = data.header || {};
+  const headerComp = (header.competitions && header.competitions[0]) || {};
+  const competitors = headerComp.competitors || [];
+  const home = competitors.find(c => c.homeAway === 'home') || competitors[0] || {};
+  const away = competitors.find(c => c.homeAway === 'away') || competitors[1] || {};
+  const homeName = (home.team && (home.team.shortDisplayName || home.team.displayName)) || 'Home';
+  const awayName = (away.team && (away.team.shortDisplayName || away.team.displayName)) || 'Away';
+  title.textContent = `${awayName} @ ${homeName}`;
+
+  const statusType = headerComp.status && headerComp.status.type || {};
+  const state = statusType.state;
+
+  // The live situation (bases/count/batter) — try the header competition first, then a
+  // top-level `situation` some summary responses use instead.
+  let situationHtml = spRenderBaseballSituation(headerComp, state) || '';
+  if (!situationHtml && data.situation) {
+    situationHtml = spRenderBaseballSituation({ situation: data.situation }, state) || '';
+  }
+
+  let html = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+      <div>
+        <div style="font-size:13px;color:var(--text2)">${awayName} <span style="color:var(--text3)">@</span> ${homeName}</div>
+        <div style="font-size:11px;color:${state==='in' ? 'var(--green)' : 'var(--text3)'}">${statusType.shortDetail || statusType.description || ''}</div>
+      </div>
+      <div style="text-align:right;font-family:var(--display);font-size:22px;font-weight:700">
+        ${away.score !== undefined ? away.score : '—'} <span style="color:var(--text3);font-size:15px">–</span> ${home.score !== undefined ? home.score : '—'}
+      </div>
+    </div>
+    ${situationHtml}
+  `;
+
+  // Team totals
+  const boxTeams = (data.boxscore && data.boxscore.teams) || [];
+  if (boxTeams.length) {
+    html += `<div class="sp-detail-section-title">Team Stats</div><table class="sp-box-table"><tbody>`;
+    boxTeams.forEach(bt => {
+      const teamName = (bt.team && (bt.team.shortDisplayName || bt.team.displayName)) || '';
+      html += `<tr><td colspan="2" style="color:var(--text);font-weight:600;padding-top:10px;border-bottom:none">${teamName}</td></tr>`;
+      (bt.statistics || []).forEach(s => {
+        html += `<tr><td>${s.label || s.displayName || s.name || ''}</td><td class="num">${s.displayValue !== undefined ? s.displayValue : ''}</td></tr>`;
+      });
+    });
+    html += `</tbody></table>`;
+  }
+
+  // Per-player lines (batting/pitching for baseball, minutes/points etc. for other sports) —
+  // this is the part of ESPN's summary shape I could verify least directly, so it's written
+  // to degrade gracefully (skip a group entirely) rather than show something wrong.
+  const boxPlayers = (data.boxscore && data.boxscore.players) || [];
+  if (boxPlayers.length) {
+    html += `<div class="sp-detail-section-title">Box Score</div>`;
+    boxPlayers.forEach(teamBlock => {
+      const teamName = (teamBlock.team && (teamBlock.team.shortDisplayName || teamBlock.team.displayName)) || '';
+      html += `<div style="font-size:12px;color:var(--text);font-weight:600;margin:10px 0 4px">${teamName}</div>`;
+      (teamBlock.statistics || []).forEach(group => {
+        const athletes = group.athletes || [];
+        if (!athletes.length) return;
+        const groupName = group.name || group.type || group.text || '';
+        const labels = group.labels || group.keys || [];
+        html += `<div style="font-size:10px;color:var(--text3);text-transform:uppercase;margin:8px 0 3px">${groupName}</div>`;
+        html += `<table class="sp-box-table"><thead><tr><th>Player</th>${labels.map(l => `<th class="num">${l}</th>`).join('')}</tr></thead><tbody>`;
+        athletes.forEach(a => {
+          const name = (a.athlete && (a.athlete.shortName || a.athlete.displayName)) || '';
+          const stats = a.stats || [];
+          html += `<tr${a.starter ? ' class="starter"' : ''}><td>${name}</td>${stats.map(s => `<td class="num">${s}</td>`).join('')}</tr>`;
+        });
+        html += `</tbody></table>`;
+      });
+    });
+  }
+
+  // Recent plays
+  const plays = data.plays || [];
+  if (plays.length) {
+    html += `<div class="sp-detail-section-title">Recent Plays</div>`;
+    const recent = plays.slice(-25).reverse();
+    html += recent.map(p => {
+      const period = (p.period && (p.period.displayValue || (p.period.number ? 'Inning ' + p.period.number : ''))) || '';
+      const scoreStr = (p.awayScore !== undefined && p.homeScore !== undefined) ? `${p.awayScore}-${p.homeScore}` : '';
+      return `<div class="sp-play-item">
+        <div class="sp-play-inning">${period}</div>
+        <div style="flex:1">${p.text || ''}</div>
+        <div class="sp-play-score">${scoreStr}</div>
+      </div>`;
+    }).join('');
+  }
+
+  if (!boxTeams.length && !boxPlayers.length && !plays.length) {
+    html += `<div class="empty-state"><div class="es-icon">📋</div><div class="es-title">No box score or play-by-play available yet</div><div class="es-sub">This usually fills in once the game gets underway</div></div>`;
+  }
+
+  body.innerHTML = html;
+}
+
 function spRenderGames(events, leagueLabel) {
   const grid = document.getElementById('sp-games-grid');
   if (!grid) return;
@@ -15083,14 +15262,18 @@ function spRenderGames(events, leagueLabel) {
       const safeName = name.replace(/'/g, "\\'");
       return `<div class="sp-team-row${isWinner ? ' winner' : ''}">
         <span class="sp-team-name">
-          <button class="sp-pin-btn${pinned ? ' pinned' : ''}" onclick="spTogglePin('${safeName}')" title="${pinned ? 'Unpin' : 'Pin'} ${name}">${pinned ? '★' : '☆'}</button>
+          <button class="sp-pin-btn${pinned ? ' pinned' : ''}" onclick="event.stopPropagation();spTogglePin('${safeName}')" title="${pinned ? 'Unpin' : 'Pin'} ${name}">${pinned ? '★' : '☆'}</button>
           ${logo ? `<img src="${logo}" class="sp-team-logo" alt="">` : ''}${name}
         </span>
         <span class="sp-team-score">${c.score !== undefined && c.score !== null && c.score !== '' ? c.score : '—'}</span>
       </div>`;
     };
 
-    return `<div class="sp-game-card${gameIsPinned ? ' sp-pinned-card' : ''}">
+    const gameId = ev.id;
+    const eventSport = ev._spSport || (SP_LEAGUES[spCurrentLeague] && SP_LEAGUES[spCurrentLeague].sport) || '';
+    const eventLeague = ev._spLeague || (SP_LEAGUES[spCurrentLeague] && SP_LEAGUES[spCurrentLeague].league) || '';
+
+    return `<div class="sp-game-card${gameIsPinned ? ' sp-pinned-card' : ''}" style="cursor:pointer" onclick="spOpenGameDetail('${gameId}','${eventSport}','${eventLeague}')">
       <div class="sp-game-status ${statusClass}">${statusLabel}</div>
       ${pacificTime ? `<div class="sp-game-time">${pacificTime}</div>` : ''}
       ${teamRow(away, away.winner)}
@@ -15207,6 +15390,7 @@ async function spFetchStandings(key) {
 <script>
 // ═══ POLYMARKET ACTIVITY (scoped, self-contained — public Data API, no key/auth needed) ═══
 let pmAllTrades = [];
+let pmKnownRowKeys = new Set(); // which rows have already been rendered once, so re-renders don't re-flash the same ones
 let pmInited = false;
 let pmAutoEnabled = false;
 let pmAutoInterval = null;
@@ -15331,10 +15515,13 @@ function pmEnsureInit() {
   pmInited = true;
   pmRenderCategoryMenu();
   pmRefresh();
+  // Live by default, the way the real site behaves — no toggle needed to see it update
+  pmStartAutoRefresh();
 }
 
-// Full reset — used by the manual refresh button and auto-refresh, so the feed reflects
-// what's happening right now rather than growing forever on a timer
+// Full reset — used by the manual "Refresh now" button, so there's still a way to force a
+// clean reload of everything. The recurring timer uses the lighter top-up functions instead
+// (see below) since re-fetching the entire window every few seconds would be slow and wasteful.
 async function pmRefresh() {
   pmOldestTs = null;
   pmHasMore = true;
@@ -15344,6 +15531,52 @@ async function pmRefresh() {
     await pmSearchTier(pmTierAmount, false);
   } else {
     await pmFetchWindow();
+  }
+}
+
+// Checks just the newest page for anything that arrived since the last check and prepends
+// it — this is what runs on the fast recurring timer for the base feed. Full re-fetching of
+// the whole 24h window every few seconds would be needlessly slow; this mirrors exactly what
+// pmTopUpTierMatches() does for tier mode.
+let pmTopUpFailures = 0; // consecutive failures — surfaced in the status text so a stuck poll is visible, not silent
+
+async function pmTopUpWindow() {
+  const statusText = document.getElementById('pm-status-text');
+  try {
+    const res = await fetch(pmTradesUrl(null)); // no cursor — the most recent trades right now
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const rawPage = Array.isArray(data) ? data : [];
+    const page = pmAggregateFills(rawPage);
+    const existingKeys = new Set(pmAllTrades.map(pmTradeKey));
+    const newestKnown = pmAllTrades.reduce((max, t) => Math.max(max, t.timestamp || 0), 0);
+
+    let added = 0;
+    page.forEach(t => {
+      if (t.timestamp >= newestKnown) {
+        const key = pmTradeKey(t);
+        if (!existingKeys.has(key)) { existingKeys.add(key); pmAllTrades.unshift(t); added++; }
+      }
+    });
+
+    if (added > 0) {
+      pmAllTrades.sort((a, b) => b.timestamp - a.timestamp);
+      pmApplyFilters();
+    }
+
+    pmTopUpFailures = 0;
+    const dot = document.getElementById('pm-dot');
+    if (dot) dot.classList.add('live');
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const lastEl = document.getElementById('pm-last-refresh');
+    if (lastEl) lastEl.textContent = 'Last: ' + timeStr;
+    if (statusText) statusText.textContent = `Live · checked ${timeStr} · ${added > 0 ? `+${added} new · ` : ''}${pmAllTrades.length} trades loaded`;
+  } catch (e) {
+    pmTopUpFailures++;
+    const dot = document.getElementById('pm-dot');
+    if (dot) dot.classList.remove('live');
+    if (statusText) statusText.textContent = `Live check failed (${pmTopUpFailures}x): ${e.message} — will keep retrying every 5s`;
   }
 }
 
@@ -15525,22 +15758,82 @@ function pmKeepSearchingTier() {
   return pmSearchTier(pmTierAmount, true);
 }
 
-function pmToggleAutoRefresh() {
-  pmAutoEnabled = !pmAutoEnabled;
+// Checks just the newest page of trades for anything new that clears the current tier —
+// this is what keeps the tier view "live" without disturbing pmTierOldestTs (the deep-history
+// scan position). "Keep searching" and this are deliberately separate: one digs backward into
+// history, this only ever looks at what's new at the front.
+async function pmTopUpTierMatches() {
+  if (!pmTierMode) return;
+  const statusText = document.getElementById('pm-status-text');
+  try {
+    const res = await fetch(pmTradesUrl(null)); // no cursor — the most recent trades right now
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const rawPage = Array.isArray(data) ? data : [];
+    const page = pmAggregateFills(rawPage);
+    const existingKeys = new Set(pmTierResults.map(pmTradeKey));
+    const newestKnown = pmTierResults.reduce((max, t) => Math.max(max, t.timestamp || 0), 0);
+
+    let added = 0;
+    page.forEach(t => {
+      const amount = (parseFloat(t.price) || 0) * (parseFloat(t.size) || 0);
+      if (amount >= pmTierAmount && t.timestamp >= newestKnown) {
+        const key = pmTradeKey(t);
+        if (!existingKeys.has(key)) { existingKeys.add(key); pmTierResults.unshift(t); added++; }
+      }
+    });
+
+    if (added > 0) {
+      pmTierResults.sort((a, b) => b.timestamp - a.timestamp);
+      if (pmTierResults.length > PM_TIER_TARGET) pmTierResults.length = PM_TIER_TARGET;
+      pmApplyFilters();
+    }
+
+    pmTopUpFailures = 0;
+    const dot = document.getElementById('pm-dot');
+    if (dot) dot.classList.add('live');
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const lastEl = document.getElementById('pm-last-refresh');
+    if (lastEl) lastEl.textContent = 'Last: ' + timeStr;
+    const found = Math.min(pmTierResults.length, PM_TIER_TARGET);
+    if (statusText) statusText.textContent = `Live · checked ${timeStr} · ${added > 0 ? `+${added} new · ` : ''}${found} of ${PM_TIER_TARGET} found ≥ $${pmTierAmount.toLocaleString()}`;
+  } catch (e) {
+    pmTopUpFailures++;
+    const dot = document.getElementById('pm-dot');
+    if (dot) dot.classList.remove('live');
+    if (statusText) statusText.textContent = `Live check failed (${pmTopUpFailures}x): ${e.message} — will keep retrying every 5s`;
+  }
+}
+
+function pmStartAutoRefresh() {
+  if (pmAutoEnabled) return;
+  pmAutoEnabled = true;
   const btn = document.getElementById('pm-auto-btn');
+  // 5 seconds — close to how the live site feels, without hammering a public endpoint.
+  // Both branches are the cheap "just check what's new" versions, not a full reload —
+  // see pmTopUpWindow / pmTopUpTierMatches.
+  pmAutoInterval = setInterval(() => {
+    if (pmTierMode) pmTopUpTierMatches();
+    else pmTopUpWindow();
+  }, 5 * 1000);
+  if (btn) { btn.textContent = '⏱ Live: ON (5s)'; btn.style.color = 'var(--green)'; }
+}
+
+function pmStopAutoRefresh() {
+  pmAutoEnabled = false;
+  clearInterval(pmAutoInterval);
+  const btn = document.getElementById('pm-auto-btn');
+  if (btn) { btn.textContent = '⏱ Live: OFF'; btn.style.color = ''; }
+}
+
+function pmToggleAutoRefresh() {
   if (pmAutoEnabled) {
-    // In tier mode, auto-refresh should extend the existing search deeper, not wipe out
-    // everything scanned so far and start over from scratch every single minute.
-    pmAutoInterval = setInterval(() => {
-      if (pmTierMode) pmSearchTier(pmTierAmount, true);
-      else pmRefresh();
-    }, 60 * 1000); // every 1 min — activity moves fast
-    if (btn) { btn.textContent = '⏱ Auto: ON (1m)'; btn.style.color = 'var(--green)'; }
-    showToast('Polymarket auto-refresh ON — every minute');
+    pmStopAutoRefresh();
+    showToast('Live updates paused');
   } else {
-    clearInterval(pmAutoInterval);
-    if (btn) { btn.textContent = '⏱ Auto: OFF'; btn.style.color = ''; }
-    showToast('Polymarket auto-refresh OFF');
+    pmStartAutoRefresh();
+    showToast('Live updates on — checking every 5 seconds');
   }
 }
 
@@ -15641,8 +15934,9 @@ function pmRenderList(trades) {
     const outcome = t.outcome || '—';
     const marketUrl = t.eventSlug ? `https://polymarket.com/event/${t.eventSlug}` : (t.slug ? `https://polymarket.com/market/${t.slug}` : '#');
     const icon = t.icon ? `<img src="${t.icon}" class="pm-icon" alt="">` : `<div class="pm-icon"></div>`;
+    const isNew = pmKnownRowKeys.size > 0 && !pmKnownRowKeys.has(pmTradeKey(t));
 
-    return `<a href="${marketUrl}" target="_blank" class="pm-row" style="text-decoration:none;color:inherit">
+    return `<a href="${marketUrl}" target="_blank" class="pm-row${isNew ? ' pm-row-new' : ''}" style="text-decoration:none;color:inherit">
       ${icon}
       <div class="pm-body">
         <div class="pm-title">${t.title || 'Untitled market'}</div>
@@ -15651,6 +15945,8 @@ function pmRenderList(trades) {
       <div class="pm-time">${pmRelativeTime(t.timestamp)}</div>
     </a>`;
   }).join('') + footer;
+
+  pmKnownRowKeys = new Set(trades.map(pmTradeKey));
 }
 </script>
 
