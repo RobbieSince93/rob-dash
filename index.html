@@ -841,9 +841,14 @@
   .sp-game-status.live .sp-live-dot { width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse 1.4s infinite; }
   .sp-game-status.final { color:var(--text3); }
   .sp-game-status.pre { color:var(--blue); }
+  .sp-game-time { font-size:11px;color:var(--text3);margin-bottom:10px; }
   .sp-team-row { display:flex;align-items:center;justify-content:space-between;padding:4px 0; }
   .sp-team-name { font-size:14px;color:var(--text2);display:flex;align-items:center;gap:8px; }
   .sp-team-logo { width:20px;height:20px;object-fit:contain;flex-shrink:0; }
+  .sp-pin-btn { background:none;border:none;cursor:pointer;font-size:14px;color:var(--text3);padding:0;line-height:1;flex-shrink:0; }
+  .sp-pin-btn:hover { color:var(--amber); }
+  .sp-pin-btn.pinned { color:var(--amber); }
+  .sp-game-card.sp-pinned-card { border-color:var(--amber); box-shadow:0 0 0 1px rgba(255,184,48,0.25); }
   .sp-team-row.winner .sp-team-name { color:var(--text);font-weight:600; }
   .sp-team-score { font-family:var(--display);font-size:18px;font-weight:700;color:var(--text2); }
   .sp-team-row.winner .sp-team-score { color:var(--text); }
@@ -14764,10 +14769,39 @@ let spAutoEnabled = false;
 let spAutoInterval = null;
 let spInited = false;
 let spViewMode = 'scores'; // 'scores' | 'standings'
+let spLastEvents = [];
+let spLastLeagueLabel = '';
+
+// Pinned teams — persisted so "who I'm following today" carries over between visits.
+// Games are matched by team display name, so pinning "Yankees" bumps every Yankees game
+// to the top regardless of which league tab or day it shows up on.
+const SP_PINNED_KEY = 'sp_pinned_teams_v1';
+let spPinnedTeams = [];
+function spLoadPinned() {
+  try { spPinnedTeams = JSON.parse(localStorage.getItem(SP_PINNED_KEY)) || []; } catch(e) { spPinnedTeams = []; }
+}
+function spSavePinned() {
+  localStorage.setItem(SP_PINNED_KEY, JSON.stringify(spPinnedTeams));
+}
+function spIsPinned(teamName) {
+  return spPinnedTeams.some(t => t.toLowerCase() === (teamName||'').toLowerCase());
+}
+function spTogglePin(teamName) {
+  if (!teamName) return;
+  if (spIsPinned(teamName)) {
+    spPinnedTeams = spPinnedTeams.filter(t => t.toLowerCase() !== teamName.toLowerCase());
+  } else {
+    spPinnedTeams.push(teamName);
+  }
+  spSavePinned();
+  // Re-render from cache — no need to refetch just because pins changed
+  spRenderGames(spLastEvents, spLastLeagueLabel);
+}
 
 function spEnsureInit() {
   if (spInited) return;
   spInited = true;
+  spLoadPinned();
   spFetchLeague(spCurrentLeague);
 }
 
@@ -14851,8 +14885,9 @@ async function spFetchLeague(key) {
       events = data.events || [];
     }
 
+    spLastEvents = events;
+    spLastLeagueLabel = cfg.label;
     spRenderGames(events, cfg.label);
-
     const now = new Date();
     const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
     const lastEl = document.getElementById('sp-last-refresh');
@@ -14872,6 +14907,23 @@ function spTeamLogo(team) {
   return '';
 }
 
+// Every game's start time, shown consistently in Pacific regardless of the person's own
+// system timezone or whatever timezone ESPN's own "detail" text happens to default to.
+function spFormatPacificTime(isoDate) {
+  if (!isoDate) return '';
+  const d = new Date(isoDate);
+  if (isNaN(d.getTime())) return '';
+  const datePart = d.toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', weekday: 'short', month: 'short', day: 'numeric' });
+  const timePart = d.toLocaleTimeString('en-US', { timeZone: 'America/Los_Angeles', hour: 'numeric', minute: '2-digit' });
+  return `${datePart} · ${timePart} PT`;
+}
+
+function spEventHasPinnedTeam(ev) {
+  const comp = (ev.competitions && ev.competitions[0]) || {};
+  const competitors = comp.competitors || [];
+  return competitors.some(c => spIsPinned(c.team && c.team.displayName));
+}
+
 function spRenderGames(events, leagueLabel) {
   const grid = document.getElementById('sp-games-grid');
   if (!grid) return;
@@ -14881,7 +14933,15 @@ function spRenderGames(events, leagueLabel) {
     return;
   }
 
-  grid.innerHTML = events.map(ev => {
+  // Pinned-team games float to the top row(s); everything else keeps its original order
+  // (index used as a stable-sort tiebreaker since Array.sort's stability can't be assumed
+  // in every environment this file might run in).
+  const sorted = events
+    .map((ev, i) => ({ ev, i, pinned: spEventHasPinnedTeam(ev) }))
+    .sort((a, b) => (b.pinned - a.pinned) || (a.i - b.i))
+    .map(x => x.ev);
+
+  grid.innerHTML = sorted.map(ev => {
     const comp = (ev.competitions && ev.competitions[0]) || {};
     const competitors = comp.competitors || [];
     const home = competitors.find(c => c.homeAway === 'home') || competitors[0] || {};
@@ -14893,17 +14953,26 @@ function spRenderGames(events, leagueLabel) {
       ? `<span class="sp-live-dot"></span> ${statusType.shortDetail || 'LIVE'}`
       : (statusType.shortDetail || statusType.description || '');
     const venue = (comp.venue && comp.venue.fullName) || '';
+    const gameIsPinned = spEventHasPinnedTeam(ev);
+    const pacificTime = spFormatPacificTime(ev.date);
 
     const teamRow = (c, isWinner) => {
       const logo = spTeamLogo(c.team);
+      const name = (c.team && c.team.displayName) || '—';
+      const pinned = spIsPinned(name);
+      const safeName = name.replace(/'/g, "\\'");
       return `<div class="sp-team-row${isWinner ? ' winner' : ''}">
-        <span class="sp-team-name">${logo ? `<img src="${logo}" class="sp-team-logo" alt="">` : ''}${(c.team && c.team.displayName) || '—'}</span>
+        <span class="sp-team-name">
+          <button class="sp-pin-btn${pinned ? ' pinned' : ''}" onclick="spTogglePin('${safeName}')" title="${pinned ? 'Unpin' : 'Pin'} ${name}">${pinned ? '★' : '☆'}</button>
+          ${logo ? `<img src="${logo}" class="sp-team-logo" alt="">` : ''}${name}
+        </span>
         <span class="sp-team-score">${c.score !== undefined && c.score !== null && c.score !== '' ? c.score : '—'}</span>
       </div>`;
     };
 
-    return `<div class="sp-game-card">
+    return `<div class="sp-game-card${gameIsPinned ? ' sp-pinned-card' : ''}">
       <div class="sp-game-status ${statusClass}">${statusLabel}</div>
+      ${pacificTime ? `<div class="sp-game-time">${pacificTime}</div>` : ''}
       ${teamRow(away, away.winner)}
       ${teamRow(home, home.winner)}
       ${venue ? `<div class="sp-game-meta">${venue}</div>` : ''}
@@ -15024,7 +15093,7 @@ let pmOffset = 0;
 let pmHasMore = true;
 const PM_PAGE_SIZE = 500; // the API's documented max per request
 const PM_TIER_TARGET = 100; // how many matches we try to find per amount tier
-const PM_TIER_MAX_PAGES_PER_CALL = 10; // safety cap per search "burst" (10 * 500 = 5000 trades scanned)
+const PM_TIER_MAX_PAGES_PER_CALL = 20; // safety cap per search "burst" (20 * 500 = 10,000 trades scanned)
 
 // Tier search state — active whenever a Min Amount other than "None" is selected. Rather
 // than just filtering whatever's already loaded (which might have zero $10k+ trades in the
@@ -15242,14 +15311,10 @@ function pmRenderList(trades) {
   const list = document.getElementById('pm-activity-list');
   if (!list) return;
 
-  if (!trades.length) {
-    list.innerHTML = `<div class="empty-state"><div class="es-icon">🔮</div><div class="es-title">No matching activity</div><div class="es-sub">Try lowering the min amount or clearing the keyword filter</div></div>`;
-    return;
-  }
-
-  // No display cap — every trade that's been loaded/found and passes the current filters
-  // is shown. The footer below adapts to whichever mode (general feed vs. tier search) is active.
-  let footer;
+  // Build the footer first — in tier mode this matters even when zero matches have been
+  // found yet, since "0 so far" isn't the same as "exhausted": there may still be more
+  // history to search, and the person needs a way to continue rather than a dead end.
+  let footer = '';
   if (pmTierMode) {
     const found = Math.min(pmTierResults.length, PM_TIER_TARGET);
     if (found >= PM_TIER_TARGET) {
@@ -15258,9 +15323,11 @@ function pmRenderList(trades) {
       footer = `<div style="padding:14px 20px;text-align:center;font-size:11px;color:var(--text3)">That's all of them — scanned ${pmTierScanned} total trades, found ${found}</div>`;
     } else {
       footer = `<div style="padding:14px 20px;text-align:center">
-        <button class="btn btn-secondary btn-sm" id="pm-load-more-btn" onclick="pmKeepSearchingTier()">Keep searching (found ${found}/${PM_TIER_TARGET} so far)</button>
+        <button class="btn btn-secondary btn-sm" id="pm-load-more-btn" onclick="pmKeepSearchingTier()">Keep searching (found ${found}/${PM_TIER_TARGET} so far, scanned ${pmTierScanned})</button>
       </div>`;
     }
+  } else if (!trades.length) {
+    footer = '';
   } else {
     footer = pmHasMore
       ? `<div style="padding:14px 20px;text-align:center">
@@ -15268,6 +15335,17 @@ function pmRenderList(trades) {
         </div>`
       : `<div style="padding:14px 20px;text-align:center;font-size:11px;color:var(--text3)">That's everything currently available</div>`;
   }
+
+  if (!trades.length) {
+    const emptyMsg = pmTierMode
+      ? `<div class="empty-state"><div class="es-icon">🔮</div><div class="es-title">No matches yet</div><div class="es-sub">${pmTierExhausted ? "Scanned everything available — none qualified" : 'Nothing found in this burst — try "Keep searching" below'}</div></div>`
+      : `<div class="empty-state"><div class="es-icon">🔮</div><div class="es-title">No matching activity</div><div class="es-sub">Try lowering the min amount or clearing the keyword filter</div></div>`;
+    list.innerHTML = emptyMsg + footer;
+    return;
+  }
+
+  // No display cap — every trade that's been loaded/found and passes the current filters
+  // is shown. The footer above adapts to whichever mode (general feed vs. tier search) is active.
 
   list.innerHTML = trades.map(t => {
     const price = parseFloat(t.price) || 0;
