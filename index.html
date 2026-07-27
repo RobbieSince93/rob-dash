@@ -849,6 +849,13 @@
   .sp-pin-btn:hover { color:var(--amber); }
   .sp-pin-btn.pinned { color:var(--amber); }
   .sp-game-card.sp-pinned-card { border-color:var(--amber); box-shadow:0 0 0 1px rgba(255,184,48,0.25); }
+  .sp-league-tabs { display:flex;flex-wrap:wrap;align-items:center;gap:2px;border-bottom:1px solid var(--border);margin-bottom:20px; }
+  .sp-league-tab { background:transparent;border:none;border-bottom:2px solid transparent;color:var(--text3);padding:11px 14px;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;gap:8px;transition:color .15s,border-color .15s;white-space:nowrap; }
+  .sp-league-tab:hover { color:var(--text2); }
+  .sp-league-tab.active { color:var(--text);border-bottom-color:var(--red); }
+  .sp-league-tab .sp-tab-icon { font-size:14px;line-height:1; }
+  .sp-fav-badge { background:var(--bg3);color:var(--text2);font-size:10px;padding:1px 7px;border-radius:10px;font-weight:700;letter-spacing:0;text-transform:none; }
+  .sp-league-tab.active .sp-fav-badge { background:rgba(255,85,102,0.15);color:var(--red); }
   .sp-situation { display:flex;align-items:center;gap:12px;margin:8px 0;padding:8px 0;border-top:1px solid var(--border); }
   .sp-bases { position:relative;width:34px;height:34px;flex-shrink:0; }
   .sp-base { position:absolute;width:12px;height:12px;border:1.5px solid var(--text3);background:transparent;transform:rotate(45deg); }
@@ -5017,20 +5024,22 @@
         </div>
       </div>
 
-      <div class="tabs" style="margin-bottom:16px;flex-wrap:wrap;height:auto;width:auto;max-width:100%">
-        <button class="tab" id="sp-tab-favorites" onclick="spSwitchLeague('favorites')" style="color:var(--amber)">★ Favorites</button>
-        <button class="tab active" id="sp-tab-mlb" onclick="spSwitchLeague('mlb')">MLB</button>
-        <button class="tab" id="sp-tab-nba" onclick="spSwitchLeague('nba')">NBA</button>
-        <button class="tab" id="sp-tab-mls" onclick="spSwitchLeague('mls')">MLS</button>
-        <button class="tab" id="sp-tab-laliga" onclick="spSwitchLeague('laliga')">La Liga</button>
-        <button class="tab" id="sp-tab-eng1" onclick="spSwitchLeague('eng1')">Premier League</button>
-        <button class="tab" id="sp-tab-mex1" onclick="spSwitchLeague('mex1')">Liga MX</button>
-        <button class="tab" id="sp-tab-ita1" onclick="spSwitchLeague('ita1')">Serie A</button>
-        <button class="tab" id="sp-tab-fra1" onclick="spSwitchLeague('fra1')">Ligue 1</button>
-        <button class="tab" id="sp-tab-ger1" onclick="spSwitchLeague('ger1')">Bundesliga</button>
-        <button class="tab" id="sp-tab-bra1" onclick="spSwitchLeague('bra1')">Brasileirão</button>
-        <button class="tab" id="sp-tab-arg1" onclick="spSwitchLeague('arg1')">Argentina</button>
-        <button class="tab" id="sp-tab-intl" onclick="spSwitchLeague('intl')">International</button>
+      <div class="sp-league-tabs">
+        <button class="sp-league-tab" id="sp-tab-favorites" onclick="spSwitchLeague('favorites')">
+          <span class="sp-tab-icon">★</span>Favorites<span class="sp-fav-badge" id="sp-fav-count">0</span>
+        </button>
+        <button class="sp-league-tab active" id="sp-tab-mlb" onclick="spSwitchLeague('mlb')"><span class="sp-tab-icon">⚾</span>MLB</button>
+        <button class="sp-league-tab" id="sp-tab-nba" onclick="spSwitchLeague('nba')"><span class="sp-tab-icon">🏀</span>NBA</button>
+        <button class="sp-league-tab" id="sp-tab-mls" onclick="spSwitchLeague('mls')"><span class="sp-tab-icon">⚽</span>MLS</button>
+        <button class="sp-league-tab" id="sp-tab-laliga" onclick="spSwitchLeague('laliga')"><span class="sp-tab-icon">⚽</span>La Liga</button>
+        <button class="sp-league-tab" id="sp-tab-eng1" onclick="spSwitchLeague('eng1')"><span class="sp-tab-icon">⚽</span>Premier League</button>
+        <button class="sp-league-tab" id="sp-tab-mex1" onclick="spSwitchLeague('mex1')"><span class="sp-tab-icon">⚽</span>Liga MX</button>
+        <button class="sp-league-tab" id="sp-tab-ita1" onclick="spSwitchLeague('ita1')"><span class="sp-tab-icon">⚽</span>Serie A</button>
+        <button class="sp-league-tab" id="sp-tab-fra1" onclick="spSwitchLeague('fra1')"><span class="sp-tab-icon">⚽</span>Ligue 1</button>
+        <button class="sp-league-tab" id="sp-tab-ger1" onclick="spSwitchLeague('ger1')"><span class="sp-tab-icon">⚽</span>Bundesliga</button>
+        <button class="sp-league-tab" id="sp-tab-bra1" onclick="spSwitchLeague('bra1')"><span class="sp-tab-icon">⚽</span>Brasileirão</button>
+        <button class="sp-league-tab" id="sp-tab-arg1" onclick="spSwitchLeague('arg1')"><span class="sp-tab-icon">⚽</span>Argentina</button>
+        <button class="sp-league-tab" id="sp-tab-intl" onclick="spSwitchLeague('intl')"><span class="sp-tab-icon">🌐</span>International</button>
       </div>
 
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
@@ -14912,6 +14921,10 @@ function spSavePinned() {
 function spIsPinned(teamName) {
   return spPinnedTeams.some(t => t.toLowerCase() === (teamName||'').toLowerCase());
 }
+function spUpdateFavBadge() {
+  const el = document.getElementById('sp-fav-count');
+  if (el) el.textContent = spPinnedTeams.length;
+}
 function spTogglePin(teamName) {
   if (!teamName) return;
   if (spIsPinned(teamName)) {
@@ -14920,6 +14933,7 @@ function spTogglePin(teamName) {
     spPinnedTeams.push(teamName);
   }
   spSavePinned();
+  spUpdateFavBadge();
   // Re-render from cache — no need to refetch just because pins changed
   spRenderGames(spLastEvents, spLastLeagueLabel);
 }
@@ -14928,13 +14942,14 @@ function spEnsureInit() {
   if (spInited) return;
   spInited = true;
   spLoadPinned();
+  spUpdateFavBadge();
   spFetchLeague(spCurrentLeague);
 }
 
 function spSwitchLeague(key) {
   if (key !== 'favorites' && !SP_LEAGUES[key]) return;
   spCurrentLeague = key;
-  document.querySelectorAll('#page-livesports .tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('#page-livesports .sp-league-tab').forEach(t => t.classList.remove('active'));
   const btn = document.getElementById('sp-tab-' + key);
   if (btn) btn.classList.add('active');
   spRenderViewToggle();
