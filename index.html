@@ -857,6 +857,7 @@
   .sp-base-2 { top:0;left:50%;margin-left:-6px; }
   .sp-base-3 { bottom:0;left:0; }
   .sp-situation-text { font-size:11px;color:var(--text2);line-height:1.5; }
+  .sp-last-play { color:var(--amber);font-weight:600;margin-top:2px; }
   .sp-detail-section-title { font-family:var(--display);font-size:12px;font-weight:600;color:var(--text);text-transform:uppercase;letter-spacing:.05em;margin:18px 0 8px; }
   .sp-detail-section-title:first-child { margin-top:0; }
   .sp-box-table { width:100%;border-collapse:collapse;font-size:11px;margin-bottom:6px; }
@@ -15056,7 +15057,17 @@ function spRenderBaseballSituation(comp, state) {
   if (!sit) return '';
   const hasCount = sit.balls !== undefined || sit.strikes !== undefined || sit.outs !== undefined;
   const hasBases = sit.onFirst !== undefined || sit.onSecond !== undefined || sit.onThird !== undefined;
-  if (!hasCount && !hasBases) return '';
+
+  // The last play's description (e.g. "Foul Ball", "Walk", "Called Strike") — ESPN doesn't
+  // use one consistent field name/shape for this across responses, so this checks several
+  // plausible spots rather than assuming one. Falls back to nothing rather than guessing.
+  const lastPlayText =
+    (sit.lastPlay && (sit.lastPlay.text || (sit.lastPlay.type && sit.lastPlay.type.text))) ||
+    (sit.play && sit.play.text) ||
+    (comp.lastPlay && comp.lastPlay.text) ||
+    null;
+
+  if (!hasCount && !hasBases && !lastPlayText) return '';
 
   const batterName = sit.batter && sit.batter.athlete && (sit.batter.athlete.shortName || sit.batter.athlete.displayName);
   const pitcherName = sit.pitcher && sit.pitcher.athlete && (sit.pitcher.athlete.shortName || sit.pitcher.athlete.displayName);
@@ -15078,6 +15089,7 @@ function spRenderBaseballSituation(comp, state) {
       ${countText}
       ${batterName ? `<div>At bat: ${batterName}</div>` : ''}
       ${pitcherName ? `<div>Pitching: ${pitcherName}</div>` : ''}
+      ${lastPlayText ? `<div class="sp-last-play">Last: ${lastPlayText}</div>` : ''}
     </div>
   </div>`;
 }
