@@ -2912,7 +2912,7 @@
           <span class="nav-icon">🏆</span> Live Sports
         </a>
         <a class="nav-item" onclick="showPage('polymarket')">
-          <span class="nav-icon">🔮</span> Polymarket Activity
+          <span class="nav-icon">🔮</span> Prediction Markets
         </a>
         <a class="nav-item" onclick="showPage('yearplan')">
           <span class="nav-icon">◈</span> Year One Plan
@@ -5078,8 +5078,8 @@
     <div class="page" id="page-polymarket">
       <div class="page-header">
         <div>
-          <div class="page-title">Polymarket <span>Activity</span></div>
-          <div class="page-subtitle">Live public trades across all Polymarket markets — no login or wallet needed</div>
+          <div class="page-title">Prediction <span>Markets</span></div>
+          <div class="page-subtitle">Polymarket activity · your own W/L tracker (any platform) · high-confidence market picks</div>
         </div>
         <div style="display:flex;gap:8px;align-items:center">
           <span style="font-size:11px;color:var(--text3)" id="pm-last-refresh">Never refreshed</span>
@@ -5088,34 +5088,111 @@
         </div>
       </div>
 
-      <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
-        <div style="position:relative">
-          <button class="btn btn-secondary" id="pm-category-btn" onclick="pmToggleCategoryMenu()" style="padding:8px 14px;font-size:12px;display:flex;align-items:center;gap:6px">
-            <span id="pm-category-label">All</span><span id="pm-category-caret">⌄</span>
-          </button>
-          <div id="pm-category-menu" class="pm-cat-menu" style="display:none"></div>
+      <div class="tabs" style="margin-bottom:16px">
+        <button class="tab active" id="pm-view-activity-btn" onclick="pmSwitchMainView('activity')">Activity Feed</button>
+        <button class="tab" id="pm-view-mybets-btn" onclick="pmSwitchMainView('mybets')">My Bets</button>
+        <button class="tab" id="pm-view-picks-btn" onclick="pmSwitchMainView('picks')">Positive Picks</button>
+      </div>
+
+      <!-- ── ACTIVITY FEED VIEW ── -->
+      <div id="pm-view-activity">
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
+          <div style="position:relative">
+            <button class="btn btn-secondary" id="pm-category-btn" onclick="pmToggleCategoryMenu()" style="padding:8px 14px;font-size:12px;display:flex;align-items:center;gap:6px">
+              <span id="pm-category-label">All</span><span id="pm-category-caret">⌄</span>
+            </button>
+            <div id="pm-category-menu" class="pm-cat-menu" style="display:none"></div>
+          </div>
+          <input class="form-input" id="pm-search-input" placeholder="Filter by market keyword (e.g. Bitcoin, election)" style="max-width:280px;padding:8px 12px;font-size:12px" oninput="pmApplyFilters()">
+          <select class="form-input" id="pm-min-amount" style="max-width:160px;padding:8px 12px;font-size:12px" onchange="pmOnMinAmountChange()">
+            <option value="0">Min amount: None</option>
+            <option value="10">Min amount: $10</option>
+            <option value="100">Min amount: $100</option>
+            <option value="1000">Min amount: $1,000</option>
+            <option value="10000">Min amount: $10,000</option>
+            <option value="100000">Min amount: $100,000</option>
+          </select>
+          <span style="font-size:11px;color:var(--text3)" id="pm-count-text"></span>
         </div>
-        <input class="form-input" id="pm-search-input" placeholder="Filter by market keyword (e.g. Bitcoin, election)" style="max-width:280px;padding:8px 12px;font-size:12px" oninput="pmApplyFilters()">
-        <select class="form-input" id="pm-min-amount" style="max-width:160px;padding:8px 12px;font-size:12px" onchange="pmOnMinAmountChange()">
-          <option value="0">Min amount: None</option>
-          <option value="10">Min amount: $10</option>
-          <option value="100">Min amount: $100</option>
-          <option value="1000">Min amount: $1,000</option>
-          <option value="10000">Min amount: $10,000</option>
-          <option value="100000">Min amount: $100,000</option>
-        </select>
-        <span style="font-size:11px;color:var(--text3)" id="pm-count-text"></span>
-      </div>
-      <div style="font-size:10px;color:var(--text3);margin:-10px 0 14px">Category is a best-effort keyword match on the market title — Polymarket's API doesn't expose the real tag on individual trades, so this won't be 100% exact.</div>
+        <div style="font-size:10px;color:var(--text3);margin:-10px 0 14px">Category is a best-effort keyword match on the market title — Polymarket's API doesn't expose the real tag on individual trades, so this won't be 100% exact.</div>
 
-      <div class="lp-status-bar" id="pm-status-bar">
-        <div class="lp-dot" id="pm-dot"></div>
-        <span id="pm-status-text">Click "Refresh now" to load recent trades</span>
+        <div class="lp-status-bar" id="pm-status-bar">
+          <div class="lp-dot" id="pm-dot"></div>
+          <span id="pm-status-text">Click "Refresh now" to load recent trades</span>
+        </div>
+
+        <div class="section-panel" style="margin-top:16px">
+          <div id="pm-activity-list">
+            <div class="empty-state"><div class="es-icon">🔮</div><div class="es-title">No activity loaded yet</div><div class="es-sub">Click "Refresh now" above</div></div>
+          </div>
+        </div>
       </div>
 
-      <div class="section-panel" style="margin-top:16px">
-        <div id="pm-activity-list">
-          <div class="empty-state"><div class="es-icon">🔮</div><div class="es-title">No activity loaded yet</div><div class="es-sub">Click "Refresh now" above</div></div>
+      <!-- ── MY BETS VIEW (manual tracker — any platform, incl. Kalshi) ── -->
+      <div id="pm-view-mybets" style="display:none">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:14px">Kalshi (and most prediction markets) require an authenticated, order-placing API key to pull your personal history automatically — embedding that in a browser-side dashboard would expose real trading credentials. This is a manual log instead: add each bet yourself and it keeps the running record.</div>
+
+        <div class="overview-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px" id="mb-stats-grid"></div>
+
+        <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+          <button class="btn btn-secondary btn-sm" onclick="mbToggleAddForm()">+ Add bet</button>
+        </div>
+        <div id="mb-add-form" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:16px">
+          <div class="form-row-2">
+            <div><label class="form-label">Platform</label>
+              <select class="form-input" id="mb-platform">
+                <option>Kalshi</option><option>Polymarket</option><option>Other</option>
+              </select>
+            </div>
+            <div><label class="form-label">Market / bet description</label><input class="form-input" id="mb-market" placeholder="e.g. Fed cuts rates in July"></div>
+          </div>
+          <div class="form-row-2">
+            <div><label class="form-label">Stake ($)</label><input class="form-input" id="mb-stake" type="number" step="0.01" placeholder="25.00"></div>
+            <div><label class="form-label">Outcome</label>
+              <select class="form-input" id="mb-outcome" onchange="mbOnOutcomeChange()">
+                <option value="pending">Pending</option><option value="win">Win</option><option value="loss">Loss</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row" id="mb-payout-row" style="display:none">
+            <label class="form-label">Payout received ($)</label>
+            <input class="form-input" id="mb-payout" type="number" step="0.01" placeholder="42.00">
+          </div>
+          <div style="display:flex;gap:8px;justify-content:flex-end">
+            <button class="btn btn-secondary btn-sm" onclick="mbToggleAddForm()">Cancel</button>
+            <button class="btn btn-primary btn-sm" onclick="mbSaveNewBet()">Save bet</button>
+          </div>
+        </div>
+
+        <div class="section-panel">
+          <div id="mb-bets-list">
+            <div class="empty-state"><div class="es-icon">📝</div><div class="es-title">No bets logged yet</div><div class="es-sub">Add your first one above</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── POSITIVE PICKS VIEW ── -->
+      <div id="pm-view-picks" style="display:none">
+        <div style="font-size:10px;color:var(--text3);margin-bottom:14px">This shows markets where the crowd is currently pricing one outcome as near-certain — it reflects current market odds, not a prediction or recommendation. High-confidence pricing can still be wrong, and it can shift before a market resolves.</div>
+        <div style="display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
+          <select class="form-input" id="pp-confidence" style="max-width:200px;padding:8px 12px;font-size:12px" onchange="ppApplyFilter()">
+            <option value="0.95">Priced ≥ 95%</option>
+            <option value="0.9" selected>Priced ≥ 90%</option>
+            <option value="0.85">Priced ≥ 85%</option>
+            <option value="0.8">Priced ≥ 80%</option>
+          </select>
+          <select class="form-input" id="pp-min-volume" style="max-width:200px;padding:8px 12px;font-size:12px" onchange="ppApplyFilter()">
+            <option value="1000">Min volume: $1,000</option>
+            <option value="10000" selected>Min volume: $10,000</option>
+            <option value="100000">Min volume: $100,000</option>
+          </select>
+          <button class="btn btn-secondary" id="pp-refresh-btn" onclick="ppRefresh()">↻ Refresh</button>
+          <span style="font-size:11px;color:var(--text3)" id="pp-count-text"></span>
+        </div>
+        <div class="section-panel">
+          <div id="pp-list">
+            <div class="empty-state"><div class="es-icon">🎯</div><div class="es-title">No picks loaded yet</div><div class="es-sub">Click "Refresh" above</div></div>
+          </div>
         </div>
       </div>
     </div>
@@ -6961,7 +7038,7 @@ function mnavShowMore() {
     { id:'nexus',       icon:'🧠', label:'NEXUS'      },
     { id:'cybertools',  icon:'🛡', label:'Cyber Tools' },
     { id:'livesports',  icon:'🏆', label:'Live Sports' },
-    { id:'polymarket',  icon:'🔮', label:'Polymarket' },
+    { id:'polymarket',  icon:'🔮', label:'Predictions' },
     { id:'devops',      icon:'⛭', label:'DevOps'     },
     { id:'yearplan',    icon:'◈', label:'Year Plan'  },
     { id:'fitplan',     icon:'◇', label:'Fit Plan'   },
@@ -15296,7 +15373,7 @@ function spRenderGames(events, leagueLabel) {
   }).join('');
 }
 
-// ── Standings ──────────────────────────────────────────────
+
 // Note: ESPN's standings response shape varies a bit by sport (conferences/divisions vs a
 // single flat table), and unlike the scoreboard endpoint this one isn't as widely documented,
 // so this parses defensively and falls back to a plain "not available" state rather than
@@ -15522,6 +15599,220 @@ function pmMatchesCategory(title) {
   return cat.keywords.some(k => t.includes(k));
 }
 
+// ── My Bets (manual W/L tracker — any platform, since personal Kalshi/Polymarket history
+// requires authenticated credentials this dashboard deliberately doesn't hold) ──
+const MB_BETS_KEY = 'mb_bets_v1';
+let mbBets = [];
+function mbLoadBets() {
+  try { mbBets = JSON.parse(localStorage.getItem(MB_BETS_KEY)) || []; } catch (e) { mbBets = []; }
+}
+function mbSaveBets() {
+  localStorage.setItem(MB_BETS_KEY, JSON.stringify(mbBets));
+}
+
+function mbToggleAddForm() {
+  const form = document.getElementById('mb-add-form');
+  if (!form) return;
+  const showing = form.style.display !== 'none';
+  form.style.display = showing ? 'none' : 'block';
+  if (!showing) {
+    document.getElementById('mb-market').value = '';
+    document.getElementById('mb-stake').value = '';
+    document.getElementById('mb-outcome').value = 'pending';
+    document.getElementById('mb-payout').value = '';
+    mbOnOutcomeChange();
+  }
+}
+
+function mbOnOutcomeChange() {
+  const outcome = document.getElementById('mb-outcome').value;
+  document.getElementById('mb-payout-row').style.display = outcome === 'win' ? 'block' : 'none';
+}
+
+function mbSaveNewBet() {
+  const platform = document.getElementById('mb-platform').value;
+  const market = document.getElementById('mb-market').value.trim();
+  const stake = parseFloat(document.getElementById('mb-stake').value);
+  const outcome = document.getElementById('mb-outcome').value;
+  const payout = outcome === 'win' ? (parseFloat(document.getElementById('mb-payout').value) || 0) : 0;
+
+  if (!market || isNaN(stake) || stake <= 0) { showToast('Enter a market and a stake amount', 'error'); return; }
+
+  mbBets.unshift({
+    id: 'bet_' + genId(), platform, market, stake, outcome, payout,
+    createdAt: new Date().toISOString(),
+  });
+  mbSaveBets();
+  mbToggleAddForm();
+  mbRenderAll();
+  showToast('Bet logged');
+}
+
+function mbUpdateOutcome(id, outcome) {
+  const bet = mbBets.find(b => b.id === id);
+  if (!bet) return;
+  if (outcome === 'win') {
+    const input = prompt(`Payout received for "${bet.market}" ($):`, bet.payout || bet.stake * 2);
+    if (input === null) return;
+    const val = parseFloat(input);
+    if (isNaN(val) || val < 0) return;
+    bet.payout = val;
+  } else {
+    bet.payout = 0;
+  }
+  bet.outcome = outcome;
+  mbSaveBets();
+  mbRenderAll();
+}
+
+function mbDeleteBet(id) {
+  const bet = mbBets.find(b => b.id === id);
+  if (!bet) return;
+  if (!confirm(`Remove "${bet.market}" from your log?`)) return;
+  mbBets = mbBets.filter(b => b.id !== id);
+  mbSaveBets();
+  mbRenderAll();
+}
+
+function mbRenderAll() {
+  mbRenderStats();
+  mbRenderList();
+}
+
+function mbRenderStats() {
+  const grid = document.getElementById('mb-stats-grid');
+  if (!grid) return;
+
+  const wins = mbBets.filter(b => b.outcome === 'win').length;
+  const losses = mbBets.filter(b => b.outcome === 'loss').length;
+  const decided = wins + losses;
+  const winPct = decided > 0 ? (wins / decided) * 100 : 0;
+  const totalStaked = mbBets.reduce((s, b) => s + (parseFloat(b.stake) || 0), 0);
+  const totalPayout = mbBets.filter(b => b.outcome === 'win').reduce((s, b) => s + (parseFloat(b.payout) || 0), 0);
+  const totalStakedOnDecided = mbBets.filter(b => b.outcome !== 'pending').reduce((s, b) => s + (parseFloat(b.stake) || 0), 0);
+  const profit = totalPayout - totalStakedOnDecided;
+
+  grid.innerHTML = `
+    <div class="kpi-card"><div class="kpi-label">Record</div><div class="kpi-value">${wins}-${losses}</div><div class="kpi-sub">${decided} decided, ${mbBets.length - decided} pending</div></div>
+    <div class="kpi-card"><div class="kpi-label">Win Rate</div><div class="kpi-value" style="color:${winPct>=50?'var(--green)':'var(--red)'}">${decided > 0 ? winPct.toFixed(0) + '%' : '—'}</div><div class="kpi-sub">of decided bets</div></div>
+    <div class="kpi-card"><div class="kpi-label">Profit</div><div class="kpi-value" style="color:${profit>=0?'var(--green)':'var(--red)'}">${profit>=0?'+':''}$${profit.toFixed(2)}</div><div class="kpi-sub">on decided bets</div></div>
+    <div class="kpi-card"><div class="kpi-label">Total Staked</div><div class="kpi-value">$${totalStaked.toFixed(2)}</div><div class="kpi-sub">${mbBets.length} bet${mbBets.length===1?'':'s'} logged</div></div>
+  `;
+}
+
+function mbRenderList() {
+  const list = document.getElementById('mb-bets-list');
+  if (!list) return;
+  if (!mbBets.length) {
+    list.innerHTML = `<div class="empty-state"><div class="es-icon">📝</div><div class="es-title">No bets logged yet</div><div class="es-sub">Add your first one above</div></div>`;
+    return;
+  }
+  list.innerHTML = mbBets.map(b => {
+    const stake = parseFloat(b.stake) || 0;
+    const payout = parseFloat(b.payout) || 0;
+    const netStr = b.outcome === 'win' ? `+$${(payout - stake).toFixed(2)}` : b.outcome === 'loss' ? `-$${stake.toFixed(2)}` : '—';
+    const netColor = b.outcome === 'win' ? 'var(--green)' : b.outcome === 'loss' ? 'var(--red)' : 'var(--text3)';
+    const dateStr = new Date(b.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return `<div class="pm-row" style="cursor:default">
+      <div class="pm-icon" style="display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text3);text-transform:uppercase;font-weight:600">${b.platform.slice(0,3)}</div>
+      <div class="pm-body">
+        <div class="pm-title">${b.market}</div>
+        <div class="pm-detail">${b.platform} · staked $${stake.toFixed(2)} · ${dateStr}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;margin-right:8px">
+        <div style="font-weight:600;color:${netColor}">${netStr}</div>
+        <div style="font-size:10px;color:var(--text3);text-transform:capitalize">${b.outcome}</div>
+      </div>
+      <div style="display:flex;gap:4px;flex-shrink:0">
+        ${b.outcome === 'pending' ? `
+          <button class="btn btn-ghost btn-sm" style="padding:3px 8px;font-size:10px;color:var(--green)" onclick="mbUpdateOutcome('${b.id}','win')">Win</button>
+          <button class="btn btn-ghost btn-sm" style="padding:3px 8px;font-size:10px;color:var(--red)" onclick="mbUpdateOutcome('${b.id}','loss')">Loss</button>
+        ` : `<button class="btn btn-ghost btn-sm" style="padding:3px 8px;font-size:10px" onclick="mbUpdateOutcome('${b.id}','pending')">↺</button>`}
+        <button class="btn btn-ghost btn-sm" style="padding:3px 8px;font-size:10px;color:var(--red)" onclick="mbDeleteBet('${b.id}')">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Positive Picks — markets currently priced near-certain by the crowd (informational
+// view of public odds, not a prediction or recommendation) ──
+let ppAllPicks = [];
+async function ppRefresh() {
+  const btn = document.getElementById('pp-refresh-btn');
+  const countEl = document.getElementById('pp-count-text');
+  const list = document.getElementById('pp-list');
+  if (btn) btn.disabled = true;
+  if (countEl) countEl.textContent = 'Loading…';
+
+  try {
+    const res = await fetch('https://gamma-api.polymarket.com/markets?active=true&closed=false&order=volume&ascending=false&limit=200');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const markets = Array.isArray(data) ? data : (data.markets || []);
+
+    ppAllPicks = markets.map(m => {
+      let outcomes = [], prices = [];
+      try { outcomes = JSON.parse(m.outcomes || '[]'); } catch (e) {}
+      try { prices = (JSON.parse(m.outcomePrices || '[]')).map(p => parseFloat(p)); } catch (e) {}
+      if (!outcomes.length || !prices.length) return null;
+
+      let maxIdx = 0;
+      for (let i = 1; i < prices.length; i++) if (prices[i] > prices[maxIdx]) maxIdx = i;
+
+      return {
+        question: m.question || '',
+        slug: m.slug || '',
+        category: m.category || '',
+        icon: m.icon || m.image || '',
+        volume: parseFloat(m.volume) || 0,
+        liquidity: parseFloat(m.liquidity) || 0,
+        endDate: m.endDate || '',
+        outcome: outcomes[maxIdx] || '',
+        price: prices[maxIdx] || 0,
+      };
+    }).filter(Boolean);
+
+    ppApplyFilter();
+  } catch (e) {
+    if (list) list.innerHTML = `<div class="empty-state"><div class="es-icon">⚠️</div><div class="es-title">Couldn't load markets</div><div class="es-sub">${e.message}</div></div>`;
+    if (countEl) countEl.textContent = '';
+  }
+  if (btn) btn.disabled = false;
+}
+
+function ppApplyFilter() {
+  const minConfidence = parseFloat(document.getElementById('pp-confidence').value) || 0.9;
+  const minVolume = parseFloat(document.getElementById('pp-min-volume').value) || 0;
+
+  const filtered = ppAllPicks
+    .filter(p => p.price >= minConfidence && p.volume >= minVolume)
+    .sort((a, b) => b.price - a.price);
+
+  const countEl = document.getElementById('pp-count-text');
+  if (countEl) countEl.textContent = `${filtered.length} markets match`;
+
+  const list = document.getElementById('pp-list');
+  if (!list) return;
+  if (!filtered.length) {
+    list.innerHTML = `<div class="empty-state"><div class="es-icon">🎯</div><div class="es-title">No markets match these filters</div><div class="es-sub">Try lowering the confidence or volume threshold</div></div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(p => {
+    const icon = p.icon ? `<img src="${p.icon}" class="pm-icon" alt="">` : `<div class="pm-icon"></div>`;
+    const daysLeft = p.endDate ? Math.max(0, Math.ceil((new Date(p.endDate) - Date.now()) / 86400000)) : null;
+    const url = p.slug ? `https://polymarket.com/market/${p.slug}` : '#';
+    return `<a href="${url}" target="_blank" class="pm-row" style="text-decoration:none;color:inherit">
+      ${icon}
+      <div class="pm-body">
+        <div class="pm-title">${p.question}</div>
+        <div class="pm-detail">Priced <span style="color:var(--green);font-weight:600">${(p.price*100).toFixed(0)}%</span> on <span style="color:var(--green)">${p.outcome}</span> · $${Math.round(p.volume).toLocaleString()} volume${daysLeft !== null ? ` · ${daysLeft}d left` : ''}</div>
+      </div>
+    </a>`;
+  }).join('');
+}
+
+
 function pmEnsureInit() {
   if (pmInited) return;
   pmInited = true;
@@ -15529,6 +15820,21 @@ function pmEnsureInit() {
   pmRefresh();
   // Live by default, the way the real site behaves — no toggle needed to see it update
   pmStartAutoRefresh();
+  mbLoadBets();
+  mbRenderAll();
+}
+
+let pmMainView = 'activity';
+function pmSwitchMainView(view) {
+  pmMainView = view;
+  document.getElementById('pm-view-activity-btn').classList.toggle('active', view === 'activity');
+  document.getElementById('pm-view-mybets-btn').classList.toggle('active', view === 'mybets');
+  document.getElementById('pm-view-picks-btn').classList.toggle('active', view === 'picks');
+  document.getElementById('pm-view-activity').style.display = view === 'activity' ? 'block' : 'none';
+  document.getElementById('pm-view-mybets').style.display = view === 'mybets' ? 'block' : 'none';
+  document.getElementById('pm-view-picks').style.display = view === 'picks' ? 'block' : 'none';
+  if (view === 'mybets') mbRenderAll();
+  if (view === 'picks' && !ppAllPicks.length) ppRefresh();
 }
 
 // Full reset — used by the manual "Refresh now" button, so there's still a way to force a
