@@ -2849,14 +2849,6 @@
       </div>
       <div class="nav-section">
         <div class="nav-section-label">Engine Modules</div>
-        <a class="nav-item" onclick="showPage('networth')">
-          <span class="nav-icon">▣</span> Net Worth Engine
-          <span class="nav-badge" id="badge-snap-count">0</span>
-        </a>
-        <a class="nav-item" onclick="showPage('history')">
-          <span class="nav-icon">◷</span> History Log
-          <span class="nav-badge" id="badge-history-count">0</span>
-        </a>
         <a class="nav-item" onclick="showPage('income')">
           <span class="nav-icon">▦</span> Income Tracker
           <span class="nav-badge" id="badge-income-count">0</span>
@@ -2880,10 +2872,6 @@
         <a class="nav-item" onclick="showPage('fitness')">
           <span class="nav-icon">⚡</span> Fitness
           <span class="nav-badge" id="badge-fitness-done">—</span>
-        </a>
-        <a class="nav-item" onclick="showPage('journal')">
-          <span class="nav-icon">📓</span> Journal
-          <span class="nav-badge" id="badge-journal-count">0</span>
         </a>
         <a class="nav-item" onclick="showPage('books')">
           <span class="nav-icon">📚</span> Books
@@ -2918,9 +2906,6 @@
         </a>
         <a class="nav-item" onclick="showPage('livesports')">
           <span class="nav-icon">🏆</span> Live Sports
-        </a>
-        <a class="nav-item" onclick="showPage('polymarket')">
-          <span class="nav-icon">🔮</span> Prediction Markets
         </a>
         <a class="nav-item" onclick="showPage('yearplan')">
           <span class="nav-icon">◈</span> Year One Plan
@@ -4402,6 +4387,7 @@
           </div>
           <div style="display:flex;gap:8px;align-items:center">
             <span style="font-size:11px;color:var(--text3)" id="tcg-stale-summary"></span>
+            <span style="font-size:11px" id="tcg-realized-summary"></span>
             <button class="btn btn-secondary btn-sm" onclick="tcgToggleSort()" id="tcg-sort-btn">Sort: Value</button>
             <button class="btn btn-secondary btn-sm" onclick="tcgStartReviewQueue()">▶ Start pricing session</button>
           </div>
@@ -4410,6 +4396,12 @@
           <span style="font-size:11px;color:var(--amber)">⚠ TCG pricing requires a manual lookup — click the search link next to each card to check current market price on TCGPlayer or eBay, then update the value directly.</span>
         </div>
         <div id="lp-tcg-list"></div>
+        <div id="lp-tcg-sold-section" style="display:none">
+          <div style="padding:10px 20px;border-top:1px solid var(--border);cursor:pointer;display:flex;justify-content:space-between;align-items:center" onclick="tcgToggleSoldSection()">
+            <span style="font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.04em" id="tcg-sold-toggle-label">▸ Sold (0)</span>
+          </div>
+          <div id="lp-tcg-sold-list" style="display:none"></div>
+        </div>
       </div>
 
       <!-- TCG pricing review queue (works through stalest-priced cards one at a time) -->
@@ -6930,11 +6922,13 @@ const Calc = {
 
   tcgTotal() {
     return DB.get('tcg').reduce((s, i) => {
+      if (i.sold) return s; // sold items no longer count toward what's currently held
       return s + (parseFloat(i.quantity) || 1) * (parseFloat(i.currentValue) || 0);
     }, 0);
   },
   tcgCostBasis() {
     return DB.get('tcg').reduce((s, i) => {
+      if (i.sold) return s;
       return s + (parseFloat(i.quantity) || 1) * (parseFloat(i.purchasePrice) || 0);
     }, 0);
   },
@@ -6943,12 +6937,24 @@ const Calc = {
     if (!basis) return 0;
     return ((this.tcgTotal() - basis) / basis) * 100;
   },
+  tcgRealizedPnL() {
+    return DB.get('tcg').reduce((s, i) => {
+      if (!i.sold) return s;
+      const qty = parseFloat(i.quantity) || 1;
+      const cost = (parseFloat(i.purchasePrice) || 0) * qty;
+      const proceeds = (parseFloat(i.soldPrice) || 0) * qty;
+      return s + (proceeds - cost);
+    }, 0);
+  },
+  tcgSoldCount() {
+    return DB.get('tcg').filter(i => i.sold).length;
+  },
   tcgBestPerformer() {
     const items = DB.get('tcg');
     if (!items.length) return null;
     return items.reduce((best, item) => {
       const cost = parseFloat(item.purchasePrice) || 0;
-      const val  = parseFloat(item.currentValue) || 0;
+      const val  = item.sold ? (parseFloat(item.soldPrice) || 0) : (parseFloat(item.currentValue) || 0);
       const roi  = cost > 0 ? ((val - cost) / cost) * 100 : 0;
       if (!best || roi > best.roi) return { ...item, roi };
       return best;
@@ -7014,7 +7020,7 @@ function showPage(name) {
 
 // ── Mobile nav ──────────────────────────────────────────────
 var MNAV_PAGES = ['overview','cash','bankaccount','billtracker','fitness',
-  'crypto','tcg','networth','history','income','bills','journal','books','goals','debtplanner','ahf','neteng','aplus','nexus','cybertools','macrotracker','devops','yearplan','fitplan','settings','livesports','polymarket',
+  'crypto','tcg','income','bills','books','goals','debtplanner','ahf','neteng','aplus','nexus','cybertools','macrotracker','devops','yearplan','fitplan','settings','livesports',
   'liveprices','cashflow','dashboard','analytics','fi','forecast'];
 
 function mnavGo(name, btn) {
@@ -7052,11 +7058,8 @@ function mnavShowMore() {
   var morePages = [
     { id:'crypto',      icon:'◎', label:'Crypto'     },
     { id:'tcg',         icon:'◆', label:'TCG'        },
-    { id:'networth',    icon:'▣', label:'Net Worth'  },
-    { id:'history',     icon:'◷', label:'History'    },
     { id:'income',      icon:'▦', label:'Income'     },
     { id:'bills',       icon:'▤', label:'Bills'      },
-    { id:'journal',     icon:'📓', label:'Journal'   },
     { id:'books',       icon:'📚', label:'Books'      },
     { id:'goals',       icon:'🎯', label:'Goals'     },
     { id:'debtplanner', icon:'◈', label:'Debt Plan'  },
@@ -7067,7 +7070,6 @@ function mnavShowMore() {
     { id:'cybertools',  icon:'🛡', label:'Cyber Tools' },
     { id:'macrotracker', icon:'🍽', label:'Macro Tracker' },
     { id:'livesports',  icon:'🏆', label:'Live Sports' },
-    { id:'polymarket',  icon:'🔮', label:'Predictions' },
     { id:'devops',      icon:'⛭', label:'DevOps'     },
     { id:'yearplan',    icon:'◈', label:'Year Plan'  },
     { id:'fitplan',     icon:'◇', label:'Fit Plan'   },
@@ -9015,8 +9017,6 @@ function updateBadges() {
   document.getElementById('badge-cash-count').textContent    = DB.get('cash').length;
   document.getElementById('badge-crypto-count').textContent  = DB.get('crypto').length;
   document.getElementById('badge-tcg-count').textContent     = DB.get('tcg').length;
-  document.getElementById('badge-snap-count').textContent    = DB.get('snapshots').length;
-  document.getElementById('badge-history-count').textContent = DB.get('snapshots').length;
   document.getElementById('badge-income-count').textContent  = DB.get('income').length;
   document.getElementById('badge-bills-count').textContent   = DB.get('bills').length;
 }
@@ -10644,6 +10644,12 @@ let lpAutoInterval = null;
 let lpAutoEnabled  = false;
 let lpPrevPrices   = {}; // { holdingId: lastPrice } — captured just before a refresh, consumed once by the next render to drive flash/tick animations
 let lpTcgSortMode  = 'value'; // 'value' | 'stale' — how the TCG list is ordered
+let lpTcgSoldOpen  = false;   // whether the "Sold" history section is expanded
+
+function tcgToggleSoldSection() {
+  lpTcgSoldOpen = !lpTcgSoldOpen;
+  renderLivePrices();
+}
 
 // ── Stock/ETF live prices (Alpha Vantage — CoinGecko only covers crypto) ──
 const LP_AV_KEY_STORAGE = 'lp_alphavantage_key';
@@ -10944,16 +10950,19 @@ function renderLivePrices() {
   // TCG list with search links
   const tcgEl=document.getElementById('lp-tcg-list');
   if(tcgEl) {
-    if(!tcgItems.length){
-      tcgEl.innerHTML=`<div class="empty-state"><div class="es-icon">◆</div><div class="es-title">No collectibles</div></div>`;
+    const activeItems=tcgItems.filter(i=>!i.sold);
+    const soldItems=tcgItems.filter(i=>i.sold);
+
+    if(!activeItems.length){
+      tcgEl.innerHTML=`<div class="empty-state"><div class="es-icon">◆</div><div class="es-title">${tcgItems.length?'Everything\'s been sold':'No collectibles'}</div></div>`;
       setText('tcg-stale-summary','');
     } else {
       const sortMode=lpTcgSortMode;
-      const sorted=[...tcgItems].sort((a,b)=>{
+      const sorted=[...activeItems].sort((a,b)=>{
         if(sortMode==='stale') return tcgStaleDays(b)-tcgStaleDays(a);
         return (parseFloat(b.currentValue)||0)-(parseFloat(a.currentValue)||0);
       });
-      const staleCount=tcgItems.filter(i=>tcgStaleDays(i)>=45).length;
+      const staleCount=activeItems.filter(i=>tcgStaleDays(i)>=45).length;
       setText('tcg-stale-summary', staleCount>0 ? `${staleCount} card${staleCount===1?'':'s'} not checked in 45+ days` : 'all prices reasonably current');
       const sortBtn=document.getElementById('tcg-sort-btn');
       if(sortBtn) sortBtn.textContent = sortMode==='stale' ? 'Sort: Staleness' : 'Sort: Value';
@@ -10980,9 +10989,52 @@ function renderLivePrices() {
             <a href="${tcgLink}" target="_blank" style="padding:4px 10px;border-radius:6px;font-size:10px;background:rgba(77,166,255,0.1);color:var(--blue);border:1px solid rgba(77,166,255,0.2);text-decoration:none;cursor:pointer">TCGPlayer ↗</a>
             <a href="${ebayLink}" target="_blank" style="padding:4px 10px;border-radius:6px;font-size:10px;background:rgba(255,184,48,0.1);color:var(--amber);border:1px solid rgba(255,184,48,0.2);text-decoration:none;cursor:pointer">eBay sold ↗</a>
             <button class="btn btn-ghost btn-sm" onclick="promptUpdateTCGPrice('${item.id}')">update $</button>
+            <button class="btn btn-ghost btn-sm" style="color:var(--green)" onclick="promptSellTCGItem('${item.id}')">$ sell</button>
           </div>
         </div>`;
       }).join('');
+    }
+
+    // Realized P&L summary next to the sort/session controls
+    const realizedPnL=Calc.tcgRealizedPnL();
+    const soldCount=Calc.tcgSoldCount();
+    const realizedEl=document.getElementById('tcg-realized-summary');
+    if(realizedEl){
+      realizedEl.textContent = soldCount>0
+        ? `Realized: ${realizedPnL>=0?'+':''}${fmt.currency(realizedPnL,0)} (${soldCount} sale${soldCount===1?'':'s'})`
+        : '';
+      realizedEl.style.color = realizedPnL>=0 ? 'var(--green)' : 'var(--red)';
+    }
+
+    // Sold history — collapsed by default, shows the locked-in +/- % on each sale
+    const soldSection=document.getElementById('lp-tcg-sold-section');
+    const soldLabel=document.getElementById('tcg-sold-toggle-label');
+    const soldList=document.getElementById('lp-tcg-sold-list');
+    if(soldSection){
+      soldSection.style.display = soldItems.length ? 'block' : 'none';
+      if(soldLabel) soldLabel.textContent = `${lpTcgSoldOpen?'▾':'▸'} Sold (${soldItems.length})`;
+      if(soldList){
+        soldList.style.display = lpTcgSoldOpen ? 'block' : 'none';
+        soldList.innerHTML = [...soldItems].sort((a,b)=>new Date(b.soldAt||0)-new Date(a.soldAt||0)).map(item=>{
+          const cost=parseFloat(item.purchasePrice)||0;
+          const sold=parseFloat(item.soldPrice)||0;
+          const pct=cost>0?((sold-cost)/cost)*100:0;
+          const soldDateStr=item.soldAt?new Date(item.soldAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'';
+          return`<div class="tcg-price-row" style="opacity:.8">
+            <div style="flex:1;min-width:0">
+              <div style="font-size:13px;color:var(--text2);text-decoration:line-through">${item.name}</div>
+              <div style="font-size:11px;color:var(--text3);margin-top:2px">${item.set||''}${item.grade?' · '+item.grade:''} · sold ${soldDateStr}</div>
+            </div>
+            <div style="text-align:right;margin-right:16px">
+              <div style="font-family:var(--mono);font-size:13px;color:var(--text)">${fmt.currency(sold,0)}</div>
+              <div style="font-size:10px;margin-top:2px;font-weight:600;color:${pct>=0?'var(--green)':'var(--red)'}">${pct>=0?'+':''}${fmt.pct(pct,1)}</div>
+            </div>
+            <div style="display:flex;gap:6px;flex-shrink:0">
+              <button class="btn btn-ghost btn-sm" onclick="undoSellTCGItem('${item.id}')">↺ undo sale</button>
+            </div>
+          </div>`;
+        }).join('');
+      }
     }
   }
 
@@ -11011,6 +11063,43 @@ function promptUpdateTCGPrice(id) {
   if(idx>-1){items[idx]={...items[idx],currentValue:val,updatedAt:now,priceCheckedAt:now};DB.set('tcg',items);}
   renderLivePrices();renderAll();
   showToast(`${item.name} updated to ${fmt.currency(val,0)}`);
+}
+
+// Records an actual sale: locks in the realized gain/loss (+/- %) against the original
+// purchase price, moves the card out of the active "currently held" total, and folds it
+// into realized P&L instead of unrealized ROI.
+function promptSellTCGItem(id) {
+  const item=DB.get('tcg').find(i=>i.id===id);if(!item)return;
+  const suggestion=item.currentValue||'';
+  const input=prompt(`Sale price for:\n${item.name}\n\nPurchased at: $${item.purchasePrice||0}\nLast market estimate: $${item.currentValue||0}\nEnter what it actually sold for ($):`, suggestion);
+  if(input===null)return;
+  const soldPrice=parseFloat(input);
+  if(isNaN(soldPrice)||soldPrice<0){showToast('Invalid sale price','error');return;}
+
+  const cost=parseFloat(item.purchasePrice)||0;
+  const pct=cost>0?((soldPrice-cost)/cost)*100:0;
+  const now=new Date().toISOString();
+  const items=DB.get('tcg'),idx=items.findIndex(i=>i.id===id);
+  if(idx>-1){
+    items[idx]={...items[idx],sold:true,soldPrice,soldAt:now};
+    DB.set('tcg',items);
+  }
+  renderLivePrices();renderAll();
+  showToast(`${item.name} sold for ${fmt.currency(soldPrice,0)} (${pct>=0?'+':''}${pct.toFixed(1)}%)`, pct>=0?'success':'error');
+}
+
+function undoSellTCGItem(id) {
+  const item=DB.get('tcg').find(i=>i.id===id);if(!item)return;
+  if(!confirm(`Undo the sale of "${item.name}"? It'll go back to your active collection.`))return;
+  const items=DB.get('tcg'),idx=items.findIndex(i=>i.id===id);
+  if(idx>-1){
+    const updated={...items[idx]};
+    delete updated.sold; delete updated.soldPrice; delete updated.soldAt;
+    items[idx]=updated;
+    DB.set('tcg',items);
+  }
+  renderLivePrices();renderAll();
+  showToast(`${item.name} moved back to active collection`);
 }
 
 // A card's price is only really "checked" when someone confirms its value — either through the
@@ -11042,8 +11131,8 @@ let tcgQueue=[];
 let tcgQueueIdx=0;
 
 function tcgStartReviewQueue() {
-  const items=DB.get('tcg');
-  if(!items.length){ showToast('No collectibles to review','info'); return; }
+  const items=DB.get('tcg').filter(i=>!i.sold);
+  if(!items.length){ showToast('No active collectibles to review','info'); return; }
   tcgQueue=[...items].sort((a,b)=>tcgStaleDays(b)-tcgStaleDays(a)).map(i=>i.id);
   tcgQueueIdx=0;
   document.getElementById('tcg-review-overlay').classList.add('open');
