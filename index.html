@@ -13741,13 +13741,13 @@ const FP_MONTH_NAMES = ['January','February','March','April','May','June','July'
 
 // Debt starting balances
 const FP_DEBTS = {
-  lexus:     { name: 'Lexus', start: 7063, monthly: 500, clearMonth: '2027-05', rate: '5.58%' },
-  vw:        { name: 'Volkswagen', start: 1610, monthly: 230, clearMonth: '2026-10', rate: '' },
-  student:   { name: 'Student loan', start: 5200, monthly: 100, clearMonth: '2027-03', rate: '4.53%' },
-  braces:    { name: "Julian's braces", start: 1275, monthly: 160, clearMonth: '2027-01', rate: '' },
+  lexus:     { name: 'Lexus', start: 6137.01, monthly: 500, clearMonth: '2027-08', rate: '5.59%' },
+  vw:        { name: 'Volkswagen', start: 1380, monthly: 230, clearMonth: '2027-01', rate: '' },
+  student:   { name: 'Student loan', start: 5200, monthly: 100, clearMonth: '2027-11', rate: '4.53%' },
+  braces:    { name: "Julian's braces", start: 1320, monthly: 160, clearMonth: '2027-03', rate: '' },
   tahoe:     { name: 'Mom — Tahoe', start: 700, monthly: 0, clearMonth: '2026-08', rate: '' },
   housesavings: { name: 'House savings repay', start: 512, monthly: 100, clearMonth: '2026-11', rate: '' },
-  falltuition:  { name: 'Fall tuition 26', start: 1033, monthly: 150, clearMonth: '2027-12', rate: '' },
+  falltuition:  { name: 'Fall tuition 26', start: 1033, monthly: 208, clearMonth: '2026-11', rate: '' },
 };
 
 // Build payment data for each month
@@ -13774,10 +13774,7 @@ function fpBuildMonthData() {
         { name: 'Verizon', amt: -210, tag: 'bills', due: '13th' },
         { name: 'Wyeerd', amt: -50, tag: 'bills', due: '13th' },
         { name: 'ClaudeAI', amt: -20, tag: 'bills', due: '16th' },
-        { name: 'Gas', amt: -150, tag: 'living', due: '' },
-        { name: 'Groceries', amt: -130, tag: 'living', due: '' },
-        { name: 'Emergency fund', amt: -300, tag: 'savings', due: '' },
-        { name: 'Personal', amt: -200, tag: 'living', due: '' },
+        { name: 'Personal', amt: -620, tag: 'living', due: '' },
       ];
       p2 = [
         { name: 'Allowance 1 (Aug 3rd)', amt: -80, tag: 'bills', due: 'Aug 3' },
@@ -13788,10 +13785,9 @@ function fpBuildMonthData() {
         { name: 'Health insurance', amt: -200, tag: 'bills', due: '26th' },
         { name: 'YouTube Premium', amt: -9, tag: 'bills', due: '26th' },
         { name: 'Student loan +extra', amt: -240, tag: 'debt', due: '26th' },
-        { name: 'Emergency fund', amt: -300, tag: 'savings', due: '' },
         { name: 'House savings repay', amt: -100, tag: 'debt', due: '' },
         { name: 'Fall tuition 26', amt: -150, tag: 'debt', due: '' },
-        { name: 'Personal', amt: -280, tag: 'living', due: '' },
+        { name: 'Personal', amt: -330, tag: 'living', due: '' },
       ];
     } else if (key === '2026-08') {
       p1 = [
@@ -13802,9 +13798,7 @@ function fpBuildMonthData() {
         { name: 'Wyeerd', amt: -50, tag: 'bills', due: '13th' },
         { name: 'ClaudeAI', amt: -20, tag: 'bills', due: '16th' },
         { name: 'Mom — Tahoe (bonus)', amt: -700, tag: 'debt', due: '' },
-        { name: 'Gas', amt: -150, tag: 'living', due: '' },
-        { name: 'Groceries', amt: -130, tag: 'living', due: '' },
-        { name: 'Emergency fund (+bonus)', amt: -600, tag: 'savings', due: '' },
+        { name: 'Personal', amt: -1320, tag: 'living', due: '' },
       ];
       p2 = [
         { name: 'Allowance 1', amt: -80, tag: 'bills', due: 'Sep 3' },
@@ -13817,226 +13811,333 @@ function fpBuildMonthData() {
         { name: 'Student loan +extra', amt: -240, tag: 'debt', due: '26th' },
         { name: 'House savings repay', amt: -100, tag: 'debt', due: '' },
         { name: 'Fall tuition 26', amt: -150, tag: 'debt', due: '' },
-        { name: 'Personal', amt: -230, tag: 'living', due: '' },
+        { name: 'Personal', amt: -30, tag: 'living', due: '' },
       ];
     } else if (key === '2026-09') {
       p1 = [
+        { name: 'Allowance', amt: -80, tag: 'bills', due: '' },
         { name: 'Rent', amt: -300, tag: 'bills', due: '12th' },
-        { name: 'Lexus', amt: -500, tag: 'debt', due: '13th' },
-        { name: 'Verizon', amt: -210, tag: 'bills', due: '13th' },
-        { name: 'Wyeerd', amt: -50, tag: 'bills', due: '13th' },
         { name: 'ClaudeAI', amt: -20, tag: 'bills', due: '16th' },
-        { name: 'Gas', amt: -150, tag: 'living', due: '' },
-        { name: 'Groceries', amt: -130, tag: 'living', due: '' },
-        { name: 'Emergency fund', amt: -300, tag: 'savings', due: '' },
-        { name: 'Personal', amt: -300, tag: 'living', due: '' },
+        { name: 'Lexus', amt: -500, tag: 'debt', due: '13th' },
+        { name: 'Wyeerd', amt: -50, tag: 'bills', due: '13th' },
+        { name: 'Amazon Prime', amt: -17, tag: 'bills', due: '' },
+        { name: 'House savings', amt: -100, tag: 'house', due: '' },
+        { name: 'Tuition', amt: -104, tag: 'debt', due: '' },
+        { name: 'Personal', amt: -529, tag: 'living', due: '' },
       ];
       p2 = [
-        { name: 'Allowance 1', amt: -80, tag: 'bills', due: 'Oct 3' },
-        { name: 'Volkswagen', amt: -230, tag: 'debt', due: 'Oct 3' },
-        { name: 'Car insurance', amt: -121, tag: 'bills', due: 'Oct 3' },
+        { name: 'Student loan', amt: -100, tag: 'debt', due: '26th' },
+        { name: 'Verizon', amt: -180, tag: 'bills', due: '13th' },
+        { name: 'Orthodontist', amt: -160, tag: 'debt', due: '26th' },
+        { name: 'YouTube Premium', amt: -8, tag: 'bills', due: '26th' },
+        { name: 'Health Insurance', amt: -193, tag: 'bills', due: '26th' },
         { name: 'Allowance 2', amt: -80, tag: 'bills', due: '26th' },
-        { name: 'Julian braces', amt: -160, tag: 'debt', due: '26th' },
-        { name: 'Health insurance', amt: -200, tag: 'bills', due: '26th' },
-        { name: 'YouTube Premium', amt: -9, tag: 'bills', due: '26th' },
-        { name: 'Student loan +extra', amt: -240, tag: 'debt', due: '26th' },
-        { name: 'Emergency fund', amt: -300, tag: 'savings', due: '' },
-        { name: 'House savings repay', amt: -100, tag: 'debt', due: '' },
-        { name: 'Fall tuition 26', amt: -150, tag: 'debt', due: '' },
-        { name: 'Personal', amt: -200, tag: 'living', due: '' },
+        { name: 'Volkswagen', amt: -230, tag: 'debt', due: 'Oct 3' },
+        { name: 'Tuition', amt: -104, tag: 'debt', due: '' },
+        { name: 'Car Insurance', amt: -121, tag: 'bills', due: 'Oct 3' },
+        { name: 'Personal', amt: -524, tag: 'living', due: '' },
       ];
     } else if (key === '2026-10') {
       p1 = [
+        { name: 'Allowance', amt: -80, tag: 'bills', due: '' },
         { name: 'Rent', amt: -300, tag: 'bills', due: '12th' },
-        { name: 'Lexus', amt: -500, tag: 'debt', due: '13th' },
-        { name: 'Verizon', amt: -210, tag: 'bills', due: '13th' },
-        { name: 'Wyeerd', amt: -50, tag: 'bills', due: '13th' },
         { name: 'ClaudeAI', amt: -20, tag: 'bills', due: '16th' },
-        { name: 'Volkswagen (final)', amt: -390, tag: 'debt', due: '13th' },
-        { name: 'Gas', amt: -150, tag: 'living', due: '' },
-        { name: 'Emergency fund', amt: -300, tag: 'savings', due: '' },
-        { name: 'Personal', amt: -140, tag: 'living', due: '' },
+        { name: 'Lexus', amt: -500, tag: 'debt', due: '13th' },
+        { name: 'Wyeerd', amt: -50, tag: 'bills', due: '13th' },
+        { name: 'Amazon Prime', amt: -17, tag: 'bills', due: '' },
+        { name: 'House savings', amt: -100, tag: 'house', due: '' },
+        { name: 'Tuition', amt: -104, tag: 'debt', due: '' },
+        { name: 'Personal', amt: -529, tag: 'living', due: '' },
       ];
       p2 = [
-        { name: 'Allowance 1', amt: -80, tag: 'bills', due: 'Nov 3' },
-        { name: 'Car insurance', amt: -121, tag: 'bills', due: 'Nov 3' },
+        { name: 'Student loan', amt: -100, tag: 'debt', due: '26th' },
+        { name: 'Verizon', amt: -180, tag: 'bills', due: '13th' },
+        { name: 'Orthodontist', amt: -160, tag: 'debt', due: '26th' },
+        { name: 'YouTube Premium', amt: -8, tag: 'bills', due: '26th' },
+        { name: 'Health Insurance', amt: -193, tag: 'bills', due: '26th' },
         { name: 'Allowance 2', amt: -80, tag: 'bills', due: '26th' },
-        { name: 'Julian braces', amt: -160, tag: 'debt', due: '26th' },
-        { name: 'Health insurance', amt: -200, tag: 'bills', due: '26th' },
-        { name: 'YouTube Premium', amt: -9, tag: 'bills', due: '26th' },
-        { name: 'Student loan +extra', amt: -470, tag: 'debt', due: '26th' },
-        { name: 'Emergency fund', amt: -300, tag: 'savings', due: '' },
-        { name: 'Groceries', amt: -130, tag: 'living', due: '' },
-        { name: 'House savings repay', amt: -100, tag: 'debt', due: '' },
-        { name: 'Fall tuition 26', amt: -150, tag: 'debt', due: '' },
-        { name: 'Personal', amt: -200, tag: 'living', due: '' },
+        { name: 'Volkswagen', amt: -230, tag: 'debt', due: 'Nov 3' },
+        { name: 'Tuition', amt: -104, tag: 'debt', due: '' },
+        { name: 'Car Insurance', amt: -121, tag: 'bills', due: 'Nov 3' },
+        { name: 'Personal', amt: -524, tag: 'living', due: '' },
       ];
     } else if (key === '2026-11') {
       p1 = [
-        { name: '★ BONUS +$1,400', amt: 1400, tag: 'bonus', due: '' },
+        { name: 'Allowance', amt: -80, tag: 'bills', due: '' },
         { name: 'Rent', amt: -300, tag: 'bills', due: '12th' },
-        { name: 'Lexus', amt: -500, tag: 'debt', due: '13th' },
-        { name: 'Verizon', amt: -210, tag: 'bills', due: '13th' },
-        { name: 'Wyeerd', amt: -50, tag: 'bills', due: '13th' },
         { name: 'ClaudeAI', amt: -20, tag: 'bills', due: '16th' },
-        { name: 'Gas', amt: -150, tag: 'living', due: '' },
-        { name: 'Groceries', amt: -130, tag: 'living', due: '' },
-        { name: 'Emergency fund (+bonus)', amt: -900, tag: 'savings', due: '' },
-        { name: 'Personal', amt: -140, tag: 'living', due: '' },
+        { name: 'Lexus', amt: -500, tag: 'debt', due: '13th' },
+        { name: 'Wyeerd', amt: -50, tag: 'bills', due: '13th' },
+        { name: 'Amazon Prime', amt: -17, tag: 'bills', due: '' },
+        { name: 'House savings', amt: -100, tag: 'house', due: '' },
+        { name: 'Tuition (final)', amt: -101, tag: 'debt', due: '' },
+        { name: 'Personal', amt: -532, tag: 'living', due: '' },
       ];
       p2 = [
-        { name: 'Allowance 1', amt: -80, tag: 'bills', due: 'Dec 3' },
-        { name: 'Car insurance', amt: -121, tag: 'bills', due: 'Dec 3' },
+        { name: 'Student loan', amt: -100, tag: 'debt', due: '26th' },
+        { name: 'Verizon', amt: -180, tag: 'bills', due: '13th' },
+        { name: 'Orthodontist', amt: -160, tag: 'debt', due: '26th' },
+        { name: 'YouTube Premium', amt: -8, tag: 'bills', due: '26th' },
+        { name: 'Health Insurance', amt: -193, tag: 'bills', due: '26th' },
         { name: 'Allowance 2', amt: -80, tag: 'bills', due: '26th' },
-        { name: 'Julian braces', amt: -160, tag: 'debt', due: '26th' },
-        { name: 'Health insurance', amt: -200, tag: 'bills', due: '26th' },
-        { name: 'YouTube Premium', amt: -9, tag: 'bills', due: '26th' },
-        { name: 'Student loan +lump $700', amt: -1170, tag: 'debt', due: '26th' },
-        { name: 'Emergency fund', amt: -400, tag: 'savings', due: '' },
-        { name: 'House savings repay (final $12)', amt: -12, tag: 'debt', due: '' },
-        { name: 'Fall tuition 26', amt: -150, tag: 'debt', due: '' },
-        { name: 'Personal', amt: -180, tag: 'living', due: '' },
+        { name: 'Volkswagen', amt: -334, tag: 'debt', due: 'Dec 3' },
+        { name: 'Car Insurance', amt: -121, tag: 'bills', due: 'Dec 3' },
+        { name: 'Emergency fund', amt: -50, tag: 'savings', due: '' },
+        { name: 'Personal', amt: -474, tag: 'living', due: '' },
       ];
     } else if (key === '2026-12') {
       p1 = [
+        { name: 'Allowance', amt: -80, tag: 'bills', due: '' },
         { name: 'Rent', amt: -300, tag: 'bills', due: '12th' },
-        { name: 'Lexus', amt: -500, tag: 'debt', due: '13th' },
-        { name: 'Verizon', amt: -210, tag: 'bills', due: '13th' },
-        { name: 'Wyeerd', amt: -50, tag: 'bills', due: '13th' },
         { name: 'ClaudeAI', amt: -20, tag: 'bills', due: '16th' },
-        { name: 'Gas', amt: -150, tag: 'living', due: '' },
-        { name: 'Groceries', amt: -130, tag: 'living', due: '' },
-        { name: 'Emergency fund', amt: -300, tag: 'savings', due: '' },
-        { name: 'Personal', amt: -300, tag: 'living', due: '' },
+        { name: 'Lexus', amt: -500, tag: 'debt', due: '13th' },
+        { name: 'Wyeerd', amt: -50, tag: 'bills', due: '13th' },
+        { name: 'Amazon Prime', amt: -17, tag: 'bills', due: '' },
+        { name: 'House savings', amt: -100, tag: 'house', due: '' },
+        { name: 'Personal', amt: -633, tag: 'living', due: '' },
       ];
       p2 = [
-        { name: 'Allowance 1', amt: -80, tag: 'bills', due: 'Jan 3' },
-        { name: 'Car insurance', amt: -121, tag: 'bills', due: 'Jan 3' },
+        { name: 'Student loan', amt: -100, tag: 'debt', due: '26th' },
+        { name: 'Verizon', amt: -180, tag: 'bills', due: '13th' },
+        { name: 'Orthodontist', amt: -160, tag: 'debt', due: '26th' },
+        { name: 'YouTube Premium', amt: -8, tag: 'bills', due: '26th' },
+        { name: 'Health Insurance', amt: -193, tag: 'bills', due: '26th' },
         { name: 'Allowance 2', amt: -80, tag: 'bills', due: '26th' },
-        { name: 'Julian braces', amt: -160, tag: 'debt', due: '26th' },
-        { name: 'Health insurance', amt: -200, tag: 'bills', due: '26th' },
-        { name: 'YouTube Premium', amt: -9, tag: 'bills', due: '26th' },
-        { name: 'Student loan +extra', amt: -470, tag: 'debt', due: '26th' },
-        { name: 'Emergency fund', amt: -300, tag: 'savings', due: '' },
-        { name: 'Fall tuition 26 (final)', amt: -133, tag: 'debt', due: '' },
-        { name: 'Personal', amt: -280, tag: 'living', due: '' },
+        { name: 'Volkswagen', amt: -334, tag: 'debt', due: 'Jan 3' },
+        { name: 'Car Insurance', amt: -121, tag: 'bills', due: 'Jan 3' },
+        { name: 'Emergency fund', amt: -124, tag: 'savings', due: '' },
+        { name: 'Personal', amt: -400, tag: 'living', due: '' },
       ];
     } else if (key === '2027-01') {
       p1 = [
+        { name: 'Allowance', amt: -80, tag: 'bills', due: '' },
         { name: 'Rent', amt: -300, tag: 'bills', due: '12th' },
-        { name: 'Lexus', amt: -500, tag: 'debt', due: '13th' },
-        { name: 'Verizon', amt: -210, tag: 'bills', due: '13th' },
-        { name: 'Wyeerd', amt: -50, tag: 'bills', due: '13th' },
         { name: 'ClaudeAI', amt: -20, tag: 'bills', due: '16th' },
-        { name: "Julian's braces (final)", amt: -155, tag: 'debt', due: '13th' },
-        { name: 'Gas', amt: -150, tag: 'living', due: '' },
-        { name: 'Emergency fund', amt: -300, tag: 'savings', due: '' },
-        { name: 'Personal', amt: -215, tag: 'living', due: '' },
+        { name: 'Lexus', amt: -500, tag: 'debt', due: '13th' },
+        { name: 'Wyeerd', amt: -50, tag: 'bills', due: '13th' },
+        { name: 'Amazon Prime', amt: -17, tag: 'bills', due: '' },
+        { name: 'House savings', amt: -100, tag: 'house', due: '' },
+        { name: 'Personal', amt: -633, tag: 'living', due: '' },
       ];
       p2 = [
-        { name: 'Allowance 1', amt: -80, tag: 'bills', due: 'Feb 3' },
-        { name: 'Car insurance', amt: -121, tag: 'bills', due: 'Feb 3' },
+        { name: 'Student loan', amt: -100, tag: 'debt', due: '26th' },
+        { name: 'Verizon', amt: -180, tag: 'bills', due: '13th' },
+        { name: 'Orthodontist', amt: -160, tag: 'debt', due: '26th' },
+        { name: 'YouTube Premium', amt: -8, tag: 'bills', due: '26th' },
+        { name: 'Health Insurance', amt: -193, tag: 'bills', due: '26th' },
         { name: 'Allowance 2', amt: -80, tag: 'bills', due: '26th' },
-        { name: 'Health insurance', amt: -200, tag: 'bills', due: '26th' },
-        { name: 'YouTube Premium', amt: -9, tag: 'bills', due: '26th' },
-        { name: 'Student loan +extra', amt: -470, tag: 'debt', due: '26th' },
-        { name: 'Emergency fund', amt: -305, tag: 'savings', due: '' },
-        { name: 'Groceries', amt: -130, tag: 'living', due: '' },
-        { name: 'Personal', amt: -405, tag: 'living', due: '' },
+        { name: 'Volkswagen (final)', amt: -22, tag: 'debt', due: 'Feb 3' },
+        { name: 'Car Insurance', amt: -121, tag: 'bills', due: 'Feb 3' },
+        { name: 'Emergency fund', amt: -150, tag: 'savings', due: '' },
+        { name: 'Personal', amt: -686, tag: 'living', due: '' },
       ];
     } else if (key === '2027-02') {
       p1 = [
-        { name: '★ BONUS +$1,400', amt: 1400, tag: 'bonus', due: '' },
+        { name: 'Allowance', amt: -80, tag: 'bills', due: '' },
         { name: 'Rent', amt: -300, tag: 'bills', due: '12th' },
-        { name: 'Lexus', amt: -500, tag: 'debt', due: '13th' },
-        { name: 'Verizon', amt: -210, tag: 'bills', due: '13th' },
-        { name: 'Wyeerd', amt: -50, tag: 'bills', due: '13th' },
         { name: 'ClaudeAI', amt: -20, tag: 'bills', due: '16th' },
-        { name: 'Gas', amt: -150, tag: 'living', due: '' },
-        { name: 'Groceries', amt: -130, tag: 'living', due: '' },
-        { name: 'Emergency fund (+bonus)', amt: -900, tag: 'savings', due: '' },
-        { name: 'Personal', amt: -140, tag: 'living', due: '' },
+        { name: 'Lexus', amt: -500, tag: 'debt', due: '13th' },
+        { name: 'Wyeerd', amt: -50, tag: 'bills', due: '13th' },
+        { name: 'Amazon Prime', amt: -17, tag: 'bills', due: '' },
+        { name: 'House savings', amt: -100, tag: 'house', due: '' },
+        { name: 'Personal', amt: -633, tag: 'living', due: '' },
       ];
       p2 = [
-        { name: 'Allowance 1', amt: -80, tag: 'bills', due: 'Mar 3' },
-        { name: 'Car insurance', amt: -121, tag: 'bills', due: 'Mar 3' },
+        { name: 'Student loan', amt: -100, tag: 'debt', due: '26th' },
+        { name: 'Verizon', amt: -180, tag: 'bills', due: '13th' },
+        { name: 'Orthodontist', amt: -494, tag: 'debt', due: '26th' },
+        { name: 'YouTube Premium', amt: -8, tag: 'bills', due: '26th' },
+        { name: 'Health Insurance', amt: -193, tag: 'bills', due: '26th' },
         { name: 'Allowance 2', amt: -80, tag: 'bills', due: '26th' },
-        { name: 'Health insurance', amt: -200, tag: 'bills', due: '26th' },
-        { name: 'YouTube Premium', amt: -9, tag: 'bills', due: '26th' },
-        { name: 'Student loan +lump $700', amt: -1330, tag: 'debt', due: '26th' },
-        { name: 'Emergency fund', amt: -400, tag: 'savings', due: '' },
-        { name: 'Personal', amt: -180, tag: 'living', due: '' },
+        { name: 'Car Insurance', amt: -121, tag: 'bills', due: 'Mar 3' },
+        { name: 'Emergency fund', amt: -124, tag: 'savings', due: '' },
+        { name: 'Personal', amt: -400, tag: 'living', due: '' },
       ];
     } else if (key === '2027-03') {
       p1 = [
-        { name: '★ TAX RETURN +$7,000', amt: 7000, tag: 'tax', due: '' },
+        { name: 'Allowance', amt: -80, tag: 'bills', due: '' },
         { name: 'Rent', amt: -300, tag: 'bills', due: '12th' },
-        { name: 'Lexus', amt: -500, tag: 'debt', due: '13th' },
-        { name: 'Verizon', amt: -210, tag: 'bills', due: '13th' },
-        { name: 'Wyeerd', amt: -50, tag: 'bills', due: '13th' },
         { name: 'ClaudeAI', amt: -20, tag: 'bills', due: '16th' },
-        { name: 'Student loan (final)', amt: -470, tag: 'debt', due: '13th' },
-        { name: 'Julian soccer (tax)', amt: -2800, tag: 'debt', due: '' },
-        { name: 'House fund (tax $4k)', amt: -4000, tag: 'house', due: '' },
-        { name: 'Gas', amt: -150, tag: 'living', due: '' },
-        { name: 'Personal buffer', amt: -730, tag: 'living', due: '' },
+        { name: 'Lexus', amt: -500, tag: 'debt', due: '13th' },
+        { name: 'Wyeerd', amt: -50, tag: 'bills', due: '13th' },
+        { name: 'Amazon Prime', amt: -17, tag: 'bills', due: '' },
+        { name: 'House savings', amt: -100, tag: 'house', due: '' },
+        { name: 'Personal', amt: -633, tag: 'living', due: '' },
       ];
       p2 = [
-        { name: 'Allowance 1', amt: -80, tag: 'bills', due: 'Apr 3' },
-        { name: 'Car insurance', amt: -121, tag: 'bills', due: 'Apr 3' },
+        { name: 'Student loan', amt: -100, tag: 'debt', due: '26th' },
+        { name: 'Verizon', amt: -180, tag: 'bills', due: '13th' },
+        { name: 'Orthodontist (final)', amt: -26, tag: 'debt', due: '26th' },
+        { name: 'YouTube Premium', amt: -8, tag: 'bills', due: '26th' },
+        { name: 'Health Insurance', amt: -193, tag: 'bills', due: '26th' },
         { name: 'Allowance 2', amt: -80, tag: 'bills', due: '26th' },
-        { name: 'Health insurance', amt: -200, tag: 'bills', due: '26th' },
-        { name: 'YouTube Premium', amt: -9, tag: 'bills', due: '26th' },
-        { name: 'Groceries', amt: -130, tag: 'living', due: '' },
-        { name: 'Personal', amt: -380, tag: 'living', due: '' },
+        { name: 'Car Insurance', amt: -121, tag: 'bills', due: 'Apr 3' },
+        { name: 'Emergency fund', amt: -150, tag: 'savings', due: '' },
+        { name: 'Personal', amt: -842, tag: 'living', due: '' },
       ];
     } else if (key === '2027-04') {
       p1 = [
+        { name: 'Allowance', amt: -80, tag: 'bills', due: '' },
         { name: 'Rent', amt: -300, tag: 'bills', due: '12th' },
-        { name: 'Lexus', amt: -500, tag: 'debt', due: '13th' },
-        { name: 'Verizon', amt: -210, tag: 'bills', due: '13th' },
-        { name: 'Wyeerd', amt: -50, tag: 'bills', due: '13th' },
         { name: 'ClaudeAI', amt: -20, tag: 'bills', due: '16th' },
-        { name: 'Roth IRA (FXAIX 60%)', amt: -300, tag: 'invest', due: '' },
-        { name: 'Roth IRA (FSKAX 20%)', amt: -100, tag: 'invest', due: '' },
-        { name: 'Roth IRA (IBIT 10%)', amt: -50, tag: 'invest', due: '' },
-        { name: 'Roth IRA (FTIHX 10%)', amt: -50, tag: 'invest', due: '' },
-        { name: 'House fund SPAXX', amt: -300, tag: 'house', due: '' },
-        { name: 'Gas', amt: -150, tag: 'living', due: '' },
+        { name: 'Lexus', amt: -500, tag: 'debt', due: '13th' },
+        { name: 'Wyeerd', amt: -50, tag: 'bills', due: '13th' },
+        { name: 'Amazon Prime', amt: -17, tag: 'bills', due: '' },
+        { name: 'House savings', amt: -100, tag: 'house', due: '' },
+        { name: 'Personal', amt: -633, tag: 'living', due: '' },
       ];
       p2 = [
-        { name: 'Allowance 1', amt: -80, tag: 'bills', due: 'May 3' },
-        { name: 'Car insurance', amt: -121, tag: 'bills', due: 'May 3' },
+        { name: 'Student loan', amt: -594, tag: 'debt', due: '26th' },
+        { name: 'Verizon', amt: -180, tag: 'bills', due: '13th' },
+        { name: 'YouTube Premium', amt: -8, tag: 'bills', due: '26th' },
+        { name: 'Health Insurance', amt: -193, tag: 'bills', due: '26th' },
         { name: 'Allowance 2', amt: -80, tag: 'bills', due: '26th' },
-        { name: 'Health insurance', amt: -200, tag: 'bills', due: '26th' },
-        { name: 'YouTube Premium', amt: -9, tag: 'bills', due: '26th' },
-        { name: 'Groceries', amt: -130, tag: 'living', due: '' },
-        { name: 'EF top-up', amt: -300, tag: 'savings', due: '' },
-        { name: 'Personal', amt: -530, tag: 'living', due: '' },
+        { name: 'Car Insurance', amt: -121, tag: 'bills', due: 'May 3' },
+        { name: 'Emergency fund', amt: -100, tag: 'savings', due: '' },
+        { name: 'Personal', amt: -424, tag: 'living', due: '' },
       ];
     } else if (key === '2027-05') {
       p1 = [
-        { name: '★ BONUS +$1,400', amt: 1400, tag: 'bonus', due: '' },
+        { name: 'Allowance', amt: -80, tag: 'bills', due: '' },
         { name: 'Rent', amt: -300, tag: 'bills', due: '12th' },
-        { name: 'Lexus (final + lump)', amt: -1063, tag: 'debt', due: '13th' },
-        { name: 'Verizon', amt: -210, tag: 'bills', due: '13th' },
-        { name: 'Wyeerd', amt: -50, tag: 'bills', due: '13th' },
         { name: 'ClaudeAI', amt: -20, tag: 'bills', due: '16th' },
-        { name: 'Roth IRA', amt: -500, tag: 'invest', due: '' },
-        { name: 'House fund (+bonus $337)', amt: -637, tag: 'house', due: '' },
-        { name: 'Gas', amt: -150, tag: 'living', due: '' },
+        { name: 'Lexus', amt: -500, tag: 'debt', due: '13th' },
+        { name: 'Wyeerd', amt: -50, tag: 'bills', due: '13th' },
+        { name: 'Amazon Prime', amt: -17, tag: 'bills', due: '' },
+        { name: 'House savings', amt: -100, tag: 'house', due: '' },
+        { name: 'Personal', amt: -633, tag: 'living', due: '' },
       ];
       p2 = [
-        { name: 'Allowance 1', amt: -80, tag: 'bills', due: 'Jun 3' },
-        { name: 'Car insurance', amt: -121, tag: 'bills', due: 'Jun 3' },
+        { name: 'Student loan', amt: -594, tag: 'debt', due: '26th' },
+        { name: 'Verizon', amt: -180, tag: 'bills', due: '13th' },
+        { name: 'YouTube Premium', amt: -8, tag: 'bills', due: '26th' },
+        { name: 'Health Insurance', amt: -193, tag: 'bills', due: '26th' },
         { name: 'Allowance 2', amt: -80, tag: 'bills', due: '26th' },
-        { name: 'Health insurance', amt: -200, tag: 'bills', due: '26th' },
-        { name: 'YouTube Premium', amt: -9, tag: 'bills', due: '26th' },
-        { name: 'Groceries', amt: -130, tag: 'living', due: '' },
-        { name: 'Personal', amt: -530, tag: 'living', due: '' },
+        { name: 'Car Insurance', amt: -121, tag: 'bills', due: 'Jun 3' },
+        { name: 'Emergency fund', amt: -100, tag: 'savings', due: '' },
+        { name: 'Personal', amt: -424, tag: 'living', due: '' },
+      ];
+    } else if (key === '2027-06') {
+      p1 = [
+        { name: 'Allowance', amt: -80, tag: 'bills', due: '' },
+        { name: 'Rent', amt: -300, tag: 'bills', due: '12th' },
+        { name: 'ClaudeAI', amt: -20, tag: 'bills', due: '16th' },
+        { name: 'Lexus', amt: -500, tag: 'debt', due: '13th' },
+        { name: 'Wyeerd', amt: -50, tag: 'bills', due: '13th' },
+        { name: 'Amazon Prime', amt: -17, tag: 'bills', due: '' },
+        { name: 'House savings', amt: -100, tag: 'house', due: '' },
+        { name: 'Personal', amt: -633, tag: 'living', due: '' },
+      ];
+      p2 = [
+        { name: 'Student loan', amt: -594, tag: 'debt', due: '26th' },
+        { name: 'Verizon', amt: -180, tag: 'bills', due: '13th' },
+        { name: 'YouTube Premium', amt: -8, tag: 'bills', due: '26th' },
+        { name: 'Health Insurance', amt: -193, tag: 'bills', due: '26th' },
+        { name: 'Allowance 2', amt: -80, tag: 'bills', due: '26th' },
+        { name: 'Car Insurance', amt: -121, tag: 'bills', due: 'Jul 3' },
+        { name: 'Emergency fund', amt: -100, tag: 'savings', due: '' },
+        { name: 'Personal', amt: -424, tag: 'living', due: '' },
+      ];
+    } else if (key === '2027-07') {
+      p1 = [
+        { name: 'Allowance', amt: -80, tag: 'bills', due: '' },
+        { name: 'Rent', amt: -300, tag: 'bills', due: '12th' },
+        { name: 'ClaudeAI', amt: -20, tag: 'bills', due: '16th' },
+        { name: 'Lexus', amt: -500, tag: 'debt', due: '13th' },
+        { name: 'Wyeerd', amt: -50, tag: 'bills', due: '13th' },
+        { name: 'Amazon Prime', amt: -17, tag: 'bills', due: '' },
+        { name: 'House savings', amt: -100, tag: 'house', due: '' },
+        { name: 'Personal', amt: -633, tag: 'living', due: '' },
+      ];
+      p2 = [
+        { name: 'Student loan', amt: -594, tag: 'debt', due: '26th' },
+        { name: 'Verizon', amt: -180, tag: 'bills', due: '13th' },
+        { name: 'YouTube Premium', amt: -8, tag: 'bills', due: '26th' },
+        { name: 'Health Insurance', amt: -193, tag: 'bills', due: '26th' },
+        { name: 'Allowance 2', amt: -80, tag: 'bills', due: '26th' },
+        { name: 'Car Insurance', amt: -121, tag: 'bills', due: 'Aug 3' },
+        { name: 'Emergency fund', amt: -100, tag: 'savings', due: '' },
+        { name: 'Personal', amt: -424, tag: 'living', due: '' },
+      ];
+    } else if (key === '2027-08') {
+      p1 = [
+        { name: 'Allowance', amt: -80, tag: 'bills', due: '' },
+        { name: 'Rent', amt: -300, tag: 'bills', due: '12th' },
+        { name: 'ClaudeAI', amt: -20, tag: 'bills', due: '16th' },
+        { name: 'Lexus (final)', amt: -332.01, tag: 'debt', due: '13th' },
+        { name: 'Wyeerd', amt: -50, tag: 'bills', due: '13th' },
+        { name: 'Amazon Prime', amt: -17, tag: 'bills', due: '' },
+        { name: 'House savings', amt: -100, tag: 'house', due: '' },
+        { name: 'Personal', amt: -801, tag: 'living', due: '' },
+      ];
+      p2 = [
+        { name: 'Student loan', amt: -594, tag: 'debt', due: '26th' },
+        { name: 'Verizon', amt: -180, tag: 'bills', due: '13th' },
+        { name: 'YouTube Premium', amt: -8, tag: 'bills', due: '26th' },
+        { name: 'Health Insurance', amt: -193, tag: 'bills', due: '26th' },
+        { name: 'Allowance 2', amt: -80, tag: 'bills', due: '26th' },
+        { name: 'Car Insurance', amt: -121, tag: 'bills', due: 'Sep 3' },
+        { name: 'Personal', amt: -524, tag: 'living', due: '' },
+      ];
+    } else if (key === '2027-09') {
+      p1 = [
+        { name: 'Allowance', amt: -80, tag: 'bills', due: '' },
+        { name: 'Rent', amt: -300, tag: 'bills', due: '12th' },
+        { name: 'ClaudeAI', amt: -20, tag: 'bills', due: '16th' },
+        { name: 'Wyeerd', amt: -50, tag: 'bills', due: '13th' },
+        { name: 'Amazon Prime', amt: -17, tag: 'bills', due: '' },
+        { name: 'House savings', amt: -100, tag: 'house', due: '' },
+        { name: 'Personal', amt: -1133, tag: 'living', due: '' },
+      ];
+      p2 = [
+        { name: 'Student loan', amt: -594, tag: 'debt', due: '26th' },
+        { name: 'Verizon', amt: -180, tag: 'bills', due: '13th' },
+        { name: 'YouTube Premium', amt: -8, tag: 'bills', due: '26th' },
+        { name: 'Health Insurance', amt: -193, tag: 'bills', due: '26th' },
+        { name: 'Allowance 2', amt: -80, tag: 'bills', due: '26th' },
+        { name: 'Car Insurance', amt: -121, tag: 'bills', due: 'Oct 3' },
+        { name: 'Personal', amt: -524, tag: 'living', due: '' },
+      ];
+    } else if (key === '2027-10') {
+      p1 = [
+        { name: 'Allowance', amt: -80, tag: 'bills', due: '' },
+        { name: 'Rent', amt: -300, tag: 'bills', due: '12th' },
+        { name: 'ClaudeAI', amt: -20, tag: 'bills', due: '16th' },
+        { name: 'Wyeerd', amt: -50, tag: 'bills', due: '13th' },
+        { name: 'Amazon Prime', amt: -17, tag: 'bills', due: '' },
+        { name: 'House savings', amt: -100, tag: 'house', due: '' },
+        { name: 'Personal', amt: -1133, tag: 'living', due: '' },
+      ];
+      p2 = [
+        { name: 'Student loan', amt: -594, tag: 'debt', due: '26th' },
+        { name: 'Verizon', amt: -180, tag: 'bills', due: '13th' },
+        { name: 'YouTube Premium', amt: -8, tag: 'bills', due: '26th' },
+        { name: 'Health Insurance', amt: -193, tag: 'bills', due: '26th' },
+        { name: 'Allowance 2', amt: -80, tag: 'bills', due: '26th' },
+        { name: 'Car Insurance', amt: -121, tag: 'bills', due: 'Nov 3' },
+        { name: 'Personal', amt: -524, tag: 'living', due: '' },
+      ];
+    } else if (key === '2027-11') {
+      p1 = [
+        { name: 'Allowance', amt: -80, tag: 'bills', due: '' },
+        { name: 'Rent', amt: -300, tag: 'bills', due: '12th' },
+        { name: 'ClaudeAI', amt: -20, tag: 'bills', due: '16th' },
+        { name: 'Wyeerd', amt: -50, tag: 'bills', due: '13th' },
+        { name: 'Amazon Prime', amt: -17, tag: 'bills', due: '' },
+        { name: 'House savings', amt: -100, tag: 'house', due: '' },
+        { name: 'Personal', amt: -1133, tag: 'living', due: '' },
+      ];
+      p2 = [
+        { name: 'Student loan', amt: -445.64, tag: 'debt', due: '26th' },
+        { name: 'Verizon', amt: -180, tag: 'bills', due: '13th' },
+        { name: 'YouTube Premium', amt: -8, tag: 'bills', due: '26th' },
+        { name: 'Health Insurance', amt: -193, tag: 'bills', due: '26th' },
+        { name: 'Allowance 2', amt: -80, tag: 'bills', due: '26th' },
+        { name: 'Car Insurance', amt: -121, tag: 'bills', due: 'Dec 3' },
+        { name: 'Personal', amt: -672, tag: 'living', due: '' },
       ];
     } else {
-      // Generic wealth phase months Jun 2027+
+      // Generic wealth phase months Dec 2027+ (debt-free after the recalibrated payoff plan)
       const isTaxMonth = isTax;
       const isBonusMonth = isBonus;
       p1 = [
@@ -14046,14 +14147,13 @@ function fpBuildMonthData() {
         { name: 'Verizon', amt: -210, tag: 'bills', due: '13th' },
         { name: 'Wyeerd', amt: -50, tag: 'bills', due: '13th' },
         { name: 'ClaudeAI', amt: -20, tag: 'bills', due: '16th' },
-        { name: 'Roth IRA (FXAIX 60%)', amt: -(key >= '2029-01' ? 350 : 300), tag: 'invest', due: '' },
+        { name: 'Roth IRA (FXAIX 60%)', amt: -(key >= '2029-01' ? 337 : 300), tag: 'invest', due: '' },
         { name: 'Roth IRA (FSKAX 20%)', amt: -(key >= '2029-01' ? 117 : 100), tag: 'invest', due: '' },
         { name: 'Roth IRA (IBIT 10%)', amt: -(key >= '2029-01' ? 58 : 50), tag: 'invest', due: '' },
         { name: 'Roth IRA (FTIHX 10%)', amt: -(key >= '2029-01' ? 58 : 50), tag: 'invest', due: '' },
         ...(isTaxMonth ? [{ name: 'House fund (tax $4k)', amt: -4000, tag: 'house', due: '' }] : []),
         ...(isBonusMonth ? [{ name: 'Roth IRA (bonus)', amt: -700, tag: 'invest', due: '' }, { name: 'House fund (bonus)', amt: -700, tag: 'house', due: '' }] : []),
-        { name: 'Gas', amt: -150, tag: 'living', due: '' },
-        { name: 'Personal', amt: -530, tag: 'living', due: '' },
+        { name: 'Personal', amt: -(key >= '2029-01' ? 550 : 620), tag: 'living', due: '' },
       ];
       p2 = [
         { name: 'Allowance 1', amt: -80, tag: 'bills', due: 'next 3rd' },
@@ -14062,9 +14162,7 @@ function fpBuildMonthData() {
         { name: 'Health insurance', amt: -200, tag: 'bills', due: '26th' },
         { name: 'YouTube Premium', amt: -9, tag: 'bills', due: '26th' },
         { name: 'House fund SPAXX', amt: -300, tag: 'house', due: '' },
-        { name: 'Groceries', amt: -130, tag: 'living', due: '' },
-        { name: 'EF top-up', amt: -300, tag: 'savings', due: '' },
-        { name: 'Personal', amt: -317, tag: 'living', due: '' },
+        { name: 'Personal', amt: -910, tag: 'living', due: '' },
       ];
     }
 
@@ -14072,15 +14170,11 @@ function fpBuildMonthData() {
     const milestones = [];
     if (key === '2026-07') milestones.push({ text: 'Emergency fund started', color: 'green' });
     if (key === '2026-08') milestones.push({ text: 'Mom — Tahoe cleared ✓', color: 'green' }, { text: 'Bonus received', color: 'amber' });
-    if (key === '2026-10') milestones.push({ text: 'Volkswagen cleared ✓', color: 'green' });
-    if (key === '2026-11') milestones.push({ text: 'Bonus received · $700 kills student loan', color: 'amber' });
-    if (key === '2026-12') milestones.push({ text: 'EF crosses $5k target ★', color: 'green' });
-    if (key === '2027-01') milestones.push({ text: "Julian's braces cleared ✓", color: 'green' });
-    if (key === '2027-02') milestones.push({ text: 'Bonus received · student loan nearly gone', color: 'amber' });
-    if (key === '2027-03') milestones.push({ text: 'Student loan cleared ✓', color: 'green' }, { text: 'Tax return deployed — house fund jumps to $6k', color: 'green' }, { text: "Julian's soccer paid in full", color: 'amber' });
-    if (key === '2027-04') milestones.push({ text: 'Roth IRA restarted ★', color: 'blue' }, { text: 'House fund contributions begin', color: 'amber' });
-    if (key === '2027-05') milestones.push({ text: 'DEBT FREE — all 8 cleared ★★', color: 'green' }, { text: 'Bonus kills Lexus early', color: 'amber' });
-    if (key === '2027-06') milestones.push({ text: 'Zero debt — full wealth mode ★', color: 'green' });
+    if (key === '2026-10') milestones.push({ text: 'Fall tuition cleared ✓', color: 'green' });
+    if (key === '2027-01') milestones.push({ text: 'Volkswagen cleared ✓', color: 'green' });
+    if (key === '2027-03') milestones.push({ text: 'Student loan cleared ✓', color: 'green' }, { text: 'Tax return deployed — EF + house fund get a boost', color: 'green' });
+    if (key === '2027-05') milestones.push({ text: "Julian's braces cleared ✓", color: 'green' });
+    if (key === '2027-08') milestones.push({ text: 'DEBT FREE — Lexus paid off ★★', color: 'green' });
     if (key === '2027-09') milestones.push({ text: 'House fund crosses $10k', color: 'amber' });
     if (key === '2027-12') milestones.push({ text: 'House fund near FHA minimum', color: 'amber' });
     if (key === '2028-03') milestones.push({ text: 'House fund crosses $18k', color: 'amber' }, { text: 'Tax return + bonus deployed', color: 'green' });
@@ -14244,6 +14338,72 @@ function fpApplyJuly2026Update() {
   fpSaveScheduleOverrides();
   fpClearCheckedForList('2026-07', 0);
   fpClearCheckedForList('2026-07', 1);
+  localStorage.setItem(FLAG, '1');
+}
+
+// One-time migration: recalibrates the plan to actual reality as of August 2026 — the
+// original Sept 2026–May 2027 schedule assumed payment amounts that didn't happen (e.g. a
+// student loan payoff by November that was never realistic), so debt balances drifted from
+// what the schedule assumed. This locks in the real current balances (via override, same
+// mechanism as the "✎ edit" button — safe to release via "↺ auto" later once comfortable
+// the auto-tracked math matches), replaces the unrealistic months with a snowball-based plan
+// that actually clears every debt using real balances and the existing bonus/tax cadence,
+// and clears stale checkmarks for the rewritten months so old positions don't misalign with
+// the new bill lists. Also neutralizes an earlier "hide all built-in debts" migration that
+// never got a chance to run for this browser — leaving it active would risk wiping out the
+// very debts this recalibration just fixed.
+function fpApplyDebtRecalibration2026() {
+  const FLAG = 'fp_debt_recalibration_2026_v1';
+  if (localStorage.getItem(FLAG)) return;
+
+  // Lock in real current balances (as of Aug 2026) — matches what's actually owed right now
+  fpDebtOverrides['vw'] = 1150;
+  fpDebtOverrides['lexus'] = 5663.33;
+  fpDebtOverrides['student'] = 5100;
+  fpDebtOverrides['braces'] = 1320;
+  fpDebtOverrides['falltuition'] = 517;
+  fpSaveDebtOverrides();
+
+  // Lock in real current savings goal progress
+  fpGoalOverrides['ef_default'] = 0;
+  fpGoalOverrides['house_default'] = 1400;
+  fpSaveGoalOverrides();
+
+  // The Sept 2026–Aug 2027 bill lists changed shape (different items/order), so any existing
+  // checkmarks in that range would land on the wrong line item — clear them all
+  ['2026-09','2026-10','2026-11','2026-12','2027-01','2027-02','2027-03','2027-04','2027-05','2027-06','2027-07','2027-08'].forEach(key => {
+    fpClearCheckedForList(key, 0);
+    fpClearCheckedForList(key, 1);
+  });
+
+  // Neutralize the "hide all built-in debts" migration — it hasn't fired for this browser yet
+  // (these debts are clearly in active use), and letting it fire now would undo this recalibration
+  localStorage.setItem('fp_delete_all_builtin_debts_v1', '1');
+
+  localStorage.setItem(FLAG, '1');
+}
+
+// Second recalibration pass: the person handed over their exact real bill breakdown (both
+// paycheck halves, precise dollar amounts) and asked for the snowball to hold off until
+// November instead of starting immediately. This reshapes Sept 2026–Nov 2027 again (renamed
+// items too — "Julian's braces"->"Orthodontist", "Fall tuition 26"->"Tuition", "House savings
+// repay"->"House savings" — matching their exact wording), so checkmarks in that range need
+// clearing again the same way the first pass did.
+function fpApplyDebtRecalibration2026v2() {
+  const FLAG = 'fp_debt_recalibration_2026_v3';
+  if (localStorage.getItem(FLAG)) return;
+
+  const keysToReset = ['2026-09','2026-10','2026-11','2026-12','2027-01','2027-02','2027-03','2027-04','2027-05','2027-06','2027-07','2027-08','2027-09','2027-10','2027-11'];
+
+  // Wipe any schedule overrides the user may have set for these months — the new hardcoded
+  // schedule replaces them entirely, so stale overrides would silently win over the new bills
+  keysToReset.forEach(key => {
+    delete fpScheduleOverrides[key];
+    fpClearCheckedForList(key, 0);
+    fpClearCheckedForList(key, 1);
+  });
+  fpSaveScheduleOverrides();
+
   localStorage.setItem(FLAG, '1');
 }
 
@@ -14804,8 +14964,8 @@ const FP_DEBT_KEYWORDS = {
   student:      'student loan',
   braces:       ['braces','orthodontist'],
   tahoe:        'tahoe',
-  housesavings: 'house savings repay',
-  falltuition:  'fall tuition',
+  housesavings: 'house savings',
+  falltuition:  'tuition',
 };
 
 function fpGetDebtBalance(id) {
@@ -14985,7 +15145,8 @@ fpLoadGoalOverrides();
 fpLoadScheduleOverrides();
 fpMigrateCustomDebtCurrents();
 fpApplyJuly2026Update();
-fpApplyDeleteAllBuiltInDebts();
+fpApplyDebtRecalibration2026();
+fpApplyDebtRecalibration2026v2();
 fpMonthData = fpBuildMonthData();
 fpRenderAll();
 
