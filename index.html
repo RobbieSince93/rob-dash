@@ -832,6 +832,13 @@
   @keyframes flashDown { 0%{background:rgba(255,85,102,.24)} 100%{background:transparent} }
   .price-card.flash-up { animation:flashUp 1.1s ease-out; }
   .price-card.flash-down { animation:flashDown 1.1s ease-out; }
+  .lp-alert-btn { background:none;border:none;cursor:pointer;font-size:12px;padding:0 0 0 6px;line-height:1;opacity:.55;float:right;margin-top:-1px; }
+  .lp-alert-btn:hover { opacity:1; }
+  .lp-alert-row { display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px; }
+  .lp-alert-row:last-child { border-bottom:none; }
+  .lp-alert-badge { padding:2px 7px;border-radius:10px;font-size:10px;font-weight:600;text-transform:uppercase; }
+  .lp-alert-badge.active { background:rgba(46,204,138,.15);color:var(--green); }
+  .lp-alert-badge.fired { background:rgba(255,85,102,.15);color:var(--red); }
 
   /* ── LIVE SPORTS ── */
   .sp-game-card { background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;transition:border-color .2s; }
@@ -2918,6 +2925,10 @@
         <a class="nav-item" onclick="showPage('macrotracker')">
           <span class="nav-icon">🍽</span> Macro Tracker
         </a>
+        <a class="nav-item" onclick="showPage('resale')">
+          <span class="nav-icon">🃏</span> Resale Tracker
+          <span class="nav-badge" id="badge-resale-items">0</span>
+        </a>
         <a class="nav-item" onclick="showPage('settings')">
           <span class="nav-icon">⚙</span> Settings
         </a>
@@ -4380,6 +4391,36 @@
 
       <!-- TCG prices -->
       <div class="section-panel" style="margin-bottom:16px">
+
+      <!-- Price Alert modal -->
+      <div class="modal-overlay" id="lp-alert-modal">
+        <div class="modal" style="width:420px">
+          <div class="modal-header">
+            <div class="modal-title">🔔 Price Alerts — <span id="lp-alert-modal-name"></span></div>
+            <div class="modal-close" onclick="lpCloseAlertModal()">✕</div>
+          </div>
+          <div class="modal-body">
+            <div style="font-size:11px;color:var(--text3);margin-bottom:14px">Get a browser notification when the price drops or rises to a target. Alerts fire on every auto-refresh while active.</div>
+            <div id="lp-alert-list" style="margin-bottom:14px"></div>
+            <div style="background:var(--bg3);border-radius:8px;padding:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+              <div style="flex:1;min-width:120px">
+                <label class="form-label">Condition</label>
+                <select class="form-input" id="lp-alert-condition" style="padding:7px 10px;font-size:12px">
+                  <option value="below">Price drops below</option>
+                  <option value="above">Price rises above</option>
+                  <option value="drop_pct">Drops by % from now</option>
+                  <option value="rise_pct">Rises by % from now</option>
+                </select>
+              </div>
+              <div style="flex:1;min-width:100px">
+                <label class="form-label" id="lp-alert-value-label">Target price ($)</label>
+                <input class="form-input" id="lp-alert-value" type="number" step="any" placeholder="e.g. 60000" style="padding:7px 10px;font-size:12px">
+              </div>
+              <button class="btn btn-primary btn-sm" onclick="lpAddAlert()">Add alert</button>
+            </div>
+          </div>
+        </div>
+      </div>
         <div class="section-header">
           <div>
             <div class="section-title">TCG / Collectibles — Market Estimates</div>
@@ -4658,7 +4699,7 @@
       <div class="fpl-hero">
         <div class="fpl-target t-cal"><div class="fpl-target-val">1,850</div><div class="fpl-target-unit">calories / day</div></div>
         <div class="fpl-target t-pro"><div class="fpl-target-val">165g</div><div class="fpl-target-unit">protein / day</div></div>
-        <div class="fpl-target t-work"><div class="fpl-target-val">7</div><div class="fpl-target-unit">training days / week</div></div>
+        <div class="fpl-target t-work"><div class="fpl-target-val">5</div><div class="fpl-target-unit">training days / week</div></div>
         <div class="fpl-target t-sprint"><div class="fpl-target-val">0</div><div class="fpl-target-unit">beers / week</div></div>
       </div>
 
@@ -4669,7 +4710,7 @@
           <span class="fpl-prog-pct" id="fpl-prog-pct">0%</span>
         </div>
         <div class="fpl-track"><div class="fpl-fill" id="fpl-fill" style="width:0%"></div></div>
-        <div class="fpl-prog-sub" id="fpl-prog-sub">Check off sessions in the Weekly Plan tab. 32 sessions over 8 weeks.</div>
+        <div class="fpl-prog-sub" id="fpl-prog-sub">Check off sessions in the Weekly Plan tab. 40 sessions over 8 weeks.</div>
       </div>
 
       <!-- tabs -->
@@ -4685,18 +4726,18 @@
         <div class="fpl-card-sub" style="margin-bottom:14px">The weekly rhythm. Same structure repeats for all 8 weeks — what changes each block is the load and volume (see the Lifting and Conditioning tabs).</div>
 
         <div class="fpl-sched">
-          <div class="fpl-sched-day"><div class="fpl-sched-dow">Mon</div><div class="fpl-sched-act">Upper A</div></div>
-          <div class="fpl-sched-day is-rest"><div class="fpl-sched-dow">Tue</div><div class="fpl-sched-act">Soccer</div></div>
-          <div class="fpl-sched-day"><div class="fpl-sched-dow">Wed</div><div class="fpl-sched-act">Lower</div></div>
-          <div class="fpl-sched-day"><div class="fpl-sched-dow">Thu</div><div class="fpl-sched-act">Upper B</div></div>
-          <div class="fpl-sched-day"><div class="fpl-sched-dow">Fri</div><div class="fpl-sched-act">Conditioning</div></div>
-          <div class="fpl-sched-day is-rest"><div class="fpl-sched-dow">Sat</div><div class="fpl-sched-act">Soccer</div></div>
-          <div class="fpl-sched-day is-rest"><div class="fpl-sched-dow">Sun</div><div class="fpl-sched-act">Soccer</div></div>
+          <div class="fpl-sched-day"><div class="fpl-sched-dow">Mon</div><div class="fpl-sched-act">Lift A</div></div>
+          <div class="fpl-sched-day"><div class="fpl-sched-dow">Tue</div><div class="fpl-sched-act">Sprints</div></div>
+          <div class="fpl-sched-day is-rest"><div class="fpl-sched-dow">Wed</div><div class="fpl-sched-act">Rest / walk</div></div>
+          <div class="fpl-sched-day"><div class="fpl-sched-dow">Thu</div><div class="fpl-sched-act">Lift B</div></div>
+          <div class="fpl-sched-day"><div class="fpl-sched-dow">Fri</div><div class="fpl-sched-act">Tempo + Agility</div></div>
+          <div class="fpl-sched-day"><div class="fpl-sched-dow">Sat</div><div class="fpl-sched-act">Lift C</div></div>
+          <div class="fpl-sched-day is-rest"><div class="fpl-sched-dow">Sun</div><div class="fpl-sched-act">Rest</div></div>
         </div>
 
         <div class="fpl-card" style="margin-top:16px">
-          <div class="fpl-card-title">Why this rhythm</div>
-          <div class="fpl-card-sub" style="margin-bottom:0">Lifting is split upper/lower so each muscle group gets hit twice a week instead of once — better for strength and muscle retention while you're in a deficit. Soccer already covers Tuesday, Saturday, and Sunday, so lifting sits on the days in between. Friday's conditioning session builds the aerobic base that keeps you from gassing out late in games — soccer gives you the bursts, this builds the engine underneath them.</div>
+          <div class="fpl-card-title">Why 5 days, not 3</div>
+          <div class="fpl-card-sub" style="margin-bottom:0">You're sitting most of the day driving, so the biggest miss in the old plan was that nothing built your aerobic base — the thing that actually stops you from gassing out in the second half. The tempo/agility day fixes that. Sprints handle short bursts, tempo running handles the engine underneath them.</div>
         </div>
 
         <div class="fpl-card-title" style="margin:22px 0 10px">Session tracker</div>
@@ -4744,28 +4785,46 @@
 
         <div class="fpl-wk-grid">
           <div class="fpl-wcard">
-            <div class="fpl-wcard-hd"><div class="wl">Workout A</div><div class="wd">Monday — Upper Body A</div></div>
+            <div class="fpl-wcard-hd"><div class="wl">Workout A</div><div class="wd">Monday — Lower Body + Core</div></div>
             <div id="fpl-wa"></div>
           </div>
           <div class="fpl-wcard">
-            <div class="fpl-wcard-hd"><div class="wl">Workout B</div><div class="wd">Wednesday — Lower Body + Core</div></div>
+            <div class="fpl-wcard-hd"><div class="wl">Workout B</div><div class="wd">Thursday — Upper Push/Pull + Core</div></div>
             <div id="fpl-wb"></div>
           </div>
           <div class="fpl-wcard">
-            <div class="fpl-wcard-hd"><div class="wl">Workout C</div><div class="wd">Thursday — Upper Body B</div></div>
+            <div class="fpl-wcard-hd"><div class="wl">Workout C</div><div class="wd">Saturday — Full Body Circuit</div></div>
             <div id="fpl-wc"></div>
           </div>
         </div>
 
         <div class="fpl-card" style="margin-top:14px; margin-bottom:0">
-          <div class="fpl-card-title">Upper A vs. Upper B</div>
-          <div class="fpl-card-sub" style="margin-bottom:0">Monday hits the same lifts every block so you can track load week to week. Thursday's variations (incline press, single-arm row, lateral raise, face pulls) work the same muscles from different angles — that's what earns the second upper session instead of just repeating Monday.</div>
+          <div class="fpl-card-title">How to run Workout C</div>
+          <div class="fpl-card-sub" style="margin-bottom:0">This one's a circuit, not straight sets — it's the metabolic finisher for the week. Move through all 5 exercises back to back with only 30–45s rest between them, then rest 90s and repeat for the listed rounds.</div>
         </div>
       </div>
 
       <!-- TAB 3: CONDITIONING -->
       <div class="fpl-panel" id="fpl-panel-3">
-        <div class="fpl-card-sub" style="margin-bottom:14px">One dedicated conditioning day a week. Soccer on Tuesday, Saturday, and Sunday already covers sprint bursts and match fitness — Friday's tempo + agility session builds the aerobic base underneath that.</div>
+        <div class="fpl-card-sub" style="margin-bottom:14px">Two conditioning days a week. Sprints build your top-end burst, tempo + agility builds the engine that keeps you sharp late in games.</div>
+
+        <div class="fpl-wcard" style="margin-bottom:14px">
+          <div class="fpl-wcard-hd"><div class="wl">Sprint Day — Repeated Sprint Ability</div><div class="wd">Tuesday</div></div>
+          <ol class="fpl-steps">
+            <li>Jog easy for 5 minutes to warm up</li>
+            <li>Sprint hard for 30 seconds</li>
+            <li>Walk to recover — length shrinks each block, see table below</li>
+            <li>Repeat sprint + walk for the block's total reps</li>
+            <li>Walk 5 minutes to cool down</li>
+          </ol>
+          <table class="fpl-table">
+            <tr><th>Block</th><th>Walk rest</th><th>Total sprints</th></tr>
+            <tr><td>Weeks 1–2</td><td>90 sec</td><td>8</td></tr>
+            <tr><td>Weeks 3–4</td><td>75 sec</td><td>8</td></tr>
+            <tr><td>Weeks 5–6</td><td>60 sec</td><td>8</td></tr>
+            <tr><td>Weeks 7–8</td><td>45 sec</td><td>10</td></tr>
+          </table>
+        </div>
 
         <div class="fpl-wcard">
           <div class="fpl-wcard-hd"><div class="wl">Tempo + Agility Day</div><div class="wd">Friday</div></div>
@@ -4780,7 +4839,7 @@
 
         <div class="fpl-note">
           <span class="fpl-note-ic">⚠️</span>
-          <span><b>With soccer three days a week plus lifting on the others, there's no true rest day.</b> If a week starts feeling heavy, it's fine to drop Friday's conditioning session and let soccer be the cardio that week — don't push through it.</span>
+          <span><b>Keep at least one rest or light day between Sprint Day and Tempo/Agility Day.</b> Back-to-back hard conditioning days without recovery is how you start regressing instead of progressing.</span>
         </div>
       </div>
 
@@ -5001,6 +5060,168 @@
         sandbox="allow-scripts allow-modals allow-downloads allow-same-origin allow-popups"></iframe>
     </div>
 
+    <!-- ─── RESALE TRACKER PAGE ─── -->
+    <div class="page" id="page-resale">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Resale <span>Tracker</span></div>
+          <div class="page-subtitle">Buy / sell log · profit split · watchlist · 30-day challenge · crypto & stock allocation</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary btn-sm" onclick="rsOpenAddItemModal()">+ Log sale</button>
+          <button class="btn btn-secondary btn-sm" onclick="rsOpenWatchlistModal()">+ Watchlist item</button>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs" style="margin-bottom:16px">
+        <button class="tab active" id="rs-tab-dashboard" onclick="rsSwitchTab('dashboard')">Dashboard</button>
+        <button class="tab" id="rs-tab-log" onclick="rsSwitchTab('log')">Item Log</button>
+        <button class="tab" id="rs-tab-watchlist" onclick="rsSwitchTab('watchlist')">Watchlist</button>
+        <button class="tab" id="rs-tab-challenge" onclick="rsSwitchTab('challenge')">30-Day Challenge</button>
+        <button class="tab" id="rs-tab-alloc" onclick="rsSwitchTab('alloc')">Allocation</button>
+      </div>
+
+      <!-- DASHBOARD VIEW -->
+      <div id="rs-view-dashboard">
+        <div class="overview-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:16px" id="rs-kpi-grid"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div class="section-panel">
+            <div class="section-header"><div class="section-title">Profit Split</div></div>
+            <div id="rs-split-body" style="padding:12px 20px"></div>
+          </div>
+          <div class="section-panel">
+            <div class="section-header"><div class="section-title">Monthly Profit (this year)</div></div>
+            <div id="rs-monthly-body" style="padding:12px 20px"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ITEM LOG VIEW -->
+      <div id="rs-view-log" style="display:none">
+        <div class="section-panel">
+          <div id="rs-log-body"></div>
+        </div>
+      </div>
+
+      <!-- WATCHLIST VIEW -->
+      <div id="rs-view-watchlist" style="display:none">
+        <div class="section-panel">
+          <div id="rs-watchlist-body"></div>
+        </div>
+      </div>
+
+      <!-- 30-DAY CHALLENGE VIEW -->
+      <div id="rs-view-challenge" style="display:none">
+        <div class="section-panel">
+          <div style="padding:14px 20px;border-bottom:1px solid var(--border);font-size:12px;color:var(--text2)">
+            Goal: prove out real ROI data by working the business daily for 30 days straight. Check off each day.
+          </div>
+          <div id="rs-challenge-grid" style="padding:12px 20px;display:grid;grid-template-columns:repeat(5,1fr);gap:8px"></div>
+          <div id="rs-challenge-stats" style="padding:0 20px 14px"></div>
+        </div>
+      </div>
+
+      <!-- ALLOCATION VIEW -->
+      <div id="rs-view-alloc" style="display:none">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div class="section-panel">
+            <div class="section-header"><div class="section-title">Crypto Allocation (from profit)</div></div>
+            <div id="rs-crypto-body" style="padding:12px 20px"></div>
+          </div>
+          <div class="section-panel">
+            <div class="section-header"><div class="section-title">Stock / ETF Allocation (from profit)</div></div>
+            <div id="rs-stock-body" style="padding:12px 20px"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add Item Modal -->
+      <div class="modal-overlay" id="rs-add-modal">
+        <div class="modal" style="width:500px">
+          <div class="modal-header">
+            <div class="modal-title" id="rs-add-modal-title">Log Sale / Purchase</div>
+            <div class="modal-close" onclick="rsCloseAddItemModal()">✕</div>
+          </div>
+          <div class="modal-body">
+            <div class="form-row-2">
+              <div><label class="form-label">Item name</label><input class="form-input" id="rs-item-name" placeholder="e.g. Mega Gengar ex SIR"></div>
+              <div><label class="form-label">Category</label>
+                <select class="form-input" id="rs-item-category">
+                  <option>TCG - Pokemon</option><option>TCG - One Piece</option><option>Electronics</option><option>Clothing</option><option>Other</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row-2">
+              <div><label class="form-label">Source</label><input class="form-input" id="rs-item-source" placeholder="eBay, Discord, etc."></div>
+              <div><label class="form-label">Date acquired</label><input class="form-input" id="rs-item-date-acq" type="date"></div>
+            </div>
+            <div class="form-row-2">
+              <div><label class="form-label">Cost basis ($)</label><input class="form-input" id="rs-item-cost" type="number" step="0.01" placeholder="45.00"></div>
+              <div><label class="form-label">Grading cost ($)</label><input class="form-input" id="rs-item-grade" type="number" step="0.01" placeholder="0"></div>
+            </div>
+            <div class="form-row-2">
+              <div><label class="form-label">Other fees ($)</label><input class="form-input" id="rs-item-fees" type="number" step="0.01" placeholder="0"></div>
+              <div><label class="form-label">Status</label>
+                <select class="form-input" id="rs-item-status" onchange="rsToggleSoldFields()">
+                  <option value="Active">Active (holding)</option>
+                  <option value="Listed">Listed</option>
+                  <option value="Sold">Sold</option>
+                </select>
+              </div>
+            </div>
+            <div id="rs-sold-fields">
+              <div class="form-row-2">
+                <div><label class="form-label">Date sold</label><input class="form-input" id="rs-item-date-sold" type="date"></div>
+                <div><label class="form-label">Sale price ($)</label><input class="form-input" id="rs-item-sale" type="number" step="0.01" placeholder="150.00"></div>
+              </div>
+              <div class="form-row-2">
+                <div><label class="form-label">Marketplace fee %</label><input class="form-input" id="rs-item-fee-pct" type="number" step="0.01" placeholder="0.13" value="0.13"></div>
+                <div><label class="form-label">Shipping cost ($)</label><input class="form-input" id="rs-item-ship" type="number" step="0.01" placeholder="8.50"></div>
+              </div>
+            </div>
+            <div><label class="form-label">Notes</label><input class="form-input" id="rs-item-notes" placeholder="Optional"></div>
+            <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+              <button class="btn btn-secondary btn-sm" onclick="rsCloseAddItemModal()">Cancel</button>
+              <button class="btn btn-primary btn-sm" onclick="rsSaveItem()">Save</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Watchlist Add Modal -->
+      <div class="modal-overlay" id="rs-watch-modal">
+        <div class="modal" style="width:480px">
+          <div class="modal-header">
+            <div class="modal-title">Add to Watchlist</div>
+            <div class="modal-close" onclick="document.getElementById('rs-watch-modal').classList.remove('open')">✕</div>
+          </div>
+          <div class="modal-body">
+            <div class="form-row-2">
+              <div><label class="form-label">Item</label><input class="form-input" id="rs-w-item" placeholder="e.g. Garmin Instinct 2"></div>
+              <div><label class="form-label">Category</label><input class="form-input" id="rs-w-cat" placeholder="Electronics"></div>
+            </div>
+            <div class="form-row-2">
+              <div><label class="form-label">Platform / Source</label><input class="form-input" id="rs-w-src" placeholder="eBay, Perks at Work…"></div>
+              <div><label class="form-label">Asking price ($)</label><input class="form-input" id="rs-w-ask" type="number" step="0.01"></div>
+            </div>
+            <div class="form-row-2">
+              <div><label class="form-label">Target buy price ($)</label><input class="form-input" id="rs-w-target" type="number" step="0.01"></div>
+              <div><label class="form-label">Est. resale value ($)</label><input class="form-input" id="rs-w-resale" type="number" step="0.01"></div>
+            </div>
+            <div class="form-row-2">
+              <div><label class="form-label">Est. fee %</label><input class="form-input" id="rs-w-fee" type="number" step="0.01" value="0.13"></div>
+              <div><label class="form-label">Notes</label><input class="form-input" id="rs-w-notes"></div>
+            </div>
+            <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+              <button class="btn btn-secondary btn-sm" onclick="document.getElementById('rs-watch-modal').classList.remove('open')">Cancel</button>
+              <button class="btn btn-primary btn-sm" onclick="rsSaveWatchItem()">Add to watchlist</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ─── LIVE SPORTS PAGE ─── -->
     <div class="page" id="page-livesports">
       <div class="page-header">
@@ -5031,6 +5252,8 @@
         <button class="sp-league-tab" id="sp-tab-bra1" onclick="spSwitchLeague('bra1')"><span class="sp-tab-icon">⚽</span>Brasileirão</button>
         <button class="sp-league-tab" id="sp-tab-arg1" onclick="spSwitchLeague('arg1')"><span class="sp-tab-icon">⚽</span>Argentina</button>
         <button class="sp-league-tab" id="sp-tab-intl" onclick="spSwitchLeague('intl')"><span class="sp-tab-icon">🌐</span>International</button>
+        <button class="sp-league-tab" id="sp-tab-atp" onclick="spSwitchLeague('atp')"><span class="sp-tab-icon">🎾</span>ATP (Men)</button>
+        <button class="sp-league-tab" id="sp-tab-wta" onclick="spSwitchLeague('wta')"><span class="sp-tab-icon">🎾</span>WTA (Women)</button>
       </div>
 
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
@@ -6991,6 +7214,7 @@ function showPage(name) {
   if (name === 'nexus' && typeof nexusEnsureInit === 'function') nexusEnsureInit();
   if (name === 'cybertools' && typeof cyberEnsureInit === 'function') cyberEnsureInit();
   if (name === 'macrotracker' && typeof macroEnsureInit === 'function') macroEnsureInit();
+  if (name === 'resale' && typeof rsRenderAll === 'function') rsRenderAll();
   if (name === 'devops' && typeof doEnsureInit === 'function') doEnsureInit();
   if (name === 'yearplan' && typeof ypEnsureInit === 'function') ypEnsureInit();
   if (name === 'books' && typeof bkEnsureInit === 'function') bkEnsureInit();
@@ -7002,7 +7226,7 @@ function showPage(name) {
 
 // ── Mobile nav ──────────────────────────────────────────────
 var MNAV_PAGES = ['overview','cash','bankaccount','billtracker','fitness',
-  'crypto','tcg','income','bills','books','goals','debtplanner','ahf','neteng','aplus','nexus','cybertools','macrotracker','devops','yearplan','fitplan','settings','livesports',
+  'crypto','tcg','income','bills','books','goals','debtplanner','ahf','neteng','aplus','nexus','cybertools','macrotracker','resale','devops','yearplan','fitplan','settings','livesports',
   'liveprices','cashflow','dashboard','analytics','fi','forecast'];
 
 function mnavGo(name, btn) {
@@ -7051,6 +7275,7 @@ function mnavShowMore() {
     { id:'nexus',       icon:'🧠', label:'NEXUS'      },
     { id:'cybertools',  icon:'🛡', label:'Cyber Tools' },
     { id:'macrotracker', icon:'🍽', label:'Macro Tracker' },
+    { id:'resale', icon:'🃏', label:'Resale' },
     { id:'livesports',  icon:'🏆', label:'Live Sports' },
     { id:'devops',      icon:'⛭', label:'DevOps'     },
     { id:'yearplan',    icon:'◈', label:'Year Plan'  },
@@ -9003,6 +9228,478 @@ function updateBadges() {
   document.getElementById('badge-bills-count').textContent   = DB.get('bills').length;
 }
 
+function updateBadges() {
+  document.getElementById('badge-total-count').textContent   = Calc.totalCount();
+  document.getElementById('badge-cash-count').textContent    = DB.get('cash').length;
+  document.getElementById('badge-crypto-count').textContent  = DB.get('crypto').length;
+  document.getElementById('badge-tcg-count').textContent     = DB.get('tcg').length;
+  document.getElementById('badge-income-count').textContent  = DB.get('income').length;
+  document.getElementById('badge-bills-count').textContent   = DB.get('bills').length;
+  const rsBadge = document.getElementById('badge-resale-items');
+  if (rsBadge) {
+    const items = rsGetItems();
+    rsBadge.textContent = items.filter(i => i.status !== 'Sold').length;
+  }
+}
+
+// ════════════════════════════════════════════════════════════════
+// RESALE TRACKER — full buy/sell log, dashboard, watchlist,
+// 30-day challenge, and profit-to-crypto/stock allocation
+// ════════════════════════════════════════════════════════════════
+const RS_ITEMS_KEY    = 'rs_items_v1';
+const RS_WATCH_KEY    = 'rs_watch_v1';
+const RS_CHALLENGE_KEY = 'rs_challenge_v1';
+const RS_SETTINGS_KEY = 'rs_settings_v1';
+
+function rsGetItems()     { try { return JSON.parse(localStorage.getItem(RS_ITEMS_KEY)) || []; } catch(e) { return []; } }
+function rsSaveItems(d)   { localStorage.setItem(RS_ITEMS_KEY, JSON.stringify(d)); }
+function rsGetWatch()     { try { return JSON.parse(localStorage.getItem(RS_WATCH_KEY)) || []; } catch(e) { return []; } }
+function rsSaveWatch(d)   { localStorage.setItem(RS_WATCH_KEY, JSON.stringify(d)); }
+function rsGetChallenge() { try { return JSON.parse(localStorage.getItem(RS_CHALLENGE_KEY)) || {}; } catch(e) { return {}; } }
+function rsSaveChallenge(d){ localStorage.setItem(RS_CHALLENGE_KEY, JSON.stringify(d)); }
+function rsGetSettings()  {
+  try { return JSON.parse(localStorage.getItem(RS_SETTINGS_KEY)) || { reinvest:0.35, crypto:0.1, stocks:0.2, takehome:0.35, targetROI:0.4, minROI:0.2, targetDays:30 }; }
+  catch(e) { return { reinvest:0.35, crypto:0.1, stocks:0.2, takehome:0.35, targetROI:0.4, minROI:0.2, targetDays:30 }; }
+}
+
+let rsCurrentTab = 'dashboard';
+let rsEditingId  = null;
+
+function rsSwitchTab(tab) {
+  rsCurrentTab = tab;
+  ['dashboard','log','watchlist','challenge','alloc'].forEach(t => {
+    document.getElementById('rs-tab-'+t).classList.toggle('active', t === tab);
+    document.getElementById('rs-view-'+t).style.display = t === tab ? 'block' : 'none';
+  });
+  rsRenderTab(tab);
+}
+
+function rsRenderAll() {
+  rsRenderTab(rsCurrentTab);
+  updateBadges();
+}
+
+function rsRenderTab(tab) {
+  if (tab === 'dashboard')  rsRenderDashboard();
+  if (tab === 'log')        rsRenderLog();
+  if (tab === 'watchlist')  rsRenderWatchlist();
+  if (tab === 'challenge')  rsRenderChallenge();
+  if (tab === 'alloc')      rsRenderAlloc();
+}
+
+// ── Dashboard ──────────────────────────────────────────────────
+function rsRenderDashboard() {
+  const items   = rsGetItems();
+  const sold    = items.filter(i => i.status === 'Sold');
+  const settings = rsGetSettings();
+
+  const totalProfit   = sold.reduce((s,i) => s + (parseFloat(i.profit)||0), 0);
+  const totalCapital  = sold.reduce((s,i) => s + (parseFloat(i.cost)||0) + (parseFloat(i.gradeCost)||0) + (parseFloat(i.otherFees)||0), 0);
+  const totalProceeds = sold.reduce((s,i) => s + (parseFloat(i.netProceeds)||0), 0);
+  const overallROI    = totalCapital > 0 ? totalProfit / totalCapital : 0;
+  const avgDays       = sold.length > 0 ? sold.reduce((s,i) => s + (parseInt(i.daysHeld)||0), 0) / sold.length : 0;
+  const now           = new Date();
+  const thisMonth     = sold.filter(i => {
+    const d = i.dateSold ? new Date(i.dateSold) : null;
+    return d && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  });
+  const monthProfit   = thisMonth.reduce((s,i) => s + (parseFloat(i.profit)||0), 0);
+
+  const grid = document.getElementById('rs-kpi-grid');
+  if (grid) grid.innerHTML = `
+    <div class="kpi-card"><div class="kpi-label">Total Profit</div><div class="kpi-value" style="color:var(--green)">$${totalProfit.toFixed(2)}</div><div class="kpi-sub">${sold.length} items sold</div></div>
+    <div class="kpi-card"><div class="kpi-label">Overall ROI</div><div class="kpi-value" style="color:${overallROI>=settings.targetROI?'var(--green)':overallROI>=settings.minROI?'var(--amber)':'var(--red)'}">${(overallROI*100).toFixed(1)}%</div><div class="kpi-sub">target: ${(settings.targetROI*100).toFixed(0)}%</div></div>
+    <div class="kpi-card"><div class="kpi-label">This Month</div><div class="kpi-value" style="color:var(--green)">$${monthProfit.toFixed(2)}</div><div class="kpi-sub">${thisMonth.length} sales</div></div>
+    <div class="kpi-card"><div class="kpi-label">Avg Days Held</div><div class="kpi-value" style="color:${avgDays<=settings.targetDays?'var(--green)':'var(--amber)'}">${sold.length?Math.round(avgDays):'—'}</div><div class="kpi-sub">target: ≤${settings.targetDays}d</div></div>
+  `;
+
+  const splitEl = document.getElementById('rs-split-body');
+  if (splitEl) {
+    const splits = [
+      { label:'Reinvest into inventory', pct:settings.reinvest, color:'var(--blue)' },
+      { label:'Crypto',                  pct:settings.crypto,   color:'var(--amber)' },
+      { label:'Stocks / Index funds',    pct:settings.stocks,   color:'var(--green)' },
+      { label:'Personal / take-home',    pct:settings.takehome, color:'var(--text)' },
+    ];
+    splitEl.innerHTML = splits.map(s => `
+      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px">
+        <span style="color:${s.color}">${s.label}</span>
+        <span>${(s.pct*100).toFixed(0)}% → <strong>$${(totalProfit*s.pct).toFixed(2)}</strong></span>
+      </div>`).join('');
+  }
+
+  const monthlyEl = document.getElementById('rs-monthly-body');
+  if (monthlyEl) {
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const byMonth = new Array(12).fill(0);
+    sold.forEach(i => {
+      if (!i.dateSold) return;
+      const d = new Date(i.dateSold);
+      if (d.getFullYear() === now.getFullYear()) byMonth[d.getMonth()] += parseFloat(i.profit)||0;
+    });
+    const maxVal = Math.max(...byMonth, 1);
+    monthlyEl.innerHTML = months.map((m,i) => {
+      const h = Math.round((byMonth[i]/maxVal)*60);
+      return `<div style="display:inline-flex;flex-direction:column;align-items:center;gap:3px;width:calc(100%/12)">
+        <div style="font-size:9px;color:var(--text3)">${byMonth[i]>0?'$'+Math.round(byMonth[i]):''}</div>
+        <div style="width:14px;height:${h||2}px;background:${byMonth[i]>0?'var(--green)':'var(--border)'};border-radius:2px;margin-top:auto"></div>
+        <div style="font-size:9px;color:var(--text3)">${m}</div>
+      </div>`;
+    }).join('');
+    monthlyEl.style.display='flex';monthlyEl.style.alignItems='flex-end';monthlyEl.style.height='90px';monthlyEl.style.gap='0';
+  }
+}
+
+// ── Item Log ──────────────────────────────────────────────────
+function rsCalcItem(i) {
+  const cost      = (parseFloat(i.cost)||0) + (parseFloat(i.gradeCost)||0) + (parseFloat(i.otherFees)||0);
+  const sale      = parseFloat(i.salePrice)||0;
+  const feePct    = parseFloat(i.feePct)||0;
+  const ship      = parseFloat(i.shipCost)||0;
+  const mktFee    = sale * feePct;
+  const netProceeds = sale - mktFee - ship;
+  const profit    = netProceeds - cost;
+  const roi       = cost > 0 ? profit/cost : 0;
+  const acq       = i.dateAcquired ? new Date(i.dateAcquired) : null;
+  const sld       = i.dateSold ? new Date(i.dateSold) : null;
+  const daysHeld  = acq && sld ? Math.round((sld-acq)/(86400000)) : null;
+  return { ...i, cost, mktFee, netProceeds, profit, roi, daysHeld };
+}
+
+function rsRenderLog() {
+  const items = rsGetItems().map(rsCalcItem);
+  const el = document.getElementById('rs-log-body');
+  if (!el) return;
+  if (!items.length) {
+    el.innerHTML = `<div class="empty-state"><div class="es-icon">📦</div><div class="es-title">No items yet</div><div class="es-sub">Click "+ Log sale" to add your first flip</div></div>`;
+    return;
+  }
+  el.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:11px">
+    <thead><tr style="border-bottom:1px solid var(--border);color:var(--text3)">
+      <th style="padding:8px 16px;text-align:left">Item</th>
+      <th style="padding:8px 8px;text-align:right">Cost</th>
+      <th style="padding:8px 8px;text-align:right">Sale</th>
+      <th style="padding:8px 8px;text-align:right">Net</th>
+      <th style="padding:8px 8px;text-align:right">Profit</th>
+      <th style="padding:8px 8px;text-align:right">ROI</th>
+      <th style="padding:8px 8px;text-align:right">Days</th>
+      <th style="padding:8px 8px;text-align:left">Status</th>
+      <th style="padding:8px 16px"></th>
+    </tr></thead>
+    <tbody>${items.map(i => {
+      const pColor = (i.profit||0) >= 0 ? 'var(--green)' : 'var(--red)';
+      const statusColor = i.status==='Sold'?'var(--green)':i.status==='Listed'?'var(--amber)':'var(--text3)';
+      return `<tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:8px 16px;color:var(--text);max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${i.name}</td>
+        <td style="padding:8px 8px;text-align:right;color:var(--text2)">$${(i.cost||0).toFixed(2)}</td>
+        <td style="padding:8px 8px;text-align:right;color:var(--text2)">${i.salePrice?'$'+(parseFloat(i.salePrice)).toFixed(2):'—'}</td>
+        <td style="padding:8px 8px;text-align:right;color:var(--text2)">${i.netProceeds&&i.status==='Sold'?'$'+i.netProceeds.toFixed(2):'—'}</td>
+        <td style="padding:8px 8px;text-align:right;color:${pColor}">${i.status==='Sold'?(i.profit>=0?'+':'')+'$'+i.profit.toFixed(2):'—'}</td>
+        <td style="padding:8px 8px;text-align:right;color:${pColor}">${i.status==='Sold'?((i.roi*100).toFixed(1)+'%'):'—'}</td>
+        <td style="padding:8px 8px;text-align:right;color:var(--text3)">${i.daysHeld!==null?i.daysHeld:'—'}</td>
+        <td style="padding:8px 8px"><span style="font-size:10px;font-weight:600;color:${statusColor}">${i.status}</span></td>
+        <td style="padding:8px 16px;white-space:nowrap">
+          <button class="btn btn-ghost btn-sm" style="font-size:10px" onclick="rsEditItem('${i.id}')">edit</button>
+          <button class="btn btn-ghost btn-sm" style="font-size:10px;color:var(--red)" onclick="rsDeleteItem('${i.id}')">✕</button>
+        </td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table>`;
+}
+
+// ── Watchlist ──────────────────────────────────────────────────
+function rsRenderWatchlist() {
+  const items = rsGetWatch();
+  const el = document.getElementById('rs-watchlist-body');
+  if (!el) return;
+  if (!items.length) {
+    el.innerHTML = `<div class="empty-state"><div class="es-icon">👀</div><div class="es-title">Nothing on the watchlist</div><div class="es-sub">Click "+ Watchlist item" to track something before you commit</div></div>`;
+    return;
+  }
+  el.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:11px">
+    <thead><tr style="border-bottom:1px solid var(--border);color:var(--text3)">
+      <th style="padding:8px 16px;text-align:left">Item</th>
+      <th style="padding:8px 8px;text-align:right">Ask</th>
+      <th style="padding:8px 8px;text-align:right">Target buy</th>
+      <th style="padding:8px 8px;text-align:right">Est. resale</th>
+      <th style="padding:8px 8px;text-align:right">Est. margin</th>
+      <th style="padding:8px 8px;text-align:right">Est. ROI</th>
+      <th style="padding:8px 8px;text-align:left">Status</th>
+      <th style="padding:8px 16px"></th>
+    </tr></thead>
+    <tbody>${items.map(w => {
+      const target = parseFloat(w.targetPrice)||0;
+      const resale = parseFloat(w.resaleValue)||0;
+      const fee    = parseFloat(w.feePct)||0.13;
+      const margin = resale*(1-fee) - target;
+      const roi    = target > 0 ? margin/target : 0;
+      const rColor = roi >= 0.4 ? 'var(--green)' : roi >= 0.2 ? 'var(--amber)' : 'var(--red)';
+      return `<tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:8px 16px;color:var(--text)">${w.name}<br><span style="font-size:10px;color:var(--text3)">${w.source||''}</span></td>
+        <td style="padding:8px 8px;text-align:right;color:var(--text2)">${w.askPrice?'$'+parseFloat(w.askPrice).toFixed(2):'—'}</td>
+        <td style="padding:8px 8px;text-align:right;color:var(--blue)">${target?'$'+target.toFixed(2):'—'}</td>
+        <td style="padding:8px 8px;text-align:right;color:var(--text2)">${resale?'$'+resale.toFixed(2):'—'}</td>
+        <td style="padding:8px 8px;text-align:right;color:${rColor}">${margin?'$'+margin.toFixed(2):'—'}</td>
+        <td style="padding:8px 8px;text-align:right;color:${rColor}">${roi?((roi*100).toFixed(1)+'%'):'—'}</td>
+        <td style="padding:8px 8px;font-size:10px;color:var(--text3)">${w.status||'Watching'}</td>
+        <td style="padding:8px 16px;white-space:nowrap">
+          <button class="btn btn-ghost btn-sm" style="font-size:10px;color:var(--green)" onclick="rsMoveWatchToLog('${w.id}')">→ bought</button>
+          <button class="btn btn-ghost btn-sm" style="font-size:10px;color:var(--red)" onclick="rsDeleteWatch('${w.id}')">✕</button>
+        </td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table>`;
+}
+
+// ── 30-Day Challenge ──────────────────────────────────────────
+function rsRenderChallenge() {
+  const data = rsGetChallenge();
+  const grid = document.getElementById('rs-challenge-grid');
+  const stats = document.getElementById('rs-challenge-stats');
+  if (!grid) return;
+
+  const days = Array.from({length:30},(_,i)=>i+1);
+  grid.innerHTML = days.map(d => {
+    const dayData = data[d] || {};
+    const checked = [dayData.sourced, dayData.listed, dayData.sold].filter(Boolean).length;
+    const color   = checked===3?'var(--green)':checked>0?'var(--amber)':'var(--border)';
+    return `<div style="border:1px solid ${color};border-radius:8px;padding:8px;text-align:center;cursor:pointer" onclick="rsToggleDay(${d})">
+      <div style="font-size:11px;font-weight:600;color:var(--text2)">Day ${d}</div>
+      <div style="font-size:10px;color:var(--text3);margin-top:2px">
+        ${dayData.sourced?'📦':'·'} ${dayData.listed?'🏷':'·'} ${dayData.sold?'💰':'·'}
+      </div>
+    </div>`;
+  }).join('');
+
+  const sourced = days.filter(d=>data[d]&&data[d].sourced).length;
+  const listed  = days.filter(d=>data[d]&&data[d].listed).length;
+  const sold    = days.filter(d=>data[d]&&data[d].sold).length;
+  if (stats) stats.innerHTML = `
+    <div style="display:flex;gap:24px;font-size:12px;color:var(--text2);padding-top:8px">
+      <span>📦 Days sourced: <strong>${sourced}</strong></span>
+      <span>🏷 Days listed: <strong>${listed}</strong></span>
+      <span>💰 Days sold: <strong>${sold}</strong></span>
+    </div>
+    <div style="font-size:10px;color:var(--text3);margin-top:4px">Click any day to cycle: sourced → listed → sold → clear</div>`;
+}
+
+function rsToggleDay(day) {
+  const data = rsGetChallenge();
+  const d    = data[day] || {};
+  if (!d.sourced)      { d.sourced = true; }
+  else if (!d.listed)  { d.listed  = true; }
+  else if (!d.sold)    { d.sold    = true; }
+  else                 { delete data[day]; rsSaveChallenge(data); rsRenderChallenge(); return; }
+  data[day] = d;
+  rsSaveChallenge(data);
+  rsRenderChallenge();
+}
+
+// ── Allocation ────────────────────────────────────────────────
+function rsRenderAlloc() {
+  const items   = rsGetItems().map(rsCalcItem);
+  const sold    = items.filter(i => i.status === 'Sold');
+  const totalProfit = sold.reduce((s,i) => s+(i.profit||0), 0);
+  const settings = rsGetSettings();
+
+  const cryptoAmt = totalProfit * settings.crypto;
+  const stockAmt  = totalProfit * settings.stocks;
+
+  const cryptoEl = document.getElementById('rs-crypto-body');
+  if (cryptoEl) cryptoEl.innerHTML = `
+    <div style="font-size:12px;color:var(--text2);margin-bottom:10px">
+      ${(settings.crypto*100).toFixed(0)}% of total profit → <strong style="color:var(--amber)">$${cryptoAmt.toFixed(2)}</strong> suggested allocation
+    </div>
+    <div style="font-size:11px;color:var(--text3)">Log your actual crypto purchases in the Crypto Portfolio section — this shows you the suggested amount based on your profit split settings.</div>`;
+
+  const stockEl = document.getElementById('rs-stock-body');
+  if (stockEl) stockEl.innerHTML = `
+    <div style="font-size:12px;color:var(--text2);margin-bottom:10px">
+      ${(settings.stocks*100).toFixed(0)}% of total profit → <strong style="color:var(--green)">$${stockAmt.toFixed(2)}</strong> suggested allocation
+    </div>
+    <div style="font-size:11px;color:var(--text3)">Track in your brokerage app. These numbers update automatically as you log more sales.</div>`;
+}
+
+// ── Modals ────────────────────────────────────────────────────
+function rsOpenAddItemModal(id) {
+  rsEditingId = id || null;
+  const modal = document.getElementById('rs-add-modal');
+  const title = document.getElementById('rs-add-modal-title');
+  if (!modal) return;
+
+  if (id) {
+    const item = rsGetItems().find(i => i.id === id);
+    if (!item) return;
+    title.textContent = 'Edit Item';
+    document.getElementById('rs-item-name').value    = item.name || '';
+    document.getElementById('rs-item-category').value = item.category || '';
+    document.getElementById('rs-item-source').value  = item.source || '';
+    document.getElementById('rs-item-date-acq').value = item.dateAcquired || '';
+    document.getElementById('rs-item-cost').value    = item.cost || '';
+    document.getElementById('rs-item-grade').value   = item.gradeCost || '';
+    document.getElementById('rs-item-fees').value    = item.otherFees || '';
+    document.getElementById('rs-item-status').value  = item.status || 'Active';
+    document.getElementById('rs-item-date-sold').value = item.dateSold || '';
+    document.getElementById('rs-item-sale').value    = item.salePrice || '';
+    document.getElementById('rs-item-fee-pct').value = item.feePct || 0.13;
+    document.getElementById('rs-item-ship').value    = item.shipCost || '';
+    document.getElementById('rs-item-notes').value   = item.notes || '';
+  } else {
+    title.textContent = 'Log Sale / Purchase';
+    ['rs-item-name','rs-item-source','rs-item-cost','rs-item-grade','rs-item-fees','rs-item-date-acq','rs-item-date-sold','rs-item-sale','rs-item-ship','rs-item-notes'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('rs-item-status').value = 'Active';
+    document.getElementById('rs-item-fee-pct').value = '0.13';
+  }
+  rsToggleSoldFields();
+  modal.classList.add('open');
+}
+
+function rsCloseAddItemModal() {
+  document.getElementById('rs-add-modal').classList.remove('open');
+  rsEditingId = null;
+}
+
+function rsToggleSoldFields() {
+  const status = document.getElementById('rs-item-status').value;
+  document.getElementById('rs-sold-fields').style.display = status === 'Sold' ? 'block' : 'none';
+}
+
+function rsSaveItem() {
+  const name = document.getElementById('rs-item-name').value.trim();
+  if (!name) { showToast('Enter an item name', 'error'); return; }
+
+  const item = {
+    id:          rsEditingId || genId(),
+    name,
+    category:    document.getElementById('rs-item-category').value,
+    source:      document.getElementById('rs-item-source').value.trim(),
+    dateAcquired:document.getElementById('rs-item-date-acq').value,
+    cost:        parseFloat(document.getElementById('rs-item-cost').value) || 0,
+    gradeCost:   parseFloat(document.getElementById('rs-item-grade').value) || 0,
+    otherFees:   parseFloat(document.getElementById('rs-item-fees').value) || 0,
+    status:      document.getElementById('rs-item-status').value,
+    dateSold:    document.getElementById('rs-item-date-sold').value,
+    salePrice:   parseFloat(document.getElementById('rs-item-sale').value) || 0,
+    feePct:      parseFloat(document.getElementById('rs-item-fee-pct').value) || 0.13,
+    shipCost:    parseFloat(document.getElementById('rs-item-ship').value) || 0,
+    notes:       document.getElementById('rs-item-notes').value.trim(),
+  };
+  const calc = rsCalcItem(item);
+  item.profit     = calc.profit;
+  item.roi        = calc.roi;
+  item.netProceeds= calc.netProceeds;
+  item.daysHeld   = calc.daysHeld;
+
+  const items = rsGetItems();
+  if (rsEditingId) {
+    const idx = items.findIndex(i => i.id === rsEditingId);
+    if (idx > -1) items[idx] = item;
+  } else {
+    items.unshift(item);
+  }
+  rsSaveItems(items);
+  rsCloseAddItemModal();
+  rsRenderAll();
+  showToast(`${name} ${rsEditingId ? 'updated' : 'logged'}`);
+}
+
+function rsEditItem(id)   { rsOpenAddItemModal(id); }
+
+function rsDeleteItem(id) {
+  const item = rsGetItems().find(i => i.id === id);
+  if (!item || !confirm(`Remove "${item.name}" from your log?`)) return;
+  rsSaveItems(rsGetItems().filter(i => i.id !== id));
+  rsRenderAll();
+  showToast(`${item.name} removed`);
+}
+
+// ── Watchlist CRUD ────────────────────────────────────────────
+function rsOpenWatchlistModal() {
+  ['rs-w-item','rs-w-cat','rs-w-src','rs-w-notes'].forEach(id => document.getElementById(id).value = '');
+  ['rs-w-ask','rs-w-target','rs-w-resale'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('rs-w-fee').value = '0.13';
+  document.getElementById('rs-watch-modal').classList.add('open');
+}
+
+function rsSaveWatchItem() {
+  const name = document.getElementById('rs-w-item').value.trim();
+  if (!name) { showToast('Enter an item name', 'error'); return; }
+  const item = {
+    id: genId(), name,
+    category:   document.getElementById('rs-w-cat').value.trim(),
+    source:     document.getElementById('rs-w-src').value.trim(),
+    dateAdded:  new Date().toISOString().slice(0,10),
+    askPrice:   parseFloat(document.getElementById('rs-w-ask').value)||0,
+    targetPrice:parseFloat(document.getElementById('rs-w-target').value)||0,
+    resaleValue:parseFloat(document.getElementById('rs-w-resale').value)||0,
+    feePct:     parseFloat(document.getElementById('rs-w-fee').value)||0.13,
+    notes:      document.getElementById('rs-w-notes').value.trim(),
+    status:     'Watching',
+  };
+  const watch = rsGetWatch();
+  watch.unshift(item);
+  rsSaveWatch(watch);
+  document.getElementById('rs-watch-modal').classList.remove('open');
+  if (rsCurrentTab === 'watchlist') rsRenderWatchlist();
+  showToast(`${name} added to watchlist`);
+}
+
+function rsDeleteWatch(id) {
+  const item = rsGetWatch().find(w => w.id === id);
+  if (!item || !confirm(`Remove "${item.name}" from watchlist?`)) return;
+  rsSaveWatch(rsGetWatch().filter(w => w.id !== id));
+  rsRenderWatchlist();
+}
+
+function rsMoveWatchToLog(id) {
+  const item = rsGetWatch().find(w => w.id === id);
+  if (!item) return;
+  // Pre-fill the add modal with the watchlist item's data so you can just confirm and save
+  document.getElementById('rs-item-name').value    = item.name;
+  document.getElementById('rs-item-category').value= item.category||'';
+  document.getElementById('rs-item-source').value  = item.source||'';
+  document.getElementById('rs-item-cost').value    = item.targetPrice||item.askPrice||'';
+  document.getElementById('rs-item-status').value  = 'Active';
+  rsToggleSoldFields();
+  document.getElementById('rs-add-modal').classList.add('open');
+  document.getElementById('rs-add-modal-title').textContent = 'Log Purchase (from watchlist)';
+  // Remove from watchlist after save
+  rsSaveWatch(rsGetWatch().filter(w => w.id !== id));
+  showToast(`${item.name} moved to log — fill in details and save`);
+  rsSwitchTab('log');
+}
+
+// Bootstrap — pre-populate from the uploaded xlsx data if localStorage is empty
+(function rsBootstrapFromXlsx() {
+  if (rsGetItems().length > 0 || rsGetWatch().length > 0) return;
+  // Seed the two real entries from the uploaded spreadsheet
+  const seedItems = [
+    {
+      id: genId(), name: 'Mega Gengar ex Ascended Heroes SIR', category: 'TCG - Pokemon',
+      source: 'Discord/VaultSquad', dateAcquired: '2026-08-01', cost: 45, gradeCost: 20, otherFees: 0,
+      status: 'Sold', dateSold: '2026-08-25', salePrice: 150, feePct: 0.13, shipCost: 8.5,
+      notes: 'PSA 9 grade',
+    },
+    {
+      id: genId(), name: 'Ascended Heroes Pokemon Center ETB', category: 'TCG - Pokemon',
+      source: '', dateAcquired: '', cost: 60, gradeCost: 0, otherFees: 0,
+      status: 'Sold', dateSold: '2026-09-16', salePrice: 330, feePct: 0, shipCost: 0,
+      notes: 'Sold via TCG resale tracker',
+    },
+  ].map(i => { const c = rsCalcItem(i); return {...i, profit:c.profit, roi:c.roi, netProceeds:c.netProceeds, daysHeld:c.daysHeld}; });
+
+  const seedWatch = [
+    {
+      id: genId(), name: 'Garmin Instinct 2 (discount)', category: 'Electronics',
+      source: 'Perks at Work', dateAdded: '2026-09-10', askPrice: 220, targetPrice: 190,
+      resaleValue: 280, feePct: 0.13, notes: 'Check eBay sold comps weekly before buying', status: 'Watching',
+    },
+  ];
+
+  rsSaveItems(seedItems);
+  rsSaveWatch(seedWatch);
+})();
+
 function renderSidebar() {
   const nw=Calc.netWorth(), count=Calc.totalCount();
   document.getElementById('sidebar-nw').textContent        = fmt.currency(nw,0);
@@ -10625,6 +11322,7 @@ function renderBankAccount() {
 let lpAutoInterval = null;
 let lpAutoEnabled  = false;
 let lpPrevPrices   = {}; // { holdingId: lastPrice } — captured just before a refresh, consumed once by the next render to drive flash/tick animations
+lpLoadAlerts();
 let lpTcgSortMode  = 'value'; // 'value' | 'stale' — how the TCG list is ordered
 let lpTcgSoldOpen  = false;   // whether the "Sold" history section is expanded
 
@@ -10756,6 +11454,166 @@ function tcgToggleSort() {
   renderLivePrices();
 }
 
+// ── Price Alerts ──────────────────────────────────────────────────────────
+// Stored under 'lp_price_alerts_v1': array of { id, holdingId, condition, value, basePrice, active, firedAt }
+// Conditions: 'below' (absolute $), 'above' (absolute $), 'drop_pct' (% drop from basePrice), 'rise_pct'
+const LP_ALERTS_KEY = 'lp_price_alerts_v1';
+let lpAlerts = [];
+function lpLoadAlerts() {
+  try { lpAlerts = JSON.parse(localStorage.getItem(LP_ALERTS_KEY)) || []; } catch(e) { lpAlerts = []; }
+}
+function lpSaveAlerts() {
+  localStorage.setItem(LP_ALERTS_KEY, JSON.stringify(lpAlerts));
+}
+function lpAlertsForHolding(holdingId) {
+  return lpAlerts.filter(a => a.holdingId === holdingId);
+}
+
+let lpAlertModalHoldingId = null;
+
+function lpOpenAlertModal(holdingId) {
+  lpAlertModalHoldingId = holdingId;
+  const holding = DB.get('crypto').find(h => h.id === holdingId);
+  if (!holding) return;
+  document.getElementById('lp-alert-modal-name').textContent = `${holding.name} (${holding.symbol})`;
+  document.getElementById('lp-alert-condition').onchange = lpUpdateAlertValueLabel;
+  lpUpdateAlertValueLabel();
+  lpRenderAlertList(holdingId, holding);
+  document.getElementById('lp-alert-modal').classList.add('open');
+  // Prime the value field with the current price as a sensible starting point
+  const price = parseFloat(holding.currentPrice) || 0;
+  if (price) document.getElementById('lp-alert-value').placeholder = `e.g. ${(price * 0.9).toFixed(price > 100 ? 0 : 4)}`;
+}
+
+function lpCloseAlertModal() {
+  document.getElementById('lp-alert-modal').classList.remove('open');
+  lpAlertModalHoldingId = null;
+}
+
+function lpUpdateAlertValueLabel() {
+  const cond = document.getElementById('lp-alert-condition').value;
+  const label = document.getElementById('lp-alert-value-label');
+  if (label) {
+    if (cond === 'drop_pct' || cond === 'rise_pct') label.textContent = 'Percentage (%)';
+    else label.textContent = 'Target price ($)';
+  }
+}
+
+function lpAddAlert() {
+  if (!lpAlertModalHoldingId) return;
+  const holding = DB.get('crypto').find(h => h.id === lpAlertModalHoldingId);
+  if (!holding) return;
+  const condition = document.getElementById('lp-alert-condition').value;
+  const value = parseFloat(document.getElementById('lp-alert-value').value);
+  if (isNaN(value) || value <= 0) { showToast('Enter a valid target value', 'error'); return; }
+  const basePrice = parseFloat(holding.currentPrice) || 0;
+  lpAlerts.push({
+    id: genId(), holdingId: lpAlertModalHoldingId, condition, value, basePrice, active: true, firedAt: null,
+  });
+  lpSaveAlerts();
+  document.getElementById('lp-alert-value').value = '';
+  lpRenderAlertList(lpAlertModalHoldingId, holding);
+  renderLivePrices(); // refresh bell icons
+  showToast(`Alert set for ${holding.name}`);
+}
+
+function lpDeleteAlert(alertId) {
+  lpAlerts = lpAlerts.filter(a => a.id !== alertId);
+  lpSaveAlerts();
+  if (lpAlertModalHoldingId) {
+    const holding = DB.get('crypto').find(h => h.id === lpAlertModalHoldingId);
+    lpRenderAlertList(lpAlertModalHoldingId, holding);
+  }
+  renderLivePrices();
+}
+
+function lpRearmAlert(alertId) {
+  const alert = lpAlerts.find(a => a.id === alertId);
+  if (!alert) return;
+  const holding = DB.get('crypto').find(h => h.id === alert.holdingId);
+  alert.active = true;
+  alert.firedAt = null;
+  // Reset basePrice for percentage conditions so they calculate from current price
+  if ((alert.condition === 'drop_pct' || alert.condition === 'rise_pct') && holding) {
+    alert.basePrice = parseFloat(holding.currentPrice) || alert.basePrice;
+  }
+  lpSaveAlerts();
+  if (lpAlertModalHoldingId) {
+    lpRenderAlertList(lpAlertModalHoldingId, holding);
+  }
+  renderLivePrices();
+}
+
+function lpRenderAlertList(holdingId, holding) {
+  const list = document.getElementById('lp-alert-list');
+  if (!list) return;
+  const alerts = lpAlertsForHolding(holdingId);
+  if (!alerts.length) {
+    list.innerHTML = `<div style="font-size:12px;color:var(--text3);padding:8px 0">No alerts set for ${holding.symbol} yet.</div>`;
+    return;
+  }
+  list.innerHTML = alerts.map(a => {
+    const condLabel = {
+      below: `drops below $${a.value.toLocaleString()}`,
+      above: `rises above $${a.value.toLocaleString()}`,
+      drop_pct: `drops ${a.value}% from $${(a.basePrice||0).toFixed(2)}`,
+      rise_pct: `rises ${a.value}% from $${(a.basePrice||0).toFixed(2)}`,
+    }[a.condition] || '';
+    const firedTime = a.firedAt ? new Date(a.firedAt).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) : '';
+    return `<div class="lp-alert-row">
+      <div style="flex:1">
+        <span style="font-weight:500;color:var(--text)">${holding.symbol} ${condLabel}</span>
+        ${a.firedAt ? `<span style="font-size:10px;color:var(--text3);margin-left:6px">· fired ${firedTime}</span>` : ''}
+      </div>
+      <span class="lp-alert-badge ${a.active?'active':'fired'}">${a.active?'active':'fired'}</span>
+      ${!a.active ? `<button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 8px" onclick="lpRearmAlert('${a.id}')">↺ rearm</button>` : ''}
+      <button class="btn btn-ghost btn-sm" style="font-size:10px;padding:2px 8px;color:var(--red)" onclick="lpDeleteAlert('${a.id}')">✕</button>
+    </div>`;
+  }).join('');
+}
+
+// Checks alerts every time prices refresh. Fires a browser notification + in-app toast.
+// After firing, the alert stays visible but goes "inactive" until you manually rearm it —
+// this prevents it from hammering you with the same alert every 5 seconds.
+function lpCheckAlerts(holdings) {
+  if (!lpAlerts.length) return;
+  let anyFired = false;
+  lpAlerts.forEach(a => {
+    if (!a.active) return;
+    const holding = holdings.find(h => h.id === a.holdingId);
+    if (!holding) return;
+    const price = parseFloat(holding.currentPrice) || 0;
+    if (!price) return;
+    let triggered = false;
+    if (a.condition === 'below') triggered = price <= a.value;
+    else if (a.condition === 'above') triggered = price >= a.value;
+    else if (a.condition === 'drop_pct') {
+      const base = a.basePrice || price;
+      triggered = ((base - price) / base) * 100 >= a.value;
+    } else if (a.condition === 'rise_pct') {
+      const base = a.basePrice || price;
+      triggered = ((price - base) / base) * 100 >= a.value;
+    }
+    if (triggered) {
+      a.active = false;
+      a.firedAt = new Date().toISOString();
+      anyFired = true;
+      const msg = `🔔 ${holding.symbol} hit $${fmt.currency(price)} — your alert triggered`;
+      showToast(msg, 'success');
+      // Browser notification (requires permission, silently skips if not granted)
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification(`📈 ${holding.name} Alert`, {
+          body: `${holding.symbol} is now $${price.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})} — your alert condition was met.`,
+          icon: '/favicon.ico',
+        });
+      } else if ('Notification' in window && Notification.permission !== 'denied') {
+        Notification.requestPermission();
+      }
+    }
+  });
+  if (anyFired) { lpSaveAlerts(); renderLivePrices(); }
+}
+
 function toggleAutoRefresh() {
   lpAutoEnabled = !lpAutoEnabled;
   const btn=document.getElementById('lp-auto-btn');
@@ -10829,6 +11687,7 @@ async function refreshCryptoPricesLP() {
     return h;
   });
   DB.set('crypto',updated);
+  lpCheckAlerts(updated);
 }
 
 // Downsample a CoinGecko 7d hourly sparkline into a small inline SVG line+area chart
@@ -10902,7 +11761,11 @@ function renderLivePrices() {
         const isLive = h.coingeckoId || h.stockSymbol;
         const sourceLabel = h.stockSymbol ? 'live · Alpha Vantage' : h.coingeckoId ? 'live · CoinGecko' : 'manual';
         return`<div class="price-card${flashClass}">
-          <div class="price-card-symbol">${h.symbol} ${isLive?`<span class="price-live-badge" style="color:var(--green);font-size:9px">● live</span>`:'<span style="color:var(--text3);font-size:9px">○ manual</span>'}</div>
+          <div class="price-card-symbol">${h.symbol} ${isLive?`<span class="price-live-badge" style="color:var(--green);font-size:9px">● live</span>`:'<span style="color:var(--text3);font-size:9px">○ manual</span>'}
+            <button class="lp-alert-btn" onclick="lpOpenAlertModal('${h.id}')" title="Price alerts for ${h.name}">
+              ${lpAlertsForHolding(h.id).some(a=>a.active)?'🔔':'🔕'}
+            </button>
+          </div>
           <div class="price-card-name">${h.name}</div>
           <div class="price-card-price" id="price-card-price-${h.id}">${price?fmt.currency(price):'—'}</div>
           <div class="price-card-change" style="color:${change24h>=0?'var(--green)':'var(--red)'}">${change24h>=0?'▲':'▼'} ${Math.abs(change24h).toFixed(2)}% 24h</div>
@@ -11229,14 +12092,7 @@ var FITNESS_PROGRAM = {
   weeks_data: [
     // WEEK 1 (Phase 1)
     { week:1, phase:1, days:[
-      { day:1, name:'Monday', focus:'Upper A — Chest/Shoulders', exercises:[
-        {name:'Bench Press',sets:'5',reps:'10-12',note:'superset ↓'},
-        {name:'Pec Deck',sets:'4',reps:'10-12',note:'superset ↓'},
-        {name:'Incline DB Press',sets:'4',reps:'10-12',note:'superset ↓'},
-        {name:'Decline Chest Press Machine',sets:'4',reps:'12',note:'superset ↓'},
-        {name:'Cable Crossovers',sets:'4',reps:'12',note:'superset ↓'},
-        {name:'Incline Bench Press',sets:'4',reps:'10-12',note:'superset ↓'},
-        {name:'Chest Press Machine',sets:'4',reps:'30',note:'superset ↓'},
+      { day:1, name:'Monday', focus:'Shoulders', exercises:[
         {name:'Seated DB Press',sets:'4',reps:'20',note:'superset ↓'},
         {name:'DB Lateral Raises',sets:'4',reps:'10-12',note:'↑ weight each set'},
         {name:'Front Plate Raises',sets:'4',reps:'20',note:'superset ↓'},
@@ -11244,10 +12100,24 @@ var FITNESS_PROGRAM = {
         {name:'Shoulder Press Machine',sets:'4',reps:'12-15',note:'superset ↓'},
         {name:'Machine Lateral Raise',sets:'4',reps:'12-15'},
         {name:'DB Shrugs',sets:'4',reps:'20'},
-        {name:'Cardio Circuit',sets:'3',reps:'20s each',note:'post-workout'}
+        {name:'Cardio Circuit (Jacks/Rope/Burpees)',sets:'3',reps:'20s each',note:'post-workout'}
       ]},
-      { day:2, name:'Tuesday', focus:'Soccer League (rest from lifting)', exercises:[]},
-      { day:3, name:'Wednesday', focus:'Lower Body + Core', exercises:[
+      { day:2, name:'Tuesday', focus:'Arms + HIIT', exercises:[
+        {name:'Barbell Curls',sets:'4',reps:'20',note:'superset ↓'},
+        {name:'Skull Crushers',sets:'4',reps:'20',note:'superset ↓'},
+        {name:'Mountain Climbers',sets:'4',reps:'20'},
+        {name:'DB Curls',sets:'4',reps:'15',note:'superset ↓'},
+        {name:'Tricep Pushdowns',sets:'4',reps:'15',note:'superset ↓'},
+        {name:'Squat Jumps',sets:'4',reps:'15'},
+        {name:'Preacher Curls',sets:'4',reps:'12',note:'superset ↓'},
+        {name:'Overhead Tricep Extension',sets:'4',reps:'12',note:'superset ↓'},
+        {name:'Run in Place',sets:'4',reps:'20s'},
+        {name:'Hammer Curls',sets:'4',reps:'15',note:'superset ↓'},
+        {name:'Rope Pushdowns',sets:'4',reps:'15',note:'superset ↓'},
+        {name:'Bench Step-Ups',sets:'4',reps:'15'},
+        {name:'Cardio Circuit',sets:'3',reps:'20s each',note:'post-workout HIIT'}
+      ]},
+      { day:3, name:'Wednesday', focus:'Legs', exercises:[
         {name:'Leg Extensions',sets:'5',reps:'12-15',note:'superset ↓ ↑ weight each set'},
         {name:'Lying Hamstring Curls',sets:'5',reps:'12-15'},
         {name:'Leg Press',sets:'4',reps:'12-15',note:'superset ↓'},
@@ -11256,12 +12126,24 @@ var FITNESS_PROGRAM = {
         {name:'Single Leg Ham Curls',sets:'4',reps:'12 each',note:'superset ↓'},
         {name:'Seated Hamstring Curls',sets:'4',reps:'15'},
         {name:'Squats',sets:'5',reps:'10',note:'↑ weight each set'},
-        {name:'Reverse Crunches',sets:'3',reps:'15',note:'circuit w/ below'},
-        {name:'Lying Leg Raises',sets:'3',reps:'15'},
-        {name:'Crunches',sets:'3',reps:'15'},
         {name:'Cardio Circuit',sets:'3',reps:'20s each',note:'post-workout'}
       ]},
-      { day:4, name:'Thursday', focus:'Upper B — Back/Arms', exercises:[
+      { day:4, name:'Thursday', focus:'Chest + HIIT', exercises:[
+        {name:'Bench Press',sets:'5',reps:'10-12',note:'superset ↓'},
+        {name:'Mountain Climbers',sets:'4',reps:'20s'},
+        {name:'Pec Deck',sets:'4',reps:'10-12',note:'superset ↓'},
+        {name:'Incline DB Press',sets:'4',reps:'10-12',note:'superset ↓'},
+        {name:'Squat Jumps',sets:'4',reps:'15'},
+        {name:'Decline Chest Press Machine',sets:'4',reps:'12',note:'superset ↓'},
+        {name:'Cable Crossovers',sets:'4',reps:'12',note:'superset ↓'},
+        {name:'Run in Place',sets:'4',reps:'20s'},
+        {name:'Incline Bench Press',sets:'4',reps:'10-12',note:'superset ↓'},
+        {name:'Bench Step-Ups',sets:'4',reps:'15'},
+        {name:'Chest Press Machine',sets:'4',reps:'30',note:'superset ↓'},
+        {name:'Jumping Jacks',sets:'4',reps:'20s'},
+        {name:'Cardio Circuit (HIIT)',sets:'3',reps:'20s each',note:'post-workout HIIT'}
+      ]},
+      { day:5, name:'Friday', focus:'Back', exercises:[
         {name:'Wide Grip Pull-Ups',sets:'4',reps:'failure'},
         {name:'Bent Over Rows',sets:'4',reps:'12-15',note:'superset ↓ ↑ weight'},
         {name:'Reverse Grip Lat Pull Down',sets:'4',reps:'12-15'},
@@ -11270,29 +12152,18 @@ var FITNESS_PROGRAM = {
         {name:'Close Grip Cable Row',sets:'4',reps:'12-15'},
         {name:'Deadlifts',sets:'4',reps:'10-12',note:'superset ↓'},
         {name:'Bodyweight Inverted Rows',sets:'4',reps:'10-12'},
-        {name:'Barbell Curls',sets:'4',reps:'20',note:'superset ↓'},
-        {name:'Skull Crushers',sets:'4',reps:'20',note:'superset ↓'},
-        {name:'DB Curls',sets:'4',reps:'15',note:'superset ↓'},
-        {name:'Tricep Pushdowns',sets:'4',reps:'15',note:'superset ↓'},
-        {name:'Preacher Curls',sets:'4',reps:'12',note:'superset ↓'},
-        {name:'Overhead Tricep Extension',sets:'4',reps:'12',note:'superset ↓'},
-        {name:'Hammer Curls',sets:'4',reps:'15',note:'superset ↓'},
-        {name:'Rope Pushdowns',sets:'4',reps:'15',note:'superset ↓'},
         {name:'Cardio Circuit',sets:'3',reps:'20s each',note:'post-workout'}
       ]},
-      { day:5, name:'Friday', focus:'Sprint Conditioning (rest from lifting)', exercises:[]},
-      { day:6, name:'Saturday', focus:'Rest / Recovery', exercises:[]}
+      { day:6, name:'Saturday', focus:'Abs', exercises:[
+        {name:'Reverse Crunches',sets:'3',reps:'15',note:'circuit w/ below'},
+        {name:'Lying Leg Raises',sets:'3',reps:'15'},
+        {name:'Crunches',sets:'3',reps:'15'},
+        {name:'Cardio Circuit',sets:'4',reps:'20s each',note:'post-workout'}
+      ]}
     ]},
     // WEEK 2 (Phase 1)
     { week:2, phase:1, days:[
-      { day:1, name:'Monday', focus:'Upper A — Chest/Shoulders', exercises:[
-        {name:'Incline Bench Press',sets:'5',reps:'10',note:'superset ↓'},
-        {name:'Incline DB Press',sets:'4',reps:'10-12',note:'superset ↓'},
-        {name:'Close Grip DB Press',sets:'4',reps:'12',note:'superset ↓'},
-        {name:'Flat DB Press',sets:'4',reps:'10-12',note:'superset ↓'},
-        {name:'Incline DB Flies',sets:'5',reps:'12',note:'superset ↓'},
-        {name:'Push-Ups',sets:'4',reps:'failure',note:'superset ↓'},
-        {name:'Decline Bench Press',sets:'5',reps:'10',note:'superset ↓'},
+      { day:1, name:'Monday', focus:'Shoulders', exercises:[
         {name:'Barbell Military Press',sets:'4',reps:'10',note:'superset ↓ ↑ weight'},
         {name:'DB Front Raise',sets:'5',reps:'15'},
         {name:'DB Lateral Raise',sets:'4',reps:'30'},
@@ -11301,20 +12172,49 @@ var FITNESS_PROGRAM = {
         {name:'Seated Alt DB Press',sets:'3',reps:'20+10',note:'20 alt + 10 both arms = 1 set'},
         {name:'Cardio Circuit',sets:'3',reps:'20s each',note:'Squat Jumps/Mt Climbers/Jump Rope'}
       ]},
-      { day:2, name:'Tuesday', focus:'Soccer League (rest from lifting)', exercises:[]},
-      { day:3, name:'Wednesday', focus:'Lower Body + Core', exercises:[
+      { day:2, name:'Tuesday', focus:'Arms + HIIT', exercises:[
+        {name:'Tricep Rope Extension',sets:'4',reps:'20',note:'superset ↓'},
+        {name:'Overhead Tricep Extension',sets:'4',reps:'20',note:'superset ↓'},
+        {name:'Jumping Jacks',sets:'4',reps:'20s'},
+        {name:'DB Skull Crushers',sets:'4',reps:'15',note:'superset ↓'},
+        {name:'Bench Step-Ups',sets:'4',reps:'15'},
+        {name:'Straight Bar Push Downs',sets:'4',reps:'15',note:'superset ↓'},
+        {name:'DB Kickbacks',sets:'4',reps:'15',note:'superset ↓'},
+        {name:'Mountain Climbers',sets:'4',reps:'20s'},
+        {name:'Reverse EZ Bar Curls',sets:'4',reps:'15',note:'superset ↓'},
+        {name:'EZ Bar Curls',sets:'4',reps:'15',note:'superset ↓'},
+        {name:'Run in Place',sets:'4',reps:'20s'},
+        {name:'Incline DB Curls',sets:'4',reps:'15',note:'superset ↓'},
+        {name:'Hammer Curls',sets:'4',reps:'15',note:'superset ↓'},
+        {name:'Squat Jumps',sets:'4',reps:'15'},
+        {name:'Machine Preacher Curls',sets:'4',reps:'8',note:'negative reps 4s down + Burpees'},
+        {name:'Cardio Circuit',sets:'3',reps:'20s each',note:'post HIIT'}
+      ]},
+      { day:3, name:'Wednesday', focus:'Legs', exercises:[
         {name:'Lying Ham Curls',sets:'4',reps:'20',note:'superset ↓'},
         {name:'Seated Ham Curls',sets:'4',reps:'20'},
         {name:'Leg Extensions',sets:'5',reps:'40/35/30/25/20',note:'↑ weight each set'},
         {name:'Stiff Leg Deadlifts',sets:'4',reps:'12',note:'superset ↓'},
         {name:'DB Lunges',sets:'4',reps:'12'},
         {name:'Leg Press',sets:'5',reps:'20'},
-        {name:'Lying Leg Raises',sets:'3',reps:'15',note:'circuit'},
-        {name:'Flutter Kicks',sets:'3',reps:'15'},
-        {name:'Leg Tucks',sets:'3',reps:'15'},
-        {name:'Cardio Circuit',sets:'3',reps:'20s each',note:'Squat Jumps/Mt Climbers/Jump Rope'}
+        {name:'Cardio Circuit',sets:'3',reps:'20s each'}
       ]},
-      { day:4, name:'Thursday', focus:'Upper B — Back/Arms', exercises:[
+      { day:4, name:'Thursday', focus:'Chest + HIIT', exercises:[
+        {name:'Incline Bench Press',sets:'5',reps:'10',note:'superset ↓'},
+        {name:'Jumping Jacks',sets:'4',reps:'20s'},
+        {name:'Incline DB Press',sets:'4',reps:'10-12',note:'superset ↓'},
+        {name:'Close Grip DB Press',sets:'4',reps:'12',note:'superset ↓'},
+        {name:'Bench Step-Ups',sets:'4',reps:'15'},
+        {name:'Flat DB Press',sets:'4',reps:'10-12',note:'superset ↓'},
+        {name:'Mountain Climbers',sets:'4',reps:'20s'},
+        {name:'Incline DB Flies',sets:'5',reps:'12',note:'superset ↓'},
+        {name:'Push-Ups',sets:'4',reps:'failure',note:'superset ↓'},
+        {name:'Run in Place',sets:'4',reps:'20s'},
+        {name:'Decline Bench Press',sets:'5',reps:'10',note:'superset ↓'},
+        {name:'Squat Jumps',sets:'4',reps:'15'},
+        {name:'Cardio Circuit',sets:'3',reps:'20s each',note:'HIIT'}
+      ]},
+      { day:5, name:'Friday', focus:'Back', exercises:[
         {name:'Pull-Ups',sets:'5',reps:'failure',note:'superset ↓'},
         {name:'Bent Over Rows',sets:'4',reps:'30',note:'wide/normal/reverse grips'},
         {name:'T-Bar Row',sets:'4',reps:'10-12',note:'↑ weight'},
@@ -11322,30 +12222,18 @@ var FITNESS_PROGRAM = {
         {name:'Back Extensions',sets:'4',reps:'15'},
         {name:'Close Grip Lat Pull Downs',sets:'4',reps:'12-15',note:'superset ↓'},
         {name:'Wide Grip Cable Row',sets:'4',reps:'12-15'},
-        {name:'Tricep Rope Extension',sets:'4',reps:'20',note:'superset ↓'},
-        {name:'Overhead Tricep Extension',sets:'4',reps:'20',note:'superset ↓'},
-        {name:'DB Skull Crushers',sets:'4',reps:'15',note:'superset ↓'},
-        {name:'Straight Bar Push Downs',sets:'4',reps:'15',note:'superset ↓'},
-        {name:'DB Kickbacks',sets:'4',reps:'15',note:'superset ↓'},
-        {name:'Reverse EZ Bar Curls',sets:'4',reps:'15',note:'superset ↓'},
-        {name:'EZ Bar Curls',sets:'4',reps:'15',note:'superset ↓'},
-        {name:'Incline DB Curls',sets:'4',reps:'15',note:'superset ↓'},
-        {name:'Hammer Curls',sets:'4',reps:'15',note:'superset ↓'},
-        {name:'Machine Preacher Curls',sets:'4',reps:'8',note:'negative reps 4s down + Burpees'},
-        {name:'Cardio Circuit',sets:'3',reps:'20s each',note:'Squat Jumps/Mt Climbers/Jump Rope'}
+        {name:'Cardio Circuit',sets:'3',reps:'20s each'}
       ]},
-      { day:5, name:'Friday', focus:'Sprint Conditioning (rest from lifting)', exercises:[]},
-      { day:6, name:'Saturday', focus:'Rest / Recovery', exercises:[]}
+      { day:6, name:'Saturday', focus:'Abs', exercises:[
+        {name:'Lying Leg Raises',sets:'3',reps:'15',note:'circuit'},
+        {name:'Flutter Kicks',sets:'3',reps:'15'},
+        {name:'Leg Tucks',sets:'3',reps:'15'},
+        {name:'Cardio Circuit',sets:'4',reps:'20s each'}
+      ]}
     ]},
     // WEEK 3 (Phase 2)
     { week:3, phase:2, days:[
-      { day:1, name:'Monday', focus:'Upper A — Chest/Shoulders', exercises:[
-        {name:'Flat DB Press',sets:'4',reps:'20/15/12/10',note:'superset ↓ Med Ball Slams'},
-        {name:'Incline DB Press',sets:'4',reps:'20/15/12/10',note:'superset ↓'},
-        {name:'Incline DB Flies',sets:'4',reps:'12',note:'superset ↓'},
-        {name:'Decline Chest Press Machine',sets:'4',reps:'10-12',note:'superset ↓'},
-        {name:'Push-Ups',sets:'4',reps:'failure',note:'superset ↓'},
-        {name:'Cable Flies',sets:'4',reps:'15',note:'superset ↓'},
+      { day:1, name:'Monday', focus:'Shoulders', exercises:[
         {name:'Standing Barbell Military Press',sets:'4',reps:'10+10',note:'normal + behind neck = 1 set'},
         {name:'Lateral/Front Raise Ladder',sets:'3',reps:'1-5 reps building',note:'pyramid sequence'},
         {name:'Shoulder Press Machine',sets:'4',reps:'10',note:'↑ weight'},
@@ -11353,8 +12241,22 @@ var FITNESS_PROGRAM = {
         {name:'Barbell Shrugs',sets:'4',reps:'20'},
         {name:'Cardio Circuit',sets:'3',reps:'25s each',note:'Burpees/Med Ball/Run'}
       ]},
-      { day:2, name:'Tuesday', focus:'Soccer League (rest from lifting)', exercises:[]},
-      { day:3, name:'Wednesday', focus:'Lower Body + Core', exercises:[
+      { day:2, name:'Tuesday', focus:'Arms + HIIT', exercises:[
+        {name:'Tricep Rope Extension',sets:'4',reps:'20',note:'superset ↓'},
+        {name:'Rope Curls',sets:'4',reps:'20',note:'superset ↓'},
+        {name:'Med Ball Slams',sets:'4',reps:'15'},
+        {name:'Straight Bar Tricep Extensions',sets:'4',reps:'20',note:'superset ↓'},
+        {name:'Lying Cable Curls',sets:'4',reps:'20',note:'superset ↓'},
+        {name:'Lunge Jumps',sets:'4',reps:'15'},
+        {name:'DB Skull Crushers',sets:'4',reps:'20',note:'superset ↓'},
+        {name:'Alternating DB Curls',sets:'4',reps:'12 each',note:'superset ↓'},
+        {name:'High Knees',sets:'4',reps:'25s'},
+        {name:'Overhead DB Extension',sets:'4',reps:'12',note:'superset ↓'},
+        {name:'EZ Bar Curls',sets:'4',reps:'20',note:'superset ↓'},
+        {name:'Bench Step-Ups',sets:'4',reps:'15'},
+        {name:'Cardio Circuit',sets:'3',reps:'25s each',note:'HIIT'}
+      ]},
+      { day:3, name:'Wednesday', focus:'Legs', exercises:[
         {name:'Leg Extensions',sets:'4',reps:'25',note:'superset ↓ ↑ weight'},
         {name:'Seated Ham Curls',sets:'4',reps:'25'},
         {name:'Squats',sets:'6',reps:'10/10/12/8/6/8',note:'pause reps, ↑ weight'},
@@ -11362,40 +12264,39 @@ var FITNESS_PROGRAM = {
         {name:'Lying Ham Curls',sets:'4',reps:'15',note:'superset ↓'},
         {name:'Glute Machine',sets:'4',reps:'15 each'},
         {name:'Seated Calf Raise',sets:'4',reps:'40'},
-        {name:'Bottoms Up',sets:'3',reps:'20'},
-        {name:'Lying Leg Raises',sets:'3',reps:'20'},
-        {name:'6-Inch Holds',sets:'3',reps:'30 seconds'},
-        {name:'Cardio Circuit',sets:'3',reps:'25s each',note:'Burpees/Med Ball/Run'}
+        {name:'Cardio Circuit',sets:'3',reps:'25s each'}
       ]},
-      { day:4, name:'Thursday', focus:'Upper B — Back/Arms', exercises:[
+      { day:4, name:'Thursday', focus:'Chest + HIIT', exercises:[
+        {name:'Flat DB Press',sets:'4',reps:'20/15/12/10',note:'superset ↓ Med Ball Slams'},
+        {name:'Incline DB Press',sets:'4',reps:'20/15/12/10',note:'superset ↓'},
+        {name:'Incline DB Flies',sets:'4',reps:'12',note:'superset ↓'},
+        {name:'Lunge Jumps',sets:'4',reps:'10 each'},
+        {name:'Decline Chest Press Machine',sets:'4',reps:'10-12',note:'superset ↓'},
+        {name:'Push-Ups',sets:'4',reps:'failure',note:'superset ↓'},
+        {name:'High Knees',sets:'4',reps:'25s'},
+        {name:'Cable Flies',sets:'4',reps:'15',note:'superset ↓'},
+        {name:'Bench Step-Ups',sets:'4',reps:'15'},
+        {name:'Cardio Circuit',sets:'3',reps:'25s each',note:'HIIT'}
+      ]},
+      { day:5, name:'Friday', focus:'Back', exercises:[
         {name:'Wide Grip Cable Row (lat bar)',sets:'4',reps:'10/10/10',note:'wide/normal/close grips'},
         {name:'Close Grip Lat Pull Down',sets:'4',reps:'12',note:'superset ↓'},
         {name:'Wide Grip Lat Pull Down',sets:'4',reps:'12'},
         {name:'Seated Row Machine',sets:'4',reps:'10+10',note:'close + wide grip'},
         {name:'DB Seal Rows',sets:'4',reps:'12',note:'superset ↓'},
         {name:'Wide Grip Pull-Ups',sets:'4',reps:'failure'},
-        {name:'Tricep Rope Extension',sets:'4',reps:'20',note:'superset ↓'},
-        {name:'Rope Curls',sets:'4',reps:'20',note:'superset ↓'},
-        {name:'Straight Bar Tricep Extensions',sets:'4',reps:'20',note:'superset ↓'},
-        {name:'Lying Cable Curls',sets:'4',reps:'20',note:'superset ↓'},
-        {name:'DB Skull Crushers',sets:'4',reps:'20',note:'superset ↓'},
-        {name:'Alternating DB Curls',sets:'4',reps:'12 each',note:'superset ↓'},
-        {name:'Overhead DB Extension',sets:'4',reps:'12',note:'superset ↓'},
-        {name:'EZ Bar Curls',sets:'4',reps:'20',note:'superset ↓'},
-        {name:'Cardio Circuit',sets:'3',reps:'25s each',note:'Burpees/Med Ball/Run'}
+        {name:'Cardio Circuit',sets:'3',reps:'25s each'}
       ]},
-      { day:5, name:'Friday', focus:'Sprint Conditioning (rest from lifting)', exercises:[]},
-      { day:6, name:'Saturday', focus:'Rest / Recovery', exercises:[]}
+      { day:6, name:'Saturday', focus:'Abs', exercises:[
+        {name:'Bottoms Up',sets:'3',reps:'20'},
+        {name:'Lying Leg Raises',sets:'3',reps:'20'},
+        {name:'6-Inch Holds',sets:'3',reps:'30 seconds'},
+        {name:'Cardio Circuit',sets:'4',reps:'25s each'}
+      ]}
     ]},
-    // WEEK 4 (Phase 2)
+    // WEEK 4 (Phase 2) - abbreviated for space
     { week:4, phase:2, days:[
-      { day:1, name:'Monday', focus:'Upper A — Chest/Shoulders', exercises:[
-        {name:'Incline DB Press',sets:'5',reps:'8/10/12/15/20'},
-        {name:'Incline Chest Press Machine',sets:'4',reps:'20/10/20/10',note:'superset ↓'},
-        {name:'Flat Bench Press',sets:'4',reps:'8/10/12/15'},
-        {name:'Pec Deck',sets:'4',reps:'25',note:'superset ↓'},
-        {name:'Cable Flies',sets:'4',reps:'25',note:'superset ↓'},
-        {name:'Chest Press Machine',sets:'4',reps:'20',note:'superset ↓'},
+      { day:1, name:'Monday', focus:'Shoulders', exercises:[
         {name:'Arnold Press',sets:'5',reps:'15/8/15/8/15',note:'drop set pattern'},
         {name:'Straight Bar Cable Front Raise',sets:'4',reps:'15',note:'superset ↓'},
         {name:'Cable Lateral Raises',sets:'4',reps:'15 each'},
@@ -11404,8 +12305,20 @@ var FITNESS_PROGRAM = {
         {name:'DB Shrugs',sets:'5',reps:'20',note:'↑ weight'},
         {name:'Cardio Circuit',sets:'3',reps:'25s each',note:'Jump Rope/Jumps/Foot Taps'}
       ]},
-      { day:2, name:'Tuesday', focus:'Soccer League (rest from lifting)', exercises:[]},
-      { day:3, name:'Wednesday', focus:'Lower Body + Core', exercises:[
+      { day:2, name:'Tuesday', focus:'Arms + HIIT', exercises:[
+        {name:'Barbell Curl',sets:'5',reps:'15/8/15/8/15',note:'superset ↓'},
+        {name:'V-Bar Tricep Pushdowns',sets:'5',reps:'10-12',note:'superset ↓'},
+        {name:'Jump Rope',sets:'5',reps:'25s'},
+        {name:'DB Hammer Curls',sets:'3',reps:'40 total',note:'5 per arm alternating'},
+        {name:'EZ Bar Curl',sets:'4',reps:'15',note:'superset ↓'},
+        {name:'Reverse Grip EZ Bar Curl',sets:'4',reps:'15',note:'superset ↓'},
+        {name:'Lunge Jumps',sets:'4',reps:'15'},
+        {name:'Straight Bar Cable Tricep Extension',sets:'4',reps:'15',note:'superset ↓'},
+        {name:'Reverse Grip Cable Tricep Extension',sets:'4',reps:'15',note:'superset ↓'},
+        {name:'Jumps in Place',sets:'4',reps:'15'},
+        {name:'Cardio Circuit',sets:'3',reps:'25s each',note:'HIIT'}
+      ]},
+      { day:3, name:'Wednesday', focus:'Legs', exercises:[
         {name:'Lying Ham Curls',sets:'4',reps:'20',note:'superset ↓'},
         {name:'Seated Ham Curls',sets:'4',reps:'20'},
         {name:'Leg Extensions',sets:'4',reps:'20',note:'superset ↓'},
@@ -11413,39 +12326,39 @@ var FITNESS_PROGRAM = {
         {name:'Box Squats',sets:'5',reps:'10/10/8/8/15',note:'pause 2s at bottom, explode up'},
         {name:'Stiff Leg Deadlifts',sets:'4',reps:'15'},
         {name:'Standing Calf Raise Machine',sets:'5',reps:'25'},
-        {name:'Reverse Crunches',sets:'3',reps:'20'},
-        {name:'Lying Leg Raises',sets:'3',reps:'20'},
-        {name:'Crunches',sets:'3',reps:'20'},
-        {name:'Cardio Circuit',sets:'3',reps:'25s each',note:'Jump Rope/Jumps/Foot Taps'}
+        {name:'Cardio Circuit',sets:'3',reps:'25s each'}
       ]},
-      { day:4, name:'Thursday', focus:'Upper B — Back/Arms', exercises:[
+      { day:4, name:'Thursday', focus:'Chest + HIIT', exercises:[
+        {name:'Incline DB Press',sets:'5',reps:'8/10/12/15/20'},
+        {name:'Jump Rope',sets:'5',reps:'25s'},
+        {name:'Incline Chest Press Machine',sets:'4',reps:'20/10/20/10',note:'superset ↓'},
+        {name:'Flat Bench Press',sets:'4',reps:'8/10/12/15'},
+        {name:'Pec Deck',sets:'4',reps:'25',note:'superset ↓'},
+        {name:'Cable Flies',sets:'4',reps:'25',note:'superset ↓'},
+        {name:'Lunge Jumps',sets:'4',reps:'15'},
+        {name:'Chest Press Machine',sets:'4',reps:'20',note:'superset ↓'},
+        {name:'Jumps in Place',sets:'4',reps:'15'},
+        {name:'Cardio Circuit',sets:'3',reps:'25s each',note:'HIIT'}
+      ]},
+      { day:5, name:'Friday', focus:'Back', exercises:[
         {name:'V-Bar Pull Downs',sets:'5',reps:'15/12/10/8/8'},
         {name:'Alternating Pull-Ups w/ V-Bar',sets:'4',reps:'failure'},
         {name:'Wide Grip Seated Cable Row',sets:'5',reps:'15/8/15/8/15',note:'superset ↓'},
         {name:'Close Grip Seated Cable Row',sets:'5',reps:'15'},
         {name:'Single Arm DB Row',sets:'3',reps:'10 each nonstop'},
         {name:'Kneeling Straight Arm Pull Down',sets:'4',reps:'15'},
-        {name:'Barbell Curl',sets:'5',reps:'15/8/15/8/15',note:'superset ↓'},
-        {name:'V-Bar Tricep Pushdowns',sets:'5',reps:'10-12',note:'superset ↓'},
-        {name:'DB Hammer Curls',sets:'3',reps:'40 total',note:'5 per arm alternating'},
-        {name:'EZ Bar Curl',sets:'4',reps:'15',note:'superset ↓'},
-        {name:'Reverse Grip EZ Bar Curl',sets:'4',reps:'15',note:'superset ↓'},
-        {name:'Straight Bar Cable Tricep Extension',sets:'4',reps:'15',note:'superset ↓'},
-        {name:'Reverse Grip Cable Tricep Extension',sets:'4',reps:'15',note:'superset ↓'},
-        {name:'Cardio Circuit',sets:'3',reps:'25s each',note:'Jump Rope/Jumps/Foot Taps'}
+        {name:'Cardio Circuit',sets:'3',reps:'25s each'}
       ]},
-      { day:5, name:'Friday', focus:'Sprint Conditioning (rest from lifting)', exercises:[]},
-      { day:6, name:'Saturday', focus:'Rest / Recovery', exercises:[]}
+      { day:6, name:'Saturday', focus:'Abs', exercises:[
+        {name:'Reverse Crunches',sets:'3',reps:'20'},
+        {name:'Lying Leg Raises',sets:'3',reps:'20'},
+        {name:'Crunches',sets:'3',reps:'20'},
+        {name:'Cardio Circuit',sets:'4',reps:'25s each'}
+      ]}
     ]},
-    // WEEK 5 (Phase 3)
+    // WEEKS 5-8: abbreviated but structured
     { week:5, phase:3, days:[
-      { day:1, name:'Monday', focus:'Upper A — Chest/Shoulders', exercises:[
-        {name:'Incline Bench Press',sets:'5',reps:'15/12/10/8/6',note:'superset ↓'},
-        {name:'Flat Bench Press',sets:'5',reps:'15/12/10/8/6',note:'superset ↓'},
-        {name:'Incline Chest Press',sets:'4',reps:'12-15',note:'superset ↓'},
-        {name:'Decline Chest Press',sets:'4',reps:'12-15',note:'superset ↓'},
-        {name:'Incline Bench Cable Flies',sets:'4',reps:'20',note:'superset ↓'},
-        {name:'Incline Close Grip DB Press',sets:'4',reps:'12',note:'superset ↓'},
+      { day:1, name:'Monday', focus:'Shoulders', exercises:[
         {name:'Clean and Jerks',sets:'4',reps:'15'},
         {name:'Straight Raises on Incline Bench',sets:'4',reps:'15',note:'superset ↓'},
         {name:'DB Lateral Raises (full extension)',sets:'4',reps:'15'},
@@ -11454,46 +12367,60 @@ var FITNESS_PROGRAM = {
         {name:'Barbell Shrugs (triple drop-set)',sets:'3',reps:'10/10/10'},
         {name:'Cardio Circuit',sets:'3',reps:'30s each',note:'Squat Jumps/Treadmill/Mt Climbers'}
       ]},
-      { day:2, name:'Tuesday', focus:'Soccer League (rest from lifting)', exercises:[]},
-      { day:3, name:'Wednesday', focus:'Lower Body + Core', exercises:[
+      { day:2, name:'Tuesday', focus:'Arms + HIIT', exercises:[
+        {name:'Incline DB Curls (drop-set)',sets:'4',reps:'20+8',note:'superset ↓'},
+        {name:'Incline Hammer Curls',sets:'4',reps:'12',note:'superset ↓'},
+        {name:'Burpees',sets:'4',reps:'15'},
+        {name:'Spider Curls',sets:'4',reps:'15/12/10/15',note:'superset ↓'},
+        {name:'Machine Bicep Curls',sets:'4',reps:'20',note:'superset ↓'},
+        {name:'Squat Jumps',sets:'4',reps:'15'},
+        {name:'Overhead Tricep Rope Extension',sets:'4',reps:'20',note:'superset ↓'},
+        {name:'Tricep Rope Extension',sets:'4',reps:'20',note:'superset ↓'},
+        {name:'Run in Place',sets:'4',reps:'30s'},
+        {name:'EZ Bar Skull Crushers',sets:'4',reps:'15/12/10/8',note:'superset ↓'},
+        {name:'Overhead DB Press',sets:'4',reps:'12-15',note:'superset ↓'},
+        {name:'Bench Step-Ups',sets:'4',reps:'15'},
+        {name:'Cardio Circuit',sets:'3',reps:'30s each',note:'HIIT'}
+      ]},
+      { day:3, name:'Wednesday', focus:'Legs', exercises:[
         {name:'Leg Extensions (drop-set)',sets:'4',reps:'20+10',note:'superset ↓'},
         {name:'Squats',sets:'4',reps:'20'},
         {name:'DB Lunges',sets:'4',reps:'12 each',note:'superset ↓'},
         {name:'Lying Ham Curls',sets:'4',reps:'20'},
         {name:'Seated Calf Raise (tri-set)',sets:'3',reps:'10 out/10 in/10 normal'},
-        {name:'Plate Twists',sets:'3',reps:'25'},
-        {name:'Straight Leg Hip Raises',sets:'3',reps:'25'},
-        {name:'Sit-Ups',sets:'3',reps:'25'},
-        {name:'Cardio Circuit',sets:'3',reps:'30s each',note:'Squat Jumps/Treadmill/Mt Climbers'}
+        {name:'Cardio Circuit',sets:'3',reps:'30s each'}
       ]},
-      { day:4, name:'Thursday', focus:'Upper B — Back/Arms', exercises:[
+      { day:4, name:'Thursday', focus:'Chest + HIIT', exercises:[
+        {name:'Incline Bench Press',sets:'5',reps:'15/12/10/8/6',note:'superset ↓'},
+        {name:'Burpees',sets:'4',reps:'15'},
+        {name:'Flat Bench Press',sets:'5',reps:'15/12/10/8/6',note:'superset ↓'},
+        {name:'Squat Jumps',sets:'4',reps:'15'},
+        {name:'Incline Chest Press',sets:'4',reps:'12-15',note:'superset ↓'},
+        {name:'Decline Chest Press',sets:'4',reps:'12-15',note:'superset ↓'},
+        {name:'Run in Place',sets:'4',reps:'30s'},
+        {name:'Incline Bench Cable Flies',sets:'4',reps:'20',note:'superset ↓'},
+        {name:'Incline Close Grip DB Press',sets:'4',reps:'12',note:'superset ↓'},
+        {name:'Bench Step-Ups',sets:'4',reps:'15'},
+        {name:'Cardio Circuit',sets:'3',reps:'30s each',note:'HIIT'}
+      ]},
+      { day:5, name:'Friday', focus:'Back', exercises:[
         {name:'Bent Over Barbell Row',sets:'5',reps:'15/12/10/8/8'},
         {name:'Wide Grip Lat Pull Down (drop-set)',sets:'4',reps:'8+15',note:'superset ↓'},
         {name:'Seated Low Row Machine',sets:'4',reps:'drop set'},
         {name:'Seated Cable Rows w/ Rope',sets:'4',reps:'20',note:'superset ↓'},
         {name:'Incline Barbell Row',sets:'4',reps:'12'},
         {name:'Seated Close Grip Cable Row',sets:'4',reps:'15'},
-        {name:'Incline DB Curls (drop-set)',sets:'4',reps:'20+8',note:'superset ↓'},
-        {name:'Incline Hammer Curls',sets:'4',reps:'12',note:'superset ↓'},
-        {name:'Spider Curls',sets:'4',reps:'15/12/10/15',note:'superset ↓'},
-        {name:'Machine Bicep Curls',sets:'4',reps:'20',note:'superset ↓'},
-        {name:'Overhead Tricep Rope Extension',sets:'4',reps:'20',note:'superset ↓'},
-        {name:'Tricep Rope Extension',sets:'4',reps:'20',note:'superset ↓'},
-        {name:'EZ Bar Skull Crushers',sets:'4',reps:'15/12/10/8',note:'superset ↓'},
-        {name:'Overhead DB Press',sets:'4',reps:'12-15',note:'superset ↓'},
-        {name:'Cardio Circuit',sets:'3',reps:'30s each',note:'Squat Jumps/Treadmill/Mt Climbers'}
+        {name:'Cardio Circuit',sets:'3',reps:'30s each'}
       ]},
-      { day:5, name:'Friday', focus:'Sprint Conditioning (rest from lifting)', exercises:[]},
-      { day:6, name:'Saturday', focus:'Rest / Recovery', exercises:[]}
+      { day:6, name:'Saturday', focus:'Abs', exercises:[
+        {name:'Plate Twists',sets:'3',reps:'25'},
+        {name:'Straight Leg Hip Raises',sets:'3',reps:'25'},
+        {name:'Sit-Ups',sets:'3',reps:'25'},
+        {name:'Cardio Circuit',sets:'4',reps:'30s each'}
+      ]}
     ]},
-    // WEEK 6 (Phase 3)
     { week:6, phase:3, days:[
-      { day:1, name:'Monday', focus:'Upper A — Chest/Shoulders', exercises:[
-        {name:'Flat Bench Press (burnout)',sets:'6',reps:'12/8/6/4/2/burnout',note:'half-rep burnout last set'},
-        {name:'Incline Bench Press (burnout)',sets:'5',reps:'12/10/8/6/burnout'},
-        {name:'Incline Cable Flies (7-7-7)',sets:'4',reps:'7 full/7 half/7 contracted'},
-        {name:'Incline Chest Press Machine',sets:'4',reps:'12',note:'superset ↓'},
-        {name:'Smith Machine Bench Press',sets:'4',reps:'15',note:'superset ↓'},
+      { day:1, name:'Monday', focus:'Shoulders', exercises:[
         {name:'Barbell Shrugs',sets:'4',reps:'30',note:'superset ↓'},
         {name:'Rear Delt Flies on Incline Bench',sets:'4',reps:'20'},
         {name:'Seated Lateral Raise',sets:'4',reps:'20',note:'superset ↓'},
@@ -11503,8 +12430,23 @@ var FITNESS_PROGRAM = {
         {name:'Behind Neck Shoulder Press',sets:'4',reps:'15/12/10/8'},
         {name:'Cardio Circuit',sets:'3',reps:'30s each',note:'Jacks/Burpees/Jump Rope'}
       ]},
-      { day:2, name:'Tuesday', focus:'Soccer League (rest from lifting)', exercises:[]},
-      { day:3, name:'Wednesday', focus:'Lower Body + Core', exercises:[
+      { day:2, name:'Tuesday', focus:'Arms + HIIT', exercises:[
+        {name:'DB Skull Crushers',sets:'4',reps:'10-12',note:'superset ↓'},
+        {name:'Mountain Climbers',sets:'4',reps:'30s'},
+        {name:'Incline Straight Bar Cable Tricep Ext',sets:'4',reps:'15-20',note:'superset ↓'},
+        {name:'Tricep Rope Extensions',sets:'4',reps:'15-20',note:'superset ↓'},
+        {name:'Squat Jumps',sets:'4',reps:'20'},
+        {name:'Cable Straight Bar Tricep Pushdowns',sets:'4',reps:'12',note:'superset ↓'},
+        {name:'Run in Place',sets:'4',reps:'30s'},
+        {name:'EZ Bar Preacher Curl',sets:'4',reps:'12 each',note:'superset ↓'},
+        {name:'DB Bicep Curl',sets:'4',reps:'12',note:'superset ↓'},
+        {name:'Bench Step-Ups',sets:'4',reps:'20'},
+        {name:'EZ Bar Curls',sets:'4',reps:'15',note:'superset ↓'},
+        {name:'Close Grip EZ Bar Curls',sets:'4',reps:'15',note:'superset ↓'},
+        {name:'Jumping Jacks',sets:'4',reps:'30'},
+        {name:'Cardio Circuit',sets:'3',reps:'30s each',note:'HIIT'}
+      ]},
+      { day:3, name:'Wednesday', focus:'Legs', exercises:[
         {name:'Leg Extensions',sets:'4',reps:'25',note:'superset ↓'},
         {name:'Stiff Leg Deadlifts',sets:'4',reps:'15'},
         {name:'Leg Press (tri-stance)',sets:'3',reps:'10 close/10 normal/10 wide'},
@@ -11512,40 +12454,38 @@ var FITNESS_PROGRAM = {
         {name:'Lying Ham Curls',sets:'4',reps:'20',note:'superset ↓'},
         {name:'Seated Ham Curls',sets:'4',reps:'20'},
         {name:'Calf Raise on Leg Press',sets:'4',reps:'25'},
-        {name:'Reverse Crunches',sets:'3',reps:'25'},
-        {name:'Leg Raises',sets:'3',reps:'25'},
-        {name:'6-Inch Holds',sets:'3',reps:'30 seconds'},
-        {name:'Cardio Circuit',sets:'3',reps:'30s each',note:'Jacks/Burpees/Jump Rope'}
+        {name:'Cardio Circuit',sets:'3',reps:'30s each'}
       ]},
-      { day:4, name:'Thursday', focus:'Upper B — Back/Arms', exercises:[
+      { day:4, name:'Thursday', focus:'Chest + HIIT', exercises:[
+        {name:'Flat Bench Press (burnout)',sets:'6',reps:'12/8/6/4/2/burnout',note:'half-rep burnout last set'},
+        {name:'Mountain Climbers',sets:'4',reps:'30s'},
+        {name:'Incline Bench Press (burnout)',sets:'5',reps:'12/10/8/6/burnout'},
+        {name:'Squat Jumps',sets:'4',reps:'20'},
+        {name:'Incline Cable Flies (7-7-7)',sets:'4',reps:'7 full/7 half/7 contracted'},
+        {name:'Incline Chest Press Machine',sets:'4',reps:'12',note:'superset ↓'},
+        {name:'Run in Place',sets:'4',reps:'30s'},
+        {name:'Smith Machine Bench Press',sets:'4',reps:'15',note:'superset ↓'},
+        {name:'Jumping Jacks',sets:'4',reps:'30s'},
+        {name:'Cardio Circuit',sets:'3',reps:'30s each',note:'HIIT'}
+      ]},
+      { day:5, name:'Friday', focus:'Back', exercises:[
         {name:'Seated Row Machine (drop-set)',sets:'5',reps:'15/12/10/10/failure',note:'superset ↓'},
         {name:'Wide Grip Pull-Ups',sets:'5',reps:'failure'},
         {name:'DB Seal Rows',sets:'4',reps:'15',note:'superset ↓'},
         {name:'High Row Machine',sets:'4',reps:'12'},
         {name:'Wide Grip Seated Cable Row',sets:'4',reps:'12-15',note:'superset ↓'},
         {name:'Kneeling Cable Lat Pull Down',sets:'4',reps:'15'},
-        {name:'DB Skull Crushers',sets:'4',reps:'10-12',note:'superset ↓'},
-        {name:'Incline Straight Bar Cable Tricep Ext',sets:'4',reps:'15-20',note:'superset ↓'},
-        {name:'Tricep Rope Extensions',sets:'4',reps:'15-20',note:'superset ↓'},
-        {name:'Cable Straight Bar Tricep Pushdowns',sets:'4',reps:'12',note:'superset ↓'},
-        {name:'EZ Bar Preacher Curl',sets:'4',reps:'12 each',note:'superset ↓'},
-        {name:'DB Bicep Curl',sets:'4',reps:'12',note:'superset ↓'},
-        {name:'EZ Bar Curls',sets:'4',reps:'15',note:'superset ↓'},
-        {name:'Close Grip EZ Bar Curls',sets:'4',reps:'15',note:'superset ↓'},
-        {name:'Cardio Circuit',sets:'3',reps:'30s each',note:'Jacks/Burpees/Jump Rope'}
+        {name:'Cardio Circuit',sets:'3',reps:'30s each'}
       ]},
-      { day:5, name:'Friday', focus:'Sprint Conditioning (rest from lifting)', exercises:[]},
-      { day:6, name:'Saturday', focus:'Rest / Recovery', exercises:[]}
+      { day:6, name:'Saturday', focus:'Abs', exercises:[
+        {name:'Reverse Crunches',sets:'3',reps:'25'},
+        {name:'Leg Raises',sets:'3',reps:'25'},
+        {name:'6-Inch Holds',sets:'3',reps:'30 seconds'},
+        {name:'Cardio Circuit',sets:'4',reps:'30s each'}
+      ]}
     ]},
-    // WEEK 7 (Phase 4)
     { week:7, phase:4, days:[
-      { day:1, name:'Monday', focus:'Upper A — Chest/Shoulders', exercises:[
-        {name:'Incline DB Press',sets:'5',reps:'12/10/8/6/15',note:'superset ↓'},
-        {name:'Flat DB Press',sets:'5',reps:'same format',note:'superset ↓'},
-        {name:'Decline Bench Press',sets:'5',reps:'12/10/8/6/15',note:'superset ↓'},
-        {name:'Pec Deck',sets:'4',reps:'15',note:'superset ↓'},
-        {name:'Incline Chest Press Machine',sets:'4',reps:'15',note:'superset ↓'},
-        {name:'Cable Flies',sets:'4',reps:'20',note:'superset ↓'},
+      { day:1, name:'Monday', focus:'Shoulders', exercises:[
         {name:'Seated DB Military Press (drop-set)',sets:'4',reps:'15/12/10/8 + drop',note:'superset ↓'},
         {name:'DB Shrugs (drop-set)',sets:'5',reps:'15+15'},
         {name:'Straight Bar Front Raises on Incline',sets:'4',reps:'15',note:'superset ↓'},
@@ -11554,8 +12494,22 @@ var FITNESS_PROGRAM = {
         {name:'Seated DB Lateral Raises',sets:'4',reps:'20'},
         {name:'Cardio Circuit',sets:'3',reps:'35s each',note:'Squat Jumps/Mt Climbers/Jump Rope'}
       ]},
-      { day:2, name:'Tuesday', focus:'Soccer League (rest from lifting)', exercises:[]},
-      { day:3, name:'Wednesday', focus:'Lower Body + Core', exercises:[
+      { day:2, name:'Tuesday', focus:'Arms + HIIT', exercises:[
+        {name:'Barbell Curl',sets:'4',reps:'20',note:'superset ↓'},
+        {name:'EZ Bar Skull Crushers',sets:'4',reps:'20',note:'superset ↓'},
+        {name:'Run in Place',sets:'4',reps:'35s'},
+        {name:'Single Arm Preacher Curls (drop-set)',sets:'4',reps:'10+10',note:'superset ↓'},
+        {name:'Single Arm Tricep Extensions (drop-set)',sets:'4',reps:'10+10',note:'superset ↓'},
+        {name:'Jumping Jacks',sets:'4',reps:'35s'},
+        {name:'EZ Bar Cable Curls',sets:'3',reps:'40',note:'superset ↓'},
+        {name:'V-Bar Tricep Pushdowns',sets:'3',reps:'40',note:'superset ↓'},
+        {name:'Mountain Climbers',sets:'3',reps:'35s'},
+        {name:'DB Curls',sets:'4',reps:'15',note:'superset ↓'},
+        {name:'Overhead DB Press',sets:'4',reps:'15',note:'superset ↓'},
+        {name:'Squat Jumps',sets:'4',reps:'15'},
+        {name:'Cardio Circuit',sets:'3',reps:'35s each',note:'HIIT'}
+      ]},
+      { day:3, name:'Wednesday', focus:'Legs', exercises:[
         {name:'Leg Extensions',sets:'4',reps:'30'},
         {name:'Squats (combo)',sets:'5',reps:'10 normal + 10 close',note:'= 1 set'},
         {name:'Stiff Leg Deadlifts',sets:'4',reps:'15',note:'superset ↓'},
@@ -11563,40 +12517,39 @@ var FITNESS_PROGRAM = {
         {name:'Smith Machine Tap-n-Go Squats',sets:'4',reps:'12'},
         {name:'Seated Ham Curl',sets:'4',reps:'20',note:'superset ↓'},
         {name:'Calf Raise',sets:'5',reps:'20'},
-        {name:'Flutter Kicks',sets:'3',reps:'30'},
-        {name:'Reverse Crunches',sets:'3',reps:'30'},
-        {name:'Leg Tucks',sets:'3',reps:'30'},
-        {name:'Cardio Circuit',sets:'3',reps:'35s each',note:'Squat Jumps/Mt Climbers/Jump Rope'}
+        {name:'Cardio Circuit',sets:'3',reps:'35s each'}
       ]},
-      { day:4, name:'Thursday', focus:'Upper B — Back/Arms', exercises:[
+      { day:4, name:'Thursday', focus:'Chest + HIIT', exercises:[
+        {name:'Incline DB Press',sets:'5',reps:'12/10/8/6/15',note:'superset ↓'},
+        {name:'Flat DB Press',sets:'5',reps:'same format',note:'superset ↓'},
+        {name:'Run in Place',sets:'4',reps:'35s'},
+        {name:'Decline Bench Press',sets:'5',reps:'12/10/8/6/15',note:'superset ↓'},
+        {name:'Jumping Jacks',sets:'4',reps:'35s'},
+        {name:'Pec Deck',sets:'4',reps:'15',note:'superset ↓'},
+        {name:'Incline Chest Press Machine',sets:'4',reps:'15',note:'superset ↓'},
+        {name:'Mountain Climbers',sets:'4',reps:'35s'},
+        {name:'Cable Flies',sets:'4',reps:'20',note:'superset ↓'},
+        {name:'Squat Jumps',sets:'4',reps:'15'},
+        {name:'Cardio Circuit',sets:'3',reps:'35s each',note:'HIIT'}
+      ]},
+      { day:5, name:'Friday', focus:'Back', exercises:[
         {name:'Deadlifts',sets:'5',reps:'15/12/10/8/20'},
         {name:'Single Arm DB Row',sets:'4',reps:'15',note:'superset ↓'},
         {name:'Wide Grip Pull-Ups',sets:'4',reps:'failure'},
         {name:'T-Bar Row (triple drop-set)',sets:'3',reps:'10/10/10'},
         {name:'V-Bar Lat Pull Down',sets:'4',reps:'12-15',note:'superset ↓'},
         {name:'Behind Neck Lat Pull Down',sets:'4',reps:'12-15'},
-        {name:'Barbell Curl',sets:'4',reps:'20',note:'superset ↓'},
-        {name:'EZ Bar Skull Crushers',sets:'4',reps:'20',note:'superset ↓'},
-        {name:'Single Arm Preacher Curls (drop-set)',sets:'4',reps:'10+10',note:'superset ↓'},
-        {name:'Single Arm Tricep Extensions (drop-set)',sets:'4',reps:'10+10',note:'superset ↓'},
-        {name:'EZ Bar Cable Curls',sets:'3',reps:'40',note:'superset ↓'},
-        {name:'V-Bar Tricep Pushdowns',sets:'3',reps:'40',note:'superset ↓'},
-        {name:'DB Curls',sets:'4',reps:'15',note:'superset ↓'},
-        {name:'Overhead DB Press',sets:'4',reps:'15',note:'superset ↓'},
-        {name:'Cardio Circuit',sets:'3',reps:'35s each',note:'Squat Jumps/Mt Climbers/Jump Rope'}
+        {name:'Cardio Circuit',sets:'3',reps:'35s each'}
       ]},
-      { day:5, name:'Friday', focus:'Sprint Conditioning (rest from lifting)', exercises:[]},
-      { day:6, name:'Saturday', focus:'Rest / Recovery', exercises:[]}
+      { day:6, name:'Saturday', focus:'Abs', exercises:[
+        {name:'Flutter Kicks',sets:'3',reps:'30'},
+        {name:'Reverse Crunches',sets:'3',reps:'30'},
+        {name:'Leg Tucks',sets:'3',reps:'30'},
+        {name:'Cardio Circuit',sets:'4',reps:'35s each'}
+      ]}
     ]},
-    // WEEK 8 (Phase 4)
     { week:8, phase:4, days:[
-      { day:1, name:'Monday', focus:'Upper A — Chest/Shoulders', exercises:[
-        {name:'Flat Bench (12+6 x4)',sets:'4',reps:'12+6',note:'12 reps then heavier 6 reps'},
-        {name:'Flat DB Bench (triple drop-set)',sets:'3',reps:'10/10/10'},
-        {name:'Incline DB Bench',sets:'4',reps:'20',note:'superset ↓'},
-        {name:'Incline Barbell (pause reps)',sets:'6',reps:'8 pause reps',note:'superset ↓'},
-        {name:'Cable Flies',sets:'5',reps:'7',note:'superset ↓'},
-        {name:'Decline Hammer Strength',sets:'5',reps:'15/12/10/8/6',note:'superset ↓'},
+      { day:1, name:'Monday', focus:'Shoulders', exercises:[
         {name:'Barbell Military Press',sets:'4',reps:'15',note:'superset ↓'},
         {name:'Barbell Upright Row',sets:'4',reps:'15',note:'superset ↓'},
         {name:'Lateral Raises',sets:'4',reps:'15'},
@@ -11605,38 +12558,59 @@ var FITNESS_PROGRAM = {
         {name:'Shoulder Press Machine (drop-set)',sets:'4',reps:'15/12/10/8 + failure'},
         {name:'Cardio Circuit',sets:'3',reps:'35s each',note:'Burpees/Treadmill/Jumps'}
       ]},
-      { day:2, name:'Tuesday', focus:'Soccer League (rest from lifting)', exercises:[]},
-      { day:3, name:'Wednesday', focus:'Lower Body + Core', exercises:[
+      { day:2, name:'Tuesday', focus:'Arms + HIIT', exercises:[
+        {name:'DB Hammer Curls (drop-set)',sets:'4',reps:'10+10',note:'superset ↓'},
+        {name:'Incline Bench Cable EZ Bar Skull Crushers',sets:'4',reps:'20',note:'superset ↓'},
+        {name:'Burpees',sets:'4',reps:'15'},
+        {name:'Incline DB Curls',sets:'4',reps:'25',note:'superset ↓'},
+        {name:'DB Skull Crushers',sets:'4',reps:'15/12/10/8',note:'superset ↓'},
+        {name:'Jumps in Place',sets:'4',reps:'15'},
+        {name:'Straight Bar Cable Curls (drop-set)',sets:'4',reps:'20+10',note:'superset ↓'},
+        {name:'Overhead Rope Tricep Extension',sets:'4',reps:'20',note:'superset ↓'},
+        {name:'Mountain Climbers',sets:'4',reps:'35s'},
+        {name:'Tricep Rope Extension (drop-set)',sets:'4',reps:'20+10',note:'superset ↓'},
+        {name:'High Pulley Cable Curls',sets:'4',reps:'20',note:'superset ↓'},
+        {name:'Jump Rope',sets:'4',reps:'35s'},
+        {name:'Cardio Circuit',sets:'3',reps:'35s each',note:'HIIT'}
+      ]},
+      { day:3, name:'Wednesday', focus:'Legs', exercises:[
         {name:'Leg Press (tri-stance)',sets:'3',reps:'15 normal/15 wide/15 close'},
         {name:'Smith Machine Vertical Leg Press',sets:'4',reps:'15/12/10/8'},
         {name:'Squats (pyramid)',sets:'7',reps:'15/12/10/8/10/12/15'},
         {name:'Leg Extension',sets:'4',reps:'20 close/20 normal',note:'superset ↓'},
         {name:'Standing Single Leg Ham Curl',sets:'4',reps:'15'},
         {name:'Lying Ham Curl',sets:'4',reps:'15'},
-        {name:'Sit-Ups',sets:'3',reps:'30'},
-        {name:'Side Twists',sets:'3',reps:'30'},
-        {name:'Leg Raises',sets:'3',reps:'30'},
-        {name:'Cardio Circuit',sets:'3',reps:'35s each',note:'Burpees/Treadmill/Jumps'}
+        {name:'Cardio Circuit',sets:'3',reps:'35s each'}
       ]},
-      { day:4, name:'Thursday', focus:'Upper B — Back/Arms', exercises:[
+      { day:4, name:'Thursday', focus:'Chest + HIIT', exercises:[
+        {name:'Flat Bench (12+6 x4)',sets:'4',reps:'12+6',note:'12 reps then heavier 6 reps'},
+        {name:'Burpees',sets:'4',reps:'15'},
+        {name:'Flat DB Bench (triple drop-set)',sets:'3',reps:'10/10/10'},
+        {name:'Jumps in Place',sets:'4',reps:'15'},
+        {name:'Incline DB Bench',sets:'4',reps:'20',note:'superset ↓'},
+        {name:'Mountain Climbers',sets:'4',reps:'35s'},
+        {name:'Incline Barbell (pause reps)',sets:'6',reps:'8 pause reps',note:'superset ↓'},
+        {name:'Jump Rope',sets:'4',reps:'35s'},
+        {name:'Cable Flies',sets:'5',reps:'7',note:'superset ↓'},
+        {name:'Decline Hammer Strength',sets:'5',reps:'15/12/10/8/6',note:'superset ↓'},
+        {name:'Alternating Foot Taps',sets:'4',reps:'35s'},
+        {name:'Cardio Circuit',sets:'3',reps:'35s each',note:'HIIT'}
+      ]},
+      { day:5, name:'Friday', focus:'Back', exercises:[
         {name:'Lat Pull Down (triple drop-set)',sets:'7',reps:'12/10/8/6 + 3 drops to failure'},
         {name:'T-Bar Row',sets:'5',reps:'12/12/8/8/6'},
         {name:'DB Row',sets:'4',reps:'15',note:'superset ↓'},
         {name:'Single Arm Front Pull Down',sets:'4',reps:'15 each'},
         {name:'Cable Row',sets:'5',reps:'20/8/20/8/20',note:'superset ↓'},
         {name:'Seated Rope Pull',sets:'5',reps:'15'},
-        {name:'DB Hammer Curls (drop-set)',sets:'4',reps:'10+10',note:'superset ↓'},
-        {name:'Incline Bench Cable EZ Bar Skull Crushers',sets:'4',reps:'20',note:'superset ↓'},
-        {name:'Incline DB Curls',sets:'4',reps:'25',note:'superset ↓'},
-        {name:'DB Skull Crushers',sets:'4',reps:'15/12/10/8',note:'superset ↓'},
-        {name:'Straight Bar Cable Curls (drop-set)',sets:'4',reps:'20+10',note:'superset ↓'},
-        {name:'Overhead Rope Tricep Extension',sets:'4',reps:'20',note:'superset ↓'},
-        {name:'Tricep Rope Extension (drop-set)',sets:'4',reps:'20+10',note:'superset ↓'},
-        {name:'High Pulley Cable Curls',sets:'4',reps:'20',note:'superset ↓'},
-        {name:'Cardio Circuit',sets:'3',reps:'35s each',note:'Burpees/Treadmill/Jumps'}
+        {name:'Cardio Circuit',sets:'3',reps:'35s each'}
       ]},
-      { day:5, name:'Friday', focus:'Sprint Conditioning (rest from lifting)', exercises:[]},
-      { day:6, name:'Saturday', focus:'Rest / Recovery', exercises:[]}
+      { day:6, name:'Saturday', focus:'Abs', exercises:[
+        {name:'Sit-Ups',sets:'3',reps:'30'},
+        {name:'Side Twists',sets:'3',reps:'30'},
+        {name:'Leg Raises',sets:'3',reps:'30'},
+        {name:'Cardio Circuit',sets:'4',reps:'35s each'}
+      ]}
     ]}
   ]
 };
@@ -15040,6 +16014,8 @@ const SP_LEAGUES = {
   bra1:   { sport: 'soccer',     league: 'bra.1', label: 'Brasileirão' },
   arg1:   { sport: 'soccer',     league: 'arg.1', label: 'Argentina Primera' },
   intl:   { sport: 'soccer',     league: null,    label: 'International', international: true, slugs: ['fifa.world', 'fifa.friendly'] },
+  atp:    { sport: 'tennis',     league: 'atp',   label: 'ATP (Men)' },
+  wta:    { sport: 'tennis',     league: 'wta',   label: 'WTA (Women)' },
 };
 
 let spCurrentLeague = 'mlb';
@@ -15117,7 +16093,7 @@ function spRenderViewToggle() {
   if (!wrap) return;
   const cfg = SP_LEAGUES[spCurrentLeague];
   // International and Favorites are merged feeds with no single league table — standings doesn't apply
-  if (spCurrentLeague === 'favorites' || (cfg && cfg.international)) {
+  if (spCurrentLeague === 'favorites' || (cfg && cfg.international) || ['atp','wta'].includes(spCurrentLeague)) {
     wrap.style.display = 'none';
     spViewMode = 'scores';
     return;
@@ -15222,6 +16198,23 @@ async function spFetchLeague(key) {
   const statusText = document.getElementById('sp-status-text');
   if (statusText) statusText.textContent = `Loading ${cfg.label}…`;
 
+  // Tennis scoreboard requires a ?dates= parameter — without it, the endpoint
+  // may return empty results even during active Grand Slam weeks.
+  // Use today's date in YYYYMMDD format, plus a narrow range to catch multi-day events.
+  function spTodayParam() {
+    const d = new Date();
+    const y = d.getFullYear();
+    const m = String(d.getMonth()+1).padStart(2,'0');
+    const dd = String(d.getDate()).padStart(2,'0');
+    return `${y}${m}${dd}`;
+  }
+  function spScoreboardUrl(sport, league) {
+    const base = `https://site.api.espn.com/apis/site/v2/sports/${sport}/${league}/scoreboard`;
+    // Tennis always needs the date; other sports work fine without it
+    if (sport === 'tennis') return `${base}?dates=${spTodayParam()}`;
+    return base;
+  }
+
   try {
     let events = [];
     if (cfg.international) {
@@ -15235,10 +16228,17 @@ async function spFetchLeague(key) {
         }
       });
     } else {
-      const res = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${cfg.sport}/${cfg.league}/scoreboard`);
+      const res = await fetch(spScoreboardUrl(cfg.sport, cfg.league));
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
       events = data.events || [];
+      // Tennis: ESPN sometimes nests events under tournaments — flatten them
+      if (cfg.sport === 'tennis' && !events.length) {
+        const leagues = data.leagues || [];
+        leagues.forEach(lg => {
+          (lg.events || []).forEach(ev => events.push(ev));
+        });
+      }
       events.forEach(ev => { ev._spSport = cfg.sport; ev._spLeague = cfg.league; });
     }
 
@@ -15478,9 +16478,9 @@ function spRenderGames(events, leagueLabel) {
     return;
   }
 
+  const isTennis = ['atp','wta'].includes(spCurrentLeague);
+
   // Pinned-team games float to the top row(s); everything else keeps its original order
-  // (index used as a stable-sort tiebreaker since Array.sort's stability can't be assumed
-  // in every environment this file might run in).
   const sorted = events
     .map((ev, i) => ({ ev, i, pinned: spEventHasPinnedTeam(ev) }))
     .sort((a, b) => (b.pinned - a.pinned) || (a.i - b.i))
@@ -15489,10 +16489,10 @@ function spRenderGames(events, leagueLabel) {
   grid.innerHTML = sorted.map(ev => {
     const comp = (ev.competitions && ev.competitions[0]) || {};
     const competitors = comp.competitors || [];
-    const home = competitors.find(c => c.homeAway === 'home') || competitors[0] || {};
-    const away = competitors.find(c => c.homeAway === 'away') || competitors[1] || {};
+    const p1 = competitors[0] || {};
+    const p2 = competitors[1] || {};
     const statusType = (ev.status && ev.status.type) || {};
-    const state = statusType.state; // 'pre' | 'in' | 'post'
+    const state = statusType.state;
     const statusClass = state === 'in' ? 'live' : state === 'post' ? 'final' : 'pre';
     const statusLabel = state === 'in'
       ? `<span class="sp-live-dot"></span> ${statusType.shortDetail || 'LIVE'}`
@@ -15500,8 +16500,62 @@ function spRenderGames(events, leagueLabel) {
     const venue = (comp.venue && comp.venue.fullName) || '';
     const gameIsPinned = spEventHasPinnedTeam(ev);
     const pacificTime = spFormatPacificTime(ev.date);
-    const situationHtml = spRenderBaseballSituation(comp, state);
+    const gameId = ev.id;
+    const eventSport = ev._spSport || (SP_LEAGUES[spCurrentLeague] && SP_LEAGUES[spCurrentLeague].sport) || '';
+    const eventLeague = ev._spLeague || (SP_LEAGUES[spCurrentLeague] && SP_LEAGUES[spCurrentLeague].league) || '';
 
+    if (isTennis) {
+      // Tennis: players (athletes), set-by-set scores, tournament/round context.
+      // ESPN's site API puts competitor display names in several possible locations
+      // depending on the event type — check all of them defensively.
+      const playerName = (c) => {
+        // Most common for site API tennis: displayName directly on competitor
+        if (c.displayName) return c.displayName;
+        // Nested under athlete object
+        if (c.athlete) return c.athlete.displayName || c.athlete.shortName || c.athlete.fullName || '—';
+        // Nested under team (doubles, sometimes)
+        if (c.team) return c.team.displayName || c.team.shortDisplayName || '—';
+        return '—';
+      };
+      const playerFlag = (c) => {
+        // Flag may be on competitor, athlete, or team depending on shape
+        const flagHref = (c.athlete && c.athlete.flag && c.athlete.flag.href)
+          || (c.flag && c.flag.href) || '';
+        return flagHref ? `<img src="${flagHref}" style="width:18px;height:12px;object-fit:cover;border-radius:2px;flex-shrink:0" alt="">` : '';
+      };
+      const setScores = (c) => {
+        const sets = c.linescores || [];
+        if (!sets.length) return c.score !== undefined && c.score !== null && c.score !== '' ? String(c.score) : '—';
+        return sets.map(s => s.displayValue || s.value || '0').join(' ');
+      };
+      const p1Name = playerName(p1);
+      const p2Name = playerName(p2);
+      const p1Safe = p1Name.replace(/'/g, "\\'");
+      const p2Safe = p2Name.replace(/'/g, "\\'");
+      const p1Pinned = spIsPinned(p1Name);
+      const p2Pinned = spIsPinned(p2Name);
+      const tournament = (ev.name) || (ev.season && ev.season.displayName) || (comp.series && comp.series.displayName) || '';
+      const round = (comp.series && comp.series.title) || (comp.notes && comp.notes[0] && comp.notes[0].headline) || (statusType.shortDetail && !statusType.shortDetail.includes('AM') && !statusType.shortDetail.includes('PM') ? statusType.shortDetail : '') || '';
+
+      const playerRow = (c, name, safe, pinned, isWinner) => `<div class="sp-team-row${isWinner ? ' winner' : ''}">
+        <span class="sp-team-name">
+          <button class="sp-pin-btn${pinned ? ' pinned' : ''}" onclick="event.stopPropagation();spTogglePin('${safe}')" title="${pinned ? 'Unpin' : 'Pin'} ${name}">${pinned ? '★' : '☆'}</button>
+          ${playerFlag(c)}${name}
+        </span>
+        <span class="sp-team-score" style="font-size:12px;letter-spacing:.05em">${setScores(c)}</span>
+      </div>`;
+
+      return `<div class="sp-game-card${gameIsPinned ? ' sp-pinned-card' : ''}" style="cursor:pointer" onclick="spOpenGameDetail('${gameId}','${eventSport}','${eventLeague}')">
+        <div class="sp-game-status ${statusClass}">${statusLabel}</div>
+        ${pacificTime ? `<div class="sp-game-time">${pacificTime}${round ? ` · ${round}` : ''}</div>` : ''}
+        ${playerRow(p1, p1Name, p1Safe, p1Pinned, p1.winner)}
+        ${playerRow(p2, p2Name, p2Safe, p2Pinned, p2.winner)}
+        ${venue ? `<div class="sp-game-meta">${tournament || venue}</div>` : (tournament ? `<div class="sp-game-meta">${tournament}</div>` : '')}
+      </div>`;
+    }
+
+    // Standard team sports card (unchanged)
+    const situationHtml = spRenderBaseballSituation(comp, state);
     const teamRow = (c, isWinner) => {
       const logo = spTeamLogo(c.team);
       const name = (c.team && c.team.displayName) || '—';
@@ -15515,10 +16569,8 @@ function spRenderGames(events, leagueLabel) {
         <span class="sp-team-score">${c.score !== undefined && c.score !== null && c.score !== '' ? c.score : '—'}</span>
       </div>`;
     };
-
-    const gameId = ev.id;
-    const eventSport = ev._spSport || (SP_LEAGUES[spCurrentLeague] && SP_LEAGUES[spCurrentLeague].sport) || '';
-    const eventLeague = ev._spLeague || (SP_LEAGUES[spCurrentLeague] && SP_LEAGUES[spCurrentLeague].league) || '';
+    const home = competitors.find(c => c.homeAway === 'home') || competitors[0] || {};
+    const away = competitors.find(c => c.homeAway === 'away') || competitors[1] || {};
 
     return `<div class="sp-game-card${gameIsPinned ? ' sp-pinned-card' : ''}" style="cursor:pointer" onclick="spOpenGameDetail('${gameId}','${eventSport}','${eventLeague}')">
       <div class="sp-game-status ${statusClass}">${statusLabel}</div>
@@ -17282,14 +18334,15 @@ const FPL_CHK = `<svg viewBox="0 0 12 12" fill="none"><path d="M2 6.2 4.6 9 10 3
 
 // The five sessions that repeat each week (rest days aren't tracked).
 const FPL_SESSIONS = [
-  { key:'A',      name:'Upper A',             day:'Mon', color:'var(--fpl-workout)', link:2 },
-  { key:'B',      name:'Lower',               day:'Wed', color:'var(--fpl-workout)', link:2 },
-  { key:'C',      name:'Upper B',             day:'Thu', color:'var(--fpl-workout)', link:2 },
-  { key:'tempo',  name:'Conditioning',        day:'Fri', color:'var(--fpl-game)',    link:3 },
+  { key:'A',      name:'Lift A',              day:'Mon', color:'var(--fpl-workout)', link:2 },
+  { key:'sprint', name:'Sprint intervals',    day:'Tue', color:'var(--fpl-sprint)',  link:3 },
+  { key:'B',      name:'Lift B',              day:'Thu', color:'var(--fpl-workout)', link:2 },
+  { key:'tempo',  name:'Tempo + agility',     day:'Fri', color:'var(--fpl-game)',    link:3 },
+  { key:'C',      name:'Lift C',              day:'Sat', color:'var(--fpl-workout)', link:2 },
 ];
 
 const FPL_WEEKS_COUNT = 8;
-const FPL_TOTAL = FPL_WEEKS_COUNT * FPL_SESSIONS.length; // 32
+const FPL_TOTAL = FPL_WEEKS_COUNT * FPL_SESSIONS.length; // 40
 
 // Sprint block progression (walk rest shrinks, total sprints climb).
 const FPL_SPRINT_BLOCKS = [
@@ -17302,24 +18355,24 @@ const FPL_SPRINT_BLOCKS = [
 // Lifting load/volume progression — same three workouts, load climbs every 2 weeks.
 const FPL_BLOCKS = [
   { label:'Weeks 1–2',
-    a:[['DB Bench Press','3×10'],['DB Bent-Over Row','3×10'],['Overhead Press','3×10'],['Pull-downs / Assisted Pull-ups','3×10'],['Side Plank','3×25s/side'],['Bicycle Crunches','3×20']],
-    b:[['Goblet Squat','3×10'],['Romanian Deadlift','3×10'],['Walking Lunges','3×10/leg'],['Hip Thrusts','3×10'],['Plank','3×30s'],['Lying Leg Raises','3×12']],
-    c:[['Incline DB Press','3×10'],['Single-Arm DB Row','3×10/side'],['DB Lateral Raise','3×12'],['Face Pulls','3×12'],['Plank','3×30s'],['Russian Twists','3×20']]
+    a:[['Goblet Squat','3×10'],['Romanian Deadlift','3×10'],['Walking Lunges','3×10/leg'],['Push-ups','3×10'],['Plank','3×30s'],['Lying Leg Raises','3×12']],
+    b:[['DB Bench Press','3×10'],['DB Bent-Over Row','3×10'],['Overhead Press','3×10'],['Pull-downs / Assisted Pull-ups','3×10'],['Side Plank','3×25s/side'],['Bicycle Crunches','3×20']],
+    c:[['DB Thrusters','3×10'],['Renegade Rows','3×8/side'],['Mountain Climbers','3×30s'],['DB Swings','3×15'],['Burpees','3×8']]
   },
   { label:'Weeks 3–4',
-    a:[['DB Bench Press','3×12'],['DB Bent-Over Row','3×12'],['Overhead Press','3×12'],['Pull-downs / Assisted Pull-ups','3×12'],['Side Plank','3×35s/side'],['Bicycle Crunches','3×25']],
-    b:[['Goblet Squat','3×12'],['Romanian Deadlift','3×12'],['Walking Lunges','3×12/leg'],['Hip Thrusts','3×12'],['Plank','3×40s'],['Lying Leg Raises','3×15']],
-    c:[['Incline DB Press','3×12'],['Single-Arm DB Row','3×12/side'],['DB Lateral Raise','3×15'],['Face Pulls','3×15'],['Plank','3×40s'],['Russian Twists','3×25']]
+    a:[['Goblet Squat','3×12'],['Romanian Deadlift','3×12'],['Walking Lunges','3×12/leg'],['Push-ups','3×12'],['Plank','3×40s'],['Lying Leg Raises','3×15']],
+    b:[['DB Bench Press','3×12'],['DB Bent-Over Row','3×12'],['Overhead Press','3×12'],['Pull-downs / Assisted Pull-ups','3×12'],['Side Plank','3×35s/side'],['Bicycle Crunches','3×25']],
+    c:[['DB Thrusters','3×12'],['Renegade Rows','3×10/side'],['Mountain Climbers','3×40s'],['DB Swings','3×20'],['Burpees','3×10']]
   },
   { label:'Weeks 5–6',
-    a:[['DB Bench Press','4×10'],['DB Bent-Over Row','4×10'],['Overhead Press','4×10'],['Pull-downs / Assisted Pull-ups','4×10'],['Side Plank','3×45s/side'],['Bicycle Crunches','4×20']],
-    b:[['Goblet Squat','4×10'],['Romanian Deadlift','4×10'],['Walking Lunges','4×10/leg'],['Hip Thrusts','4×10'],['Plank','3×50s'],['Lying Leg Raises','4×12']],
-    c:[['Incline DB Press','4×10'],['Single-Arm DB Row','4×10/side'],['DB Lateral Raise','4×12'],['Face Pulls','4×12'],['Plank','3×50s'],['Russian Twists','4×20']]
+    a:[['Goblet Squat','4×10'],['Romanian Deadlift','4×10'],['Walking Lunges','4×10/leg'],['Push-ups','4×15'],['Plank','3×50s'],['Lying Leg Raises','4×12']],
+    b:[['DB Bench Press','4×10'],['DB Bent-Over Row','4×10'],['Overhead Press','4×10'],['Pull-downs / Assisted Pull-ups','4×10'],['Side Plank','3×45s/side'],['Bicycle Crunches','4×20']],
+    c:[['DB Thrusters','4×10'],['Renegade Rows','4×8/side'],['Mountain Climbers','4×30s'],['DB Swings','4×15'],['Burpees','4×8']]
   },
   { label:'Weeks 7–8',
-    a:[['DB Bench Press','4×12'],['DB Bent-Over Row','4×12'],['Overhead Press','4×12'],['Pull-downs / Assisted Pull-ups','4×12'],['Side Plank','3×60s/side'],['Bicycle Crunches','4×25']],
-    b:[['Goblet Squat','4×12'],['Romanian Deadlift','4×12'],['Walking Lunges','4×12/leg'],['Hip Thrusts','4×12'],['Plank','3×60s'],['Lying Leg Raises','4×15']],
-    c:[['Incline DB Press','4×12'],['Single-Arm DB Row','4×12/side'],['DB Lateral Raise','4×15'],['Face Pulls','4×15'],['Plank','3×60s'],['Russian Twists','4×25']]
+    a:[['Goblet Squat','4×12'],['Romanian Deadlift','4×12'],['Walking Lunges','4×12/leg'],['Push-ups','4×20'],['Plank','3×60s'],['Lying Leg Raises','4×15']],
+    b:[['DB Bench Press','4×12'],['DB Bent-Over Row','4×12'],['Overhead Press','4×12'],['Pull-downs / Assisted Pull-ups','4×12'],['Side Plank','3×60s/side'],['Bicycle Crunches','4×25']],
+    c:[['DB Thrusters','4×12'],['Renegade Rows','4×10/side'],['Mountain Climbers','4×40s'],['DB Swings','4×20'],['Burpees','4×10']]
   }
 ];
 
@@ -17339,7 +18392,7 @@ function fplBuildTracker(){
   for(let wi=1; wi<=FPL_WEEKS_COUNT; wi++){
     const rows = FPL_SESSIONS.map(s => {
       const on = !!fplState.done[fplSk(wi,s.key)];
-      const linkLabel = (s.key==='tempo') ? 'protocol →' : 'exercises →';
+      const linkLabel = (s.key==='sprint'||s.key==='tempo') ? 'protocol →' : 'exercises →';
       return `<div class="fpl-sess${on?' done':''}" id="fpl-row-${wi}-${s.key}" onclick="fplToggle(${wi},'${s.key}')">
         <div class="fpl-cb${on?' checked':''}" id="fpl-cb-${wi}-${s.key}">${FPL_CHK}</div>
         <div class="fpl-dot" style="background:${s.color}"></div>
@@ -17379,7 +18432,7 @@ function fplUpdateProgress(){
   if(fill) fill.style.width = pct + '%';
   if(pctEl) pctEl.textContent = pct + '%';
   if(subEl){
-    if(done === 0) subEl.textContent = 'Check off sessions in the Weekly Plan tab. 32 sessions over 8 weeks.';
+    if(done === 0) subEl.textContent = 'Check off sessions in the Weekly Plan tab. 40 sessions over 8 weeks.';
     else if(done === FPL_TOTAL) subEl.textContent = '🎉 Eight weeks done. Beer stayed out, load went up, and you should be lasting the full 90 on the field.';
     else subEl.textContent = done + ' of ' + FPL_TOTAL + ' sessions done · ' + (FPL_TOTAL - done) + ' to go';
   }
