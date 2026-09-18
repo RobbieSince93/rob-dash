@@ -9315,17 +9315,29 @@ function rsRenderDashboard() {
 
   const splitEl = document.getElementById('rs-split-body');
   if (splitEl) {
+    const totalReceived = totalCapital + totalProfit; // full cash-in-hand after all sales
     const splits = [
       { label:'Reinvest into inventory', pct:settings.reinvest, color:'var(--blue)' },
       { label:'Crypto',                  pct:settings.crypto,   color:'var(--amber)' },
       { label:'Stocks / Index funds',    pct:settings.stocks,   color:'var(--green)' },
       { label:'Personal / take-home',    pct:settings.takehome, color:'var(--text)' },
     ];
-    splitEl.innerHTML = splits.map(s => `
-      <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px">
+    splitEl.innerHTML = `
+      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Total received from ${sold.length} sale${sold.length!==1?'s':''}: <strong style="color:var(--text)">\$${totalReceived.toFixed(2)}</strong></div>
+
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:2px solid var(--border);font-size:12px">
+        <span style="font-weight:600;color:var(--text)">↩ Return cost basis to inventory</span>
+        <span style="font-weight:700;color:var(--text)">\$${totalCapital.toFixed(2)}</span>
+      </div>
+      <div style="font-size:10px;color:var(--text3);padding:5px 0 8px;border-bottom:1px solid var(--border)">This is your original capital — put it straight back in so you can keep buying inventory without going into your own pocket.</div>
+
+      <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin:8px 0 4px">Then split the profit (<strong style="color:var(--green)">\$${totalProfit.toFixed(2)}</strong>):</div>
+      ${splits.map(s => `
+      <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px">
         <span style="color:${s.color}">${s.label}</span>
-        <span>${(s.pct*100).toFixed(0)}% → <strong>$${(totalProfit*s.pct).toFixed(2)}</strong></span>
-      </div>`).join('');
+        <span style="color:var(--text3)">${(s.pct*100).toFixed(0)}% → <strong style="color:var(--text)">\$${(totalProfit*s.pct).toFixed(2)}</strong></span>
+      </div>`).join('')}
+    `;
   }
 
   const monthlyEl = document.getElementById('rs-monthly-body');
