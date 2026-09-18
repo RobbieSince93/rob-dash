@@ -6423,7 +6423,8 @@
         </div>
         <div>
           <label class="form-label">Symbol / Ticker</label>
-          <input class="form-input" id="crypto-symbol" placeholder="e.g. BTC">
+          <input class="form-input" id="crypto-symbol" placeholder="e.g. BTC" oninput="cryptoAutoFillFromSymbol(this.value)">
+          <div class="form-hint">Type BTC, ETH, SOL, FXAIX, IBIT etc — name and price ID auto-fill for known assets</div>
           <div class="form-hint">Used for price lookups</div>
         </div>
       </div>
@@ -7388,6 +7389,61 @@ function saveCashAccount() {
   renderAll();
   showToast(editId ? 'Account updated' : 'Account added');
   takeNetWorthSnapshot();
+}
+
+// Auto-fills name and CoinGecko ID when user types a known symbol — prevents the
+// "added BTC but CoinGecko ID is blank so price never loads" problem
+const CRYPTO_SYMBOL_MAP = {
+  // Major coins
+  'BTC':   { name:'Bitcoin',   coingeckoId:'bitcoin' },
+  'ETH':   { name:'Ethereum',  coingeckoId:'ethereum' },
+  'SOL':   { name:'Solana',    coingeckoId:'solana' },
+  'ADA':   { name:'Cardano',   coingeckoId:'cardano' },
+  'XRP':   { name:'XRP',       coingeckoId:'ripple' },
+  'DOGE':  { name:'Dogecoin',  coingeckoId:'dogecoin' },
+  'DOT':   { name:'Polkadot',  coingeckoId:'polkadot' },
+  'AVAX':  { name:'Avalanche', coingeckoId:'avalanche-2' },
+  'MATIC': { name:'Polygon',   coingeckoId:'matic-network' },
+  'LINK':  { name:'Chainlink', coingeckoId:'chainlink' },
+  'UNI':   { name:'Uniswap',   coingeckoId:'uniswap' },
+  'LTC':   { name:'Litecoin',  coingeckoId:'litecoin' },
+  'BCH':   { name:'Bitcoin Cash', coingeckoId:'bitcoin-cash' },
+  'ATOM':  { name:'Cosmos',    coingeckoId:'cosmos' },
+  'XLM':   { name:'Stellar',   coingeckoId:'stellar' },
+  'NEAR':  { name:'NEAR Protocol', coingeckoId:'near' },
+  'APT':   { name:'Aptos',     coingeckoId:'aptos' },
+  'OP':    { name:'Optimism',  coingeckoId:'optimism' },
+  'ARB':   { name:'Arbitrum',  coingeckoId:'arbitrum' },
+  'SUI':   { name:'Sui',       coingeckoId:'sui' },
+  'TIA':   { name:'Celestia',  coingeckoId:'celestia' },
+  'SEI':   { name:'Sei',       coingeckoId:'sei-network' },
+  'INJ':   { name:'Injective', coingeckoId:'injective-protocol' },
+  'ETHY':  { name:'Ethereum',  coingeckoId:'ethereum' }, // wrapped/staked variants fallback to ETH
+  // ETFs and stocks — these use stockSymbol, not coingeckoId
+  'FXAIX': { name:'Fidelity 500 Index Fund', stockSymbol:'FXAIX' },
+  'FSKAX': { name:'Fidelity Total Market',   stockSymbol:'FSKAX' },
+  'FTIHX': { name:'Fidelity Intl Index',     stockSymbol:'FTIHX' },
+  'IBIT':  { name:'iShares Bitcoin Trust',   stockSymbol:'IBIT' },
+  'VTI':   { name:'Vanguard Total Stock',    stockSymbol:'VTI' },
+  'VOO':   { name:'Vanguard S&P 500',        stockSymbol:'VOO' },
+  'QQQ':   { name:'Invesco QQQ',            stockSymbol:'QQQ' },
+  'SPY':   { name:'SPDR S&P 500 ETF',       stockSymbol:'SPY' },
+};
+
+function cryptoAutoFillFromSymbol(raw) {
+  const sym = (raw||'').trim().toUpperCase();
+  const match = CRYPTO_SYMBOL_MAP[sym];
+  if (!match) return; // Unknown symbol — user fills in manually, no problem
+  const nameEl = document.getElementById('crypto-name');
+  const geckoEl = document.getElementById('crypto-coingecko-id');
+  const stockEl = document.getElementById('crypto-stock-symbol');
+  // Only auto-fill if the fields are still blank (don't overwrite what they typed)
+  if (nameEl && !nameEl.value) nameEl.value = match.name;
+  if (match.stockSymbol) {
+    if (stockEl && !stockEl.value) stockEl.value = match.stockSymbol;
+  } else {
+    if (geckoEl && !geckoEl.value) geckoEl.value = match.coingeckoId || '';
+  }
 }
 
 function saveCryptoHolding() {
