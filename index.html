@@ -5176,7 +5176,7 @@
                 <div><label class="form-label">Sale price ($)</label><input class="form-input" id="rs-item-sale" type="number" step="0.01" placeholder="150.00"></div>
               </div>
               <div class="form-row-2">
-                <div><label class="form-label">Marketplace fee %</label><input class="form-input" id="rs-item-fee-pct" type="number" step="0.01" placeholder="0.13" value="0.13"></div>
+                <div><label class="form-label">Marketplace fee % <span style="font-size:10px;color:var(--text3)">(0 for private/cash sales)</span></label><input class="form-input" id="rs-item-fee-pct" type="number" step="0.01" min="0" max="1" placeholder="0 = no fee · eBay ≈ 0.13" value="0"></div>
                 <div><label class="form-label">Shipping cost ($)</label><input class="form-input" id="rs-item-ship" type="number" step="0.01" placeholder="8.50"></div>
               </div>
             </div>
@@ -5210,7 +5210,7 @@
               <div><label class="form-label">Est. resale value ($)</label><input class="form-input" id="rs-w-resale" type="number" step="0.01"></div>
             </div>
             <div class="form-row-2">
-              <div><label class="form-label">Est. fee %</label><input class="form-input" id="rs-w-fee" type="number" step="0.01" value="0.13"></div>
+              <div><label class="form-label">Est. fee % <span style="font-size:10px;color:var(--text3)">(0 for private)</span></label><input class="form-input" id="rs-w-fee" type="number" step="0.01" min="0" max="1" placeholder="0 = no fee · eBay ≈ 0.13" value="0"></div>
               <div><label class="form-label">Notes</label><input class="form-input" id="rs-w-notes"></div>
             </div>
             <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
@@ -9430,7 +9430,7 @@ function rsRenderWatchlist() {
     <tbody>${items.map(w => {
       const target = parseFloat(w.targetPrice)||0;
       const resale = parseFloat(w.resaleValue)||0;
-      const fee    = parseFloat(w.feePct)||0.13;
+      const fee    = parseFloat(w.feePct)||0;
       const margin = resale*(1-fee) - target;
       const roi    = target > 0 ? margin/target : 0;
       const rColor = roi >= 0.4 ? 'var(--green)' : roi >= 0.2 ? 'var(--amber)' : 'var(--red)';
@@ -9541,14 +9541,14 @@ function rsOpenAddItemModal(id) {
     document.getElementById('rs-item-status').value  = item.status || 'Active';
     document.getElementById('rs-item-date-sold').value = item.dateSold || '';
     document.getElementById('rs-item-sale').value    = item.salePrice || '';
-    document.getElementById('rs-item-fee-pct').value = item.feePct || 0.13;
+    document.getElementById('rs-item-fee-pct').value = item.feePct != null ? item.feePct : '';
     document.getElementById('rs-item-ship').value    = item.shipCost || '';
     document.getElementById('rs-item-notes').value   = item.notes || '';
   } else {
     title.textContent = 'Log Sale / Purchase';
     ['rs-item-name','rs-item-source','rs-item-cost','rs-item-grade','rs-item-fees','rs-item-date-acq','rs-item-date-sold','rs-item-sale','rs-item-ship','rs-item-notes'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('rs-item-status').value = 'Active';
-    document.getElementById('rs-item-fee-pct').value = '0.13';
+    document.getElementById('rs-item-fee-pct').value = '';
   }
   rsToggleSoldFields();
   modal.classList.add('open');
@@ -9580,7 +9580,7 @@ function rsSaveItem() {
     status:      document.getElementById('rs-item-status').value,
     dateSold:    document.getElementById('rs-item-date-sold').value,
     salePrice:   parseFloat(document.getElementById('rs-item-sale').value) || 0,
-    feePct:      parseFloat(document.getElementById('rs-item-fee-pct').value) || 0.13,
+    feePct:      parseFloat(document.getElementById('rs-item-fee-pct').value) || 0,
     shipCost:    parseFloat(document.getElementById('rs-item-ship').value) || 0,
     notes:       document.getElementById('rs-item-notes').value.trim(),
   };
@@ -9632,7 +9632,7 @@ function rsSaveWatchItem() {
     askPrice:   parseFloat(document.getElementById('rs-w-ask').value)||0,
     targetPrice:parseFloat(document.getElementById('rs-w-target').value)||0,
     resaleValue:parseFloat(document.getElementById('rs-w-resale').value)||0,
-    feePct:     parseFloat(document.getElementById('rs-w-fee').value)||0.13,
+    feePct:     parseFloat(document.getElementById('rs-w-fee').value)||0,
     notes:      document.getElementById('rs-w-notes').value.trim(),
     status:     'Watching',
   };
