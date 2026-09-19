@@ -4361,16 +4361,25 @@
         </div>
       </div>
 
-      <!-- Alpha Vantage API key (needed for stock/ETF live prices — CoinGecko only covers crypto) -->
+      <!-- API keys panel -->
       <div class="section-panel" style="margin-bottom:16px" id="lp-stock-key-panel">
-        <div style="padding:12px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-          <span style="font-size:11px;color:var(--text3);white-space:nowrap">Stock/ETF prices need a free Alpha Vantage key:</span>
-          <input class="form-input" id="lp-av-key-input" placeholder="Paste your Alpha Vantage API key" style="max-width:280px;padding:6px 10px;font-size:11px">
+        <div style="padding:12px 20px 6px;font-size:11px;font-weight:600;color:var(--text2);border-bottom:1px solid var(--border)">API Keys — required for live prices</div>
+        <div style="padding:10px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--border)">
+          <span style="font-size:11px;color:var(--text3);white-space:nowrap;min-width:180px">🪙 CoinMarketCap key (crypto):</span>
+          <input class="form-input" id="lp-cg-key-input" placeholder="Paste your CoinMarketCap API key" style="max-width:260px;padding:6px 10px;font-size:11px">
+          <button class="btn btn-secondary btn-sm" onclick="lpSaveCoinGeckoKey()">Save key</button>
+          <a href="https://pro.coinmarketcap.com/account/plan" target="_blank" style="font-size:11px;color:var(--blue);text-decoration:none">Get a free key ↗</a>
+          <span id="lp-cg-key-status" style="font-size:11px;color:var(--text3)"></span>
+        </div>
+        <div style="padding:0 20px 6px;font-size:10px;color:var(--text3)">Free Basic key from pro.coinmarketcap.com → sign up free. Gives 333 calls/day. Required for live crypto prices.</div>
+        <div style="padding:10px 20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--border)">
+          <span style="font-size:11px;color:var(--text3);white-space:nowrap;min-width:180px">📈 Alpha Vantage key (stocks/ETFs):</span>
+          <input class="form-input" id="lp-av-key-input" placeholder="Paste your Alpha Vantage API key" style="max-width:260px;padding:6px 10px;font-size:11px">
           <button class="btn btn-secondary btn-sm" onclick="lpSaveAlphaVantageKey()">Save key</button>
           <a href="https://www.alphavantage.co/support/#api-key" target="_blank" style="font-size:11px;color:var(--blue);text-decoration:none">Get a free key ↗</a>
           <span id="lp-av-key-status" style="font-size:11px;color:var(--text3)"></span>
         </div>
-        <div style="padding:0 20px 12px;font-size:10px;color:var(--text3)">The free tier allows 25 requests/day and 5/minute — plenty for an occasional manual refresh, not for auto-refreshing continuously. Your key is stored only in this browser, never sent anywhere but Alpha Vantage.</div>
+        <div style="padding:0 20px 10px;font-size:10px;color:var(--text3)">Alpha Vantage free tier: 25 requests/day, 5/minute. Both keys stored only in this browser, never sent anywhere else.</div>
       </div>
 
       <!-- Status bar -->
@@ -7787,23 +7796,31 @@ async function refreshCryptoPrices() {
   btn.classList.add('spin');
   document.getElementById('refresh-btn').style.pointerEvents = 'none';
 
-  const ids = [...new Set(withIds.map(h => h.coingeckoId))].join(',');
+  const cmcKey = localStorage.getItem('lp_coinmarketcap_key') || '';
+  const symbols = [...new Set(withIds.map(h => h.symbol.toUpperCase()))].join(',');
   try {
-    const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`);
-    if (!res.ok) throw new Error('API error');
-    const prices = await res.json();
+    if (!cmcKey) throw new Error('no-key');
+    const res = await fetch(
+      `https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?symbol=${encodeURIComponent(symbols)}&convert=USD`,
+      { headers: { 'X-CMC_PRO_API_KEY': cmcKey, 'Accept': 'application/json' } }
+    );
+    if (!res.ok) throw new Error('API error ' + res.status);
+    const json = await res.json();
+    const data = json.data || {};
     const now = new Date().toISOString();
     const updated = holdings.map(h => {
-      if (h.coingeckoId && prices[h.coingeckoId]) {
-        return { ...h, currentPrice: prices[h.coingeckoId].usd, priceUpdatedAt: now };
-      }
+      const sym = h.symbol.toUpperCase();
+      const entry = data[sym];
+      const quote = entry && entry.quote && entry.quote.USD;
+      if (quote) return { ...h, currentPrice: quote.price, change24h: quote.percent_change_24h || 0, priceUpdatedAt: now };
       return h;
     });
     DB.set('crypto', updated);
     renderAll();
-    showToast('Prices updated from CoinGecko');
+    showToast('Prices updated from CoinMarketCap');
   } catch (e) {
-    showToast('Price fetch failed — check connection', 'error');
+    if (e.message === 'no-key') showToast('Add your CoinMarketCap key in Live Prices first', 'error');
+    else showToast('Price fetch failed — ' + e.message, 'error');
   } finally {
     btn.classList.remove('spin');
     document.getElementById('refresh-btn').style.pointerEvents = '';
@@ -11400,10 +11417,14 @@ function tcgToggleSoldSection() {
 }
 
 // ── Stock/ETF live prices (Alpha Vantage — CoinGecko only covers crypto) ──
-const LP_AV_KEY_STORAGE = 'lp_alphavantage_key';
+var LP_AV_KEY_STORAGE = 'lp_alphavantage_key';
+var LP_CG_KEY_STORAGE = 'lp_coinmarketcap_key';
 
 function lpLoadAlphaVantageKey() {
   return localStorage.getItem(LP_AV_KEY_STORAGE) || '';
+}
+function lpLoadCoinGeckoKey() {
+  return localStorage.getItem(LP_CG_KEY_STORAGE) || '';
 }
 
 function lpSaveAlphaVantageKey() {
@@ -11415,11 +11436,31 @@ function lpSaveAlphaVantageKey() {
   showToast('Alpha Vantage key saved');
 }
 
+function lpSaveCoinGeckoKey() {
+  const input = document.getElementById('lp-cg-key-input');
+  const key = input ? input.value.trim() : '';
+  if (!key) { showToast('Enter a key first', 'error'); return; }
+  localStorage.setItem(LP_CG_KEY_STORAGE, key);
+  lpRenderCoinGeckoKeyStatus();
+  showToast('CoinMarketCap key saved — crypto prices ready');
+}
+
 function lpRenderAlphaVantageKeyStatus() {
   const key = lpLoadAlphaVantageKey();
   const statusEl = document.getElementById('lp-av-key-status');
   const inputEl = document.getElementById('lp-av-key-input');
   if (statusEl) statusEl.textContent = key ? '✓ key saved' : '';
+  if (inputEl && key) inputEl.placeholder = '•'.repeat(Math.min(key.length, 20)) + ' (saved — paste a new one to replace)';
+}
+
+function lpRenderCoinGeckoKeyStatus() {
+  const key = lpLoadCoinGeckoKey();
+  const statusEl = document.getElementById('lp-cg-key-status');
+  const inputEl = document.getElementById('lp-cg-key-input');
+  if (statusEl) {
+    statusEl.textContent = key ? '✓ key saved' : '⚠ no key — may hit rate limits';
+    statusEl.style.color = key ? 'var(--green)' : 'var(--amber)';
+  }
   if (inputEl && key) inputEl.placeholder = '•'.repeat(Math.min(key.length, 20)) + ' (saved — paste a new one to replace)';
 }
 
@@ -11525,7 +11566,7 @@ function tcgToggleSort() {
 // ── Price Alerts ──────────────────────────────────────────────────────────
 // Stored under 'lp_price_alerts_v1': array of { id, holdingId, condition, value, basePrice, active, firedAt }
 // Conditions: 'below' (absolute $), 'above' (absolute $), 'drop_pct' (% drop from basePrice), 'rise_pct'
-const LP_ALERTS_KEY = 'lp_price_alerts_v1';
+var LP_ALERTS_KEY = 'lp_price_alerts_v1';
 let lpAlerts = [];
 function lpLoadAlerts() {
   try { lpAlerts = JSON.parse(localStorage.getItem(LP_ALERTS_KEY)) || []; } catch(e) { lpAlerts = []; }
@@ -11715,8 +11756,9 @@ async function refreshAllPrices() {
     if(statusText)statusText.textContent='Prices live · updated '+now;
   } catch(e) {
     if(dot)dot.className='lp-dot';
-    if(statusText)statusText.textContent='Fetch failed — check internet connection';
-    showToast('Price fetch failed','error');
+    const msg = e && e.message ? e.message : 'check internet connection';
+    if(statusText)statusText.textContent='Price fetch failed — '+msg;
+    showToast('Price fetch failed: '+msg,'error');
   } finally {
     if(btn){btn.textContent='↻ Refresh now';btn.disabled=false;}
   }
@@ -11728,33 +11770,55 @@ async function refreshCryptoPricesLP() {
   const holdings=DB.get('crypto');
   const withIds=holdings.filter(h=>h.coingeckoId&&!h.stockSymbol);
   if(!withIds.length) return;
-  const ids=[...new Set(withIds.map(h=>h.coingeckoId))].join(',');
-  const res=await fetch(`https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&sparkline=true`);
-  if(!res.ok) throw new Error('API error '+res.status);
-  const rows=await res.json();
-  const byId={};
-  rows.forEach(r=>{ byId[r.id]=r; });
-  const now=new Date().toISOString();
 
-  // Snapshot prices as they stand right now, so the next render can tell what moved and animate it
+  const cmcKey = lpLoadCoinGeckoKey(); // field renamed to CMC but same storage slot
+  if (!cmcKey) throw new Error('Add your CoinMarketCap API key in the field above first');
+
+  // CoinMarketCap uses symbol (BTC, ETH) not CoinGecko slug IDs
+  const symbols = [...new Set(withIds.map(h => h.symbol.toUpperCase()))].join(',');
+
+  const res = await fetch(
+    `https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?symbol=${encodeURIComponent(symbols)}&convert=USD`,
+    { headers: { 'X-CMC_PRO_API_KEY': cmcKey, 'Accept': 'application/json' } }
+  );
+
+  if (!res.ok) {
+    const status = res.status;
+    if (status === 401) throw new Error('CoinMarketCap key invalid (401) — re-paste and save it');
+    if (status === 429) throw new Error('CoinMarketCap rate limit (429) — wait a minute then refresh');
+    throw new Error(`CoinMarketCap error ${status}`);
+  }
+
+  const json = await res.json();
+  if (json.status && json.status.error_code && json.status.error_code !== 0) {
+    throw new Error(`CoinMarketCap: ${json.status.error_message}`);
+  }
+
+  // json.data keyed by symbol: { "BTC": { quote: { USD: { price, percent_change_24h } } } }
+  const data = json.data || {};
+  const now = new Date().toISOString();
+
   const snapshot={};
   holdings.forEach(h=>{ snapshot[h.id]=parseFloat(h.currentPrice)||0; });
   lpPrevPrices=snapshot;
 
-  const updated=holdings.map(h=>{
-    if(h.coingeckoId&&byId[h.coingeckoId]){
-      const r=byId[h.coingeckoId];
-      return{
-        ...h,
-        currentPrice:r.current_price,
-        change24h:r.price_change_percentage_24h||0,
-        sparkline7d:(r.sparkline_in_7d&&r.sparkline_in_7d.price)||[],
-        priceUpdatedAt:now,
-      };
-    }
-    return h;
+  const updated = holdings.map(h => {
+    if (!h.coingeckoId || h.stockSymbol) return h;
+    const sym = h.symbol.toUpperCase();
+    const entry = data[sym];
+    if (!entry) return h;
+    const quote = entry.quote && entry.quote.USD;
+    if (!quote) return h;
+    return {
+      ...h,
+      currentPrice: quote.price || 0,
+      change24h: quote.percent_change_24h || 0,
+      sparkline7d: h.sparkline7d || [],
+      priceUpdatedAt: now,
+    };
   });
-  DB.set('crypto',updated);
+
+  DB.set('crypto', updated);
   lpCheckAlerts(updated);
 }
 
@@ -11803,6 +11867,7 @@ function renderLivePrices() {
   const holdings=DB.get('crypto');
   const tcgItems=DB.get('tcg');
   lpRenderAlphaVantageKeyStatus();
+  lpRenderCoinGeckoKeyStatus();
 
   // Crypto cards
   const cryptoEl=document.getElementById('lp-crypto-cards');
